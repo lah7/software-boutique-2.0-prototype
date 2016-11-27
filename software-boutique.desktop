@@ -1,0 +1,9 @@
+[Desktop Entry]
+Terminal=false
+Type=Application
+Categories=PackageManager;System;Settings;
+Name=Software Boutique
+Comment=Discover and install software from a collection that compliments Ubuntu MATE.
+Exec=software-boutique
+Icon=software-boutique
+StartupNotify=false
