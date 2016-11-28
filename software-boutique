@@ -1,0 +1,292 @@
+#! /usr/bin/python3
+# -*- coding:utf-8 -*-
+#
+# Copyright 2015-2016 Luke Horwell <luke@ubuntu-mate.org>
+# Copyright 2015-2016 Martin Wimpress <code@flexion.org>
+#
+# Software Boutique is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Software Boutique is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Software Boutique. If not, see <http://www.gnu.org/licenses/>.
+#
+
+""" The curated software collection application for Ubuntu MATE """
+
+import gi
+gi.require_version("Gdk", "3.0")
+gi.require_version("Gtk", "3.0")
+gi.require_version("WebKit2", "4.0")
+import gettext
+import inspect
+import locale
+import os
+import setproctitle
+import signal
+import sys
+from gi.repository import GLib, Gio, GObject, Gdk, Gtk, Notify, WebKit2
+from threading import Thread
+
+import software_boutique.boutique as boutique
+
+supported_arch=["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
+supported_codenames=["xenial", "yakkety", "zesty"]
+
+
+""" Data Source """
+def get_data_source():
+    current_folder = os.path.dirname( os.path.abspath(inspect.getfile(inspect.currentframe())) )
+    if( os.path.exists( os.path.join(current_folder, 'data/' ) ) ):
+        dbg.stdout("Using relative path for data source. Non-production testing.", 4, 1)
+        data_path = os.path.join(current_folder, 'data/')
+    elif( os.path.exists('/usr/share/ubuntu-mate-welcome/') ):
+        dbg.stdout("Using /usr/share/ubuntu-mate-welcome/ for data source.", 4, 1)
+        data_path = '/usr/share/ubuntu-mate-welcome/'
+    else:
+        dbg.stdout("Unable to source the ubuntu-mate-welcome data directory.", 1)
+        sys.exit(1)
+    return data_path
+
+
+""" i18n Translations """
+class Translations(object):
+    def __init__(self):
+        self.locale = None
+        self.locale_path = None
+
+        # Determine which locale to use
+        if dbg.override_locale:
+            self.locale = dbg.override_locale
+        else:
+            self.locale = str(locale.getlocale()[0])
+
+        # Use relative translations for development.
+        if os.path.exists(os.path.join(data_source, '../locale/')):
+            dbg.stdout("Using relative path for translations.", 4, 1)
+            self.locale_path = os.path.join(data_source, '../locale/')
+        else:
+            dbg.stdout("Using system path for translations or falling back to 'en_US'.", 4, 1)
+            self.locale_path = '/usr/share/locale/'
+
+        # Initialise i18n
+        global _
+        t = gettext.translation('software-boutique', localedir=self.locale_path, fallback=True)
+        _ = t.gettext
+
+
+""" Browser and WebKit Operations """
+class WebView(WebKit2.WebView):
+    def __init__(self, app_obj):
+        self.webkit = WebKit2
+        self.webkit.WebView.__init__(self)
+        self.app = app_obj
+
+        # Connect signals to application
+        self.connect('notify::title', self._on_title_change)
+        self.connect('context-menu', self._on_context_menu)
+
+        # Enable keyboard navigation
+        self.get_settings().set_enable_spatial_navigation(True)
+        self.get_settings().set_enable_caret_browsing(True)
+
+        # Show console messages in stdout if we're debugging.
+        if dbg.verbose_level == 2:
+            self.get_settings().set_enable_write_console_messages_to_stdout(True)
+
+
+    def update_page(self, element, function, parm1=None, parm2=None):
+        """ Runs a JavaScript jQuery function on the page,
+            ensuring correctly parsed quotes. """
+        if parm1 and parm2:
+            self.webkit.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
+        if parm1:
+            self.webkit.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
+        else:
+            self.webkit.run_javascript('$("' + element + '").' + function + '()')
+
+    def _on_title_change(self, view, frame):
+        title = self.get_title()
+        if title != 'null' and title != '' and title != None:
+            self.app.process_command(title)
+
+    def _on_context_menu(self, webview, menu, event, htr, user_data=None):
+        # Disable context menu.
+        return True
+
+
+""" Main thread for building and interacting with the application. """
+class MainThread(object):
+    def __init__(self):
+        return
+
+    def build(self):
+        title = _("Software Boutique")
+        width = 900
+        height = 600
+        index_file = 'boutique.html'
+
+        w = Gtk.Window()
+        w.set_position(Gtk.WindowPosition.CENTER)
+        w.set_wmclass('software-boutique', 'software-boutique')
+        w.set_title(title)
+        w.set_icon_from_file(os.path.join(data_source, 'img', 'boutique-icon.svg'))
+
+        # http://askubuntu.com/questions/153549/how-to-detect-a-computers-physical-screen-size-in-gtk
+        s = Gdk.Screen.get_default()
+        if s.get_height() <= 600:
+            w.set_size_request(768, 528)
+        else:
+            w.set_size_request(width, height)
+
+        self.webkit = WebView(self)
+
+        # Load the starting page
+        index_path = 'file://' + os.path.abspath(os.path.join(data_source, index_file))
+        self.webkit.load_uri(index_path)
+
+        # Build scrolled window widget and add our appview container
+        sw = Gtk.ScrolledWindow()
+        sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        sw.add(self.webkit)
+
+        # Build an autoexpanding box and add our scrolled window
+        b = Gtk.VBox(homogeneous=False, spacing=0)
+        b.pack_start(sw, expand=True, fill=True, padding=0)
+
+        # Add the box to the parent window
+        w.add(b)
+        w.connect('delete-event', self._close)
+        w.show_all()
+
+    def run(self):
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        Gtk.main()
+
+    def _close(self, window, event):
+        shutdown()
+
+    def process_command(cmd):
+        dbg.stdout("Command: '{0}'".format(title), 4, 2)
+
+
+
+""" Parses parameters and terminal stdout. """
+class Debugging(object):
+    def __init__(self):
+        self.verbose_level = 0
+        self.override_arch = None
+        self.override_codename = None
+        self.override_internet_on = None
+        self.override_locale = None
+        self.simulate_only = None
+
+    def parse_parameters(self):
+        for arg in sys.argv:
+            if arg in ['-h', '--help']:
+                print("\nSoftware Boutique Parameters\n\n")
+                print("\nUsage: software-boutique [arguments]")
+                #     | Command                      | Help Text                                     |
+                print("  -h, --help                   Show this help text.")
+                print("  --arch=ARCH                  Show listings for a specific architecture.")
+                print("                                -- Examples: i386, amd64, powerpc, armhf")
+                print("  --codename=CODENAME          Show listings for a specific release.")
+                print("                                -- Examples: trusty, xenial, zesty")
+                print("  --force-net                  Force an internet connection to be present.")
+                print("  --force-no-net               Force no internet connection.")
+                print("  --locale=CODE                Locale to use. e.g. fr_FR.")
+                print("  --simulate                   Simulate software package changes without")
+                print("                               modifying the system.")
+                print("  -v, --verbose                Show details to stdout (for diagnosis).")
+                print("  -vv, --debug                 Show more details to stdout (for debugging).")
+
+            elif arg.startswith('--arch'):
+                self.override_arch = arg.split("--arch=")[1]
+                dbg.stdout("Showing listings for arch: " + self.override_arch, 4)
+
+            elif arg.startswith('--codename'):
+                self.override_codename = arg.split("--codename=")[1]
+                dbg.stdout("Showing listings for release: " + self.override_codename, 4)
+
+            elif arg == '--force-net':
+                self.override_internet_on = True
+                dbg.stdout("Forcing internet connection.", 4)
+
+            elif arg == '--force-no-net':
+                self.override_internet_on = False
+                dbg.stdout("Forcing no internet connection.", 4)
+
+            elif arg.startswith('locale'):
+                self.override_locale = arg.split("--locale=")[1]
+                dbg.stdout("Forcing locale: " + self.override_locale, 4)
+
+            elif arg == '--simulate':
+                self.simulate_only = True
+                dbg.stdout("Starting in simulation mode...", 4)
+
+            elif arg in ['-v', '--verbose']:
+                self.verbose_level = 1
+
+            elif arg in ['-vv', '-d', '--debug']:
+                self.verbose_level = 2
+
+    def stdout(self, msg, color=0, verbosity=0):
+        # msg           String containing message for stdout.
+        #
+        # color         0 = Default (white text)
+        #               1 = Error (red)
+        #               2 = Warning (yellow)
+        #               3 = Success (green)
+        #               4 = Info (blue)
+        #
+        # verbosity     0 = Always shown
+        #               1 = -v flag
+        #               2 = -vv flag
+
+        # Only colourise output if running in a real terminal.
+        if sys.stdout.isatty():
+            if color == 1:            # Failure (Red)
+                col_start = '\033[91m'
+            elif color == 2:          # Success (Green)
+                col_start = '\033[92m'
+            elif color == 3:          # Action (Yellow)
+                col_start = '\033[93m'
+            elif color == 4:          # Debug (Blue)
+                col_start = '\033[96m'
+            else:                        # Normal/Misc (White)
+                col_start = '\033[0m'
+            col_end = '\033[0m'
+
+        # Ignore colours when redirected or piped.
+        else:
+            col_start = ''
+            col_end   = ''
+
+        # Output the message
+        if self.verbose_level >= verbosity:
+            print(col_start + msg + col_end)
+
+
+""" For quitting the application gracefully """
+def shutdown():
+    dbg.stdout("Closing Software Boutique...", 4, 1)
+    Gtk.main_quit()
+    sys.exit(0)
+
+if __name__ == "__main__":
+    dbg = Debugging()
+    dbg.parse_parameters()
+    data_source = get_data_source()
+    trans = Translations()
+
+    # On this thread
+    app = MainThread()
+    app.build()
+    webview = WebView(app)
+    app.run()
