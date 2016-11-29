@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="lib/boutique.css" rel="stylesheet" media="screen">
+</head>
+<body>
+    <div id="header">
+        <div id="header-title">Software Boutique</div> <div id="header-subtitle"></div>
+        <div class="right">
+            <button id="scroll-top" class="navigation" onclick=""><span class="fa fa-chevron-up"></span></button>
+        </div>
+    </div>
+    <div id="subheader">
+        <div class="left">
+            <button id="change-category-button" class="dropdown with-text">
+                <img id="current-category-icon" src="/usr/share/icons/Humanity/categories/24/applications-accessories.svg"/> <span id="current-category-text">Accessories</span> &nbsp;⏷
+            </button>
+        </div>
+        <div class="right">
+              <button id="browse-button" class="navigation with-text active" onclick="#"><img class="with-icon" src="img/boutique-mono.svg"/> Browse</button>
+              <button id="installed-button" class="navigation with-text" onclick="#"><span class="fa fa-download"></span> Installed</button>
+              <button id="queue-button" class="navigation with-text disabled" onclick="#"><span class="fa fa-clone"></span> Queue (0)</button>
+              <button id="news-button" class="navigation with-text" onclick="#"><span class="fa fa-newspaper-o"></span> What's New?</button>
+              <button id="search-button" class="navigation" onclick="#"><span class="fa fa-search"></span></button>
+              <button id="settings-button" class="navigation" onclick="#"><span class="fa fa-gear"></span></button>
+        </div>
+    </div>
+
+    <div class="content" id="main-page">
+    </div>
+
+    <div id="footer">
+        <div id="footer-left">
+        </div>
+        <div id="footer-right">
+        </div>
+    </div>
+
+    <script src="lib/boutique.js"></script>
+</body>
+</html>

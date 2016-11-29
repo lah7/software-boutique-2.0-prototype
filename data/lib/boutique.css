@@ -1,0 +1,387 @@
+/************************
+ * General
+*************************/
+html {
+    overflow: hidden;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+
+    /* Behave more like an application by preventing text highlighting / dragging. */
+    -webkit-user-select: none;
+    cursor: default;
+}
+
+img, a {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+body {
+    background-color: #f4f4f4;
+    background: #F4F4F4 url("img/background.svg") no-repeat fixed right bottom;
+    background-position: 100% calc(100% - 64px);
+}
+
+body, button, input {
+    font-family: 'Ubuntu', sans-serif;
+}
+
+p {
+    font-size: 1em;
+}
+
+
+/************************
+ * Cursors
+*************************/
+.cursor-wait {
+    cursor: wait;
+}
+
+
+/************************
+ * Buttons
+*************************/
+/* Buttons behave like anchors */
+button {
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    border: 1px solid transparent;
+    cursor: default !important;
+    color: #758A53;
+    font-size: 14px;
+}
+
+button:focus {
+    cursor: default;
+    border: 1px solid #87A556;
+}
+
+.link:hover {
+    cursor: pointer !important;
+    text-decoration: underline;
+}
+
+/* Button Theme - Dialog */
+button.dialog-theme {
+    background: linear-gradient(white, #F5F4F3);
+    border: 2px solid #D4D3D0;
+    color: black;
+    border-radius: 8px;
+    padding: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+button.dialog-theme:active {
+    background: linear-gradient(#E4E4E4, #E9E9E9);
+}
+
+button.dialog-theme:hover {
+    border: 2px solid #A9A9A9;
+}
+
+/* Button Theme - Header/Footer */
+button.inverted {
+    background: linear-gradient(#585858, #3C3B37);
+    color: white;
+}
+
+button.inverted:active {
+    background: linear-gradient(#3C3B37, #585858);
+    color: white;
+}
+
+button.inverted:hover {
+    border: 2px solid #A9A9A9;
+}
+
+/* Button Theme - Green */
+button.green {
+    background: linear-gradient(#87A556, #6F8647);
+    color: white;
+}
+
+button.green:active {
+    background: linear-gradient(#6F8647, #87A556);
+    color: white;
+}
+
+button.green:hover {
+    border: 2px solid #A9A9A9;
+}
+
+/* Button Theme - Yellow */
+button.yellow {
+    background: linear-gradient(#FBB24C, #F8970D);
+    color: white;
+}
+
+button.yellow:active {
+    background: linear-gradient(#F8970D, #FBB24C);
+    color: white;
+}
+
+button.yellow:hover {
+    border: 2px solid #A9A9A9;
+}
+
+/* Button Theme - Red */
+button.red {
+    background: linear-gradient(#ED5E5A, #C03831);
+    color: white;
+}
+
+button.red:active {
+    background: linear-gradient(#C03831, #ED5E5A);
+    color: white;
+}
+
+button.yellow:hover {
+    border: 2px solid #A9A9A9;
+}
+
+/* Buttons for navigation/header/footer */
+button.navigation {
+    width: 40px;
+    height: 30px;
+    color: #DED9CB;
+    display: inline-block;
+    padding: 4px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    line-height: 20px;
+    vertical-align: middle;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+button.navigation:hover {
+    color: #fff;
+}
+
+button.navigation:active {
+    background-color: #667E40;
+    color: #fff;
+}
+
+button.navigation.active {
+    background-color: #667E40;
+}
+
+button.navigation.with-text {
+  width: auto;
+}
+
+/* Button Theme - Green */
+button.dropdown {
+    color: #DED9CB;
+}
+
+button.dropdown:hover {
+    color: white;
+}
+
+
+/************************
+ * Scroll Bar Integration
+*************************/
+::-webkit-scrollbar {
+    width: 20px;
+    height: 18px;
+    z-index: 100;
+}
+
+::-webkit-scrollbar-thumb {
+    height: 6px;
+    border: 4px solid rgba(0, 0, 0, 0);
+    background-clip: padding-box;
+    -webkit-border-radius: 7px;
+    background-color: rgba(0, 0, 0, 0.15);
+    -webkit-box-shadow: inset -1px -1px 0px rgba(0, 0, 0, 0.05), inset 1px 1px 0px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+}
+
+::-webkit-scrollbar-button {
+    width: 0;
+    height: 0;
+    display: none;
+    z-index: 100;
+}
+
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+    z-index: 100;
+}
+
+
+/************************
+ * Header
+*************************/
+#header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 8px;
+    width: 100%;
+    height: 32px;
+    padding: 8px;
+    margin-bottom: 8px;
+    z-index: 10;
+    box-shadow: -8px 2px 10px rgba(0,0,0,0.5);
+
+    /* Ambience Theme */
+    background-color: #3C3B37;
+    font-size: 24px;
+    font-weight: normal;
+    color: #DED9CB;
+}
+
+#header > .right {
+    float: right;
+    margin-top: 2px;
+    margin-right: 16px;
+}
+
+#header-title {
+    font-size: 18px;
+    padding-left: 4px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+#header-subtitle {
+    font-weight: normal;
+    font-size: 18px;
+    vertical-align: middle;
+    display: inline-block;
+    color: #959595;
+}
+
+#navigation-right {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 11;
+}
+
+#navigation-right.disabled,
+#category-tabs.disabled ul li button,
+button.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+
+/************************
+ * Subheading
+*************************/
+#subheader {
+    background-color: #656565;
+    left: 0;
+    top: 48px;
+    position: fixed;
+    padding: 8px;
+    width: 100%;
+    height: 24px;
+    padding: 8px;
+    margin-bottom: 8px;
+    z-index: 9;
+    font-size: 16px;
+    font-weight: normal;
+    color: #DED9CB;
+    box-shadow: -8px 2px 10px rgba(0,0,0,0.5);
+}
+
+#subheader > .left {
+    float: left;
+    margin-top: 0px;
+    margin-left: 4px;
+}
+
+#subheader > .right {
+    float: right;
+    margin-top: -2px;
+    margin-right: 16px;
+}
+
+#subheader .with-icon {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 2px;
+}
+
+#current-category-icon {
+    width: 22px;
+    height: auto;
+    max-height: 22px;
+    float: left;
+}
+
+#current-category-text {
+    float: left;
+    margin-left: 4px;
+    margin-top: 2px;
+}
+
+
+/************************
+ * Content
+*************************/
+.content {
+    top: 88px;
+    bottom: 64px;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    overflow-x: none;
+    overflow-y: scroll;
+    position: fixed;
+    height: auto;
+    width: auto;
+}
+
+
+/************************
+ * Footer
+*************************/
+#footer {
+    background-color: #3C3B37;
+    position: fixed;
+    bottom: 0;
+    height: 48px;
+    width: 100%;
+    padding: 8px;
+    z-index: 10;
+    box-shadow: -8px 2px 10px 4px rgba(0,0,0,0.5);
+}
+
+#footer-right {
+    display: inline-block;
+    position: absolute;
+    right: 16px;
+}
+
+#footer button {
+    color: #fff;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+#footer label {
+    display: inline-block;
+    padding-left: 0;
+    margin-bottom: 0;
+    vertical-align: middle;
+    margin-right: 8px;
+    color: #fff;
+}
+
