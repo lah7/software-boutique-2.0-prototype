@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # -*- coding:utf-8 -*-
 #
-# Copyright 2016 Luke Horwell <luke@ubuntu-mate.org>
+# Copyright 2016-2017 Luke Horwell <luke@ubuntu-mate.org>
 #
 # Software Boutique is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -66,24 +66,22 @@ class IndexMeta(object):
             # Required
             try:
                 self.name = data["name"]
+                self.metadata = data["metadata"]
                 self.open_source = data["open-source"]
-                self.url_info = data["url-info"]
+                self.urls = data["urls"]
+                data["urls"]["info"]        # Required
                 self.arch = data["arch"]
                 self.releases = data["releases"]
                 self.methods = data["methods"]
             except Exception as e:
                 dbg.stdout(" -- Missing required data: " + str(e), 1, 0)
+                return
 
             # Optional
             try:
-                self.launch_command = data["launch-command"]
+                self.launch_cmd = data["launch-cmd"]
             except:
-                self.launch_command = None
-
-            try:
-                self.description = data["description"]
-            except:
-                self.description = None
+                self.launch_cmd = None
 
             try:
                 self.alternate_to = data["alternate-to"]
@@ -91,19 +89,14 @@ class IndexMeta(object):
                 self.alternate_to = None
 
             try:
-                self.tags = data["tags"]
+                self.post_install = data["post-install"]
             except:
-                self.tags = None
+                self.post_install = None
 
             try:
-                self.url_android = data["url-android"]
+                self.post_remove = data["post-remove"]
             except:
-                self.url_android = None
-
-            try:
-                self.url_ios = data["url-ios"]
-            except:
-                self.url_ios = None
+                self.post_remove = None
 
 
 class ApplicationMeta(object):
@@ -139,3 +132,11 @@ class SoftwareInstallation():
 
         def do_upgrade(self, packages):
             return 0
+
+    #~ class Snappy(object):
+        #~ def __init__(self):
+            #~ return
+
+    #~ class WebApps(object):
+        #~ def __init__(self):
+            #~ return

@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # -*- coding:utf-8 -*-
 #
-# Copyright 2015-2016 Luke Horwell <luke@ubuntu-mate.org>
+# Copyright 2015-2017 Luke Horwell <luke@ubuntu-mate.org>
 # Copyright 2015-2016 Martin Wimpress <code@flexion.org>
 #
 # Software Boutique is free software: you can redistribute it and/or modify
@@ -18,7 +18,9 @@
 # along with Software Boutique. If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" The curated software collection application for Ubuntu MATE """
+"""
+    The curated software collection application for Ubuntu MATE
+"""
 
 import gi
 gi.require_version("Gdk", "3.0")
@@ -34,14 +36,21 @@ import sys
 from gi.repository import GLib, Gio, GObject, Gdk, Gtk, Notify, WebKit2
 from threading import Thread
 
-import software_boutique.boutique as boutique
+try:
+    import pylib.boutique as boutique
+    import pylib.preferences as preferences
+except ImportError:
+    import software_boutique.boutique as boutique
+    import software_boutique.preferences as preferences
 
 supported_arch=["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
 supported_codenames=["xenial", "yakkety", "zesty"]
 
 
-""" Data Source """
 def get_data_source():
+    """
+    Retrieves the data source for assets used by the application.
+    """
     current_folder = os.path.dirname( os.path.abspath(inspect.getfile(inspect.currentframe())) )
     if( os.path.exists( os.path.join(current_folder, 'data/' ) ) ):
         dbg.stdout("Using relative path for data source. Non-production testing.", 4, 1)
@@ -55,8 +64,10 @@ def get_data_source():
     return data_path
 
 
-""" i18n Translations """
 class Translations(object):
+    """
+    Set up i18n translations
+    """
     def __init__(self):
         self.locale = None
         self.locale_path = None
@@ -81,16 +92,18 @@ class Translations(object):
         _ = t.gettext
 
 
-""" Browser and WebKit Operations """
 class WebView(WebKit2.WebView):
-    def __init__(self, app_obj):
+    """
+    Setting up the program's web browser and processing WebKit operations
+    """
+    def __init__(self):
         self.webkit = WebKit2
         self.webkit.WebView.__init__(self)
-        self.app = app_obj
 
         # Connect signals to application
         self.connect('notify::title', self._on_title_change)
         self.connect('context-menu', self._on_context_menu)
+        self.connect('load-changed', self.on_finish_load)
 
         # Enable keyboard navigation
         self.get_settings().set_enable_spatial_navigation(True)
@@ -105,28 +118,37 @@ class WebView(WebKit2.WebView):
         """ Runs a JavaScript jQuery function on the page,
             ensuring correctly parsed quotes. """
         if parm1 and parm2:
-            self.webkit.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
+            self.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
         if parm1:
-            self.webkit.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
+            self.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
         else:
-            self.webkit.run_javascript('$("' + element + '").' + function + '()')
+            self.run_javascript('$("' + element + '").' + function + '()')
+
+    """ Callback: Page changed """
+    def on_finish_load(self, view, frame):
+        if not self.is_loading():
+            dbg.stdout("Initalisation finished.", 3, 1)
+            app.start_loading()
 
     def _on_title_change(self, view, frame):
         title = self.get_title()
         if title != 'null' and title != '' and title != None:
-            self.app.process_command(title)
+            dbg.stdout("Command: '{0}'".format(title), 3, 2)
+            app.process_command(title)
 
     def _on_context_menu(self, webview, menu, event, htr, user_data=None):
         # Disable context menu.
         return True
 
 
-""" Main thread for building and interacting with the application. """
-class MainThread(object):
+class ApplicationWindow(object):
+    """
+    Main thread for building and interacting with the application.
+    """
     def __init__(self):
-        return
+        self.webview = None
 
-    def build(self):
+    def build(self, webview_obj):
         title = _("Software Boutique")
         width = 900
         height = 600
@@ -145,7 +167,7 @@ class MainThread(object):
         else:
             w.set_size_request(width, height)
 
-        self.webkit = WebView(self)
+        self.webkit = webview_obj
 
         # Load the starting page
         index_path = 'file://' + os.path.abspath(os.path.join(data_source, index_file))
@@ -172,13 +194,202 @@ class MainThread(object):
     def _close(self, window, event):
         shutdown()
 
-    def process_command(cmd):
-        dbg.stdout("Command: '{0}'".format(title), 4, 2)
+
+class SoftwareBoutique(object):
+    """
+    "app" object that stores variables and shared data/functions
+    throughout the program.
+    """
+    def __init__(self):
+        self.webkit = None
+        self.update_page = None
+
+        # Hardware Environment
+        self.current_arch = "unknown" # E.g. amd64
+
+        # OS Environment
+        self.current_os_version = "unknown" # E.g. 16.04
+        self.current_os_codename = "unknown" # E.g. xenial
+
+        # Software Environment
+        self.is_ubuntu_mate = True
+        self.boutique_ppa_enabled = False
+        self.internet_connected = False
+
+        # User Preferences
+        self.advanced_mode = True
+
+    def process_command(self, cmd):
+        if cmd == 'init-boutique':
+            self.start_loading()
+        elif cmd == 'exit':
+            shutdown()
+
+    def override_for_debugging(self):
+        if dbg.override_arch:
+            self.current_arch = dbg.override_arch
+        if dbg.override_codename:
+            self.current_os_codename = dbg.override_codename
+        if dbg.override_internet_on == True:
+            self.internet_connected = True
+        if dbg.override_internet_on == False:
+            self.internet_connected = False
+
+    def start_loading(self):
+        # Assume we're using Ubuntu MATE unless the metapackages are not present.
+        print('fixme:is_ubuntu_mate')
+
+        # Adapt header/footer to current theme.
+        self.set_base_ui_theme()
+
+        # Check whether Welcome/Boutique PPA is present.
+        # -- This is our way of ensuring the user gets up-to-date listings.
+        ppa_file = '/etc/apt/sources.list.d/ubuntu-mate-dev-ubuntu-welcome-' + self.current_os_codename + '.list'
+        if os.path.exists(ppa_file):
+            if os.path.getsize(ppa_file) > 0:
+                self.boutique_ppa_enabled = True
+
+        # Prepare user cache folder
+        pref.init_cache()
+
+        # Advanced mode shows more verbose details.
+        def loading_update_state(string, verbose_only=False, progress_shown=False, progress_val=0, progress_max=1):
+            if verbose_only and not self.advanced_mode:
+                return
+            app.update_page("#init-text", "html", string)
+            if progress_shown:
+                app.update_page("#init-progress-bar", "show")
+                percent = int((progress_val / progress_max) * 100) + "%"
+                app.update_page("#init-progress-value", "style", "width", percent)
+
+        loading_update_state(_("Populating applications..."))
+
+        ############################################
+        # Prepare Categories
+        ############################################
+        loading_update_state(_("Preparing categories..."), True)
+
+        def add_category(internal_name, human_name):
+            # Categories Selection Page
+            html = "<div id=\"category-{1}\" class=\"category\">" + \
+                        "<a onclick=\"changeCategory('{1}', '{2}')\">" + \
+                            "<div class=\"option\">" + \
+                                "<img src=\"{0}/categories/{1}.svg\"/> <label>{2}</label>" + \
+                            "</div>" + \
+                            "<div id=\"category-preview-{1}\" class=\"app-previews\"></div>" + \
+                        "</a>" + \
+                    "</div>"
+            html = html.replace('{0}', data_source).replace('{1}', internal_name).replace('{2}', human_name)
+            self.update_page("#categories-page", "append", html)
+
+        add_category('start-page', _("Start Page"))
+        add_category('accessories', _("Accessories"))
+        add_category('education', _("Education"))
+        add_category('games', _("Games"))
+        add_category('graphics', _("Graphics"))
+        add_category('internet', _("Internet"))
+        add_category('office', _("Office"))
+        add_category('development', _("Programming"))
+        add_category('multimedia', _("Sound & Video"))
+        add_category('system', _("System Tools"))
+        add_category('accessibility', _("Universal Access"))
+        add_category('server', _("Servers"))
+        add_category('more-software', _("More Software"))
+        add_category('fixes', _("Fixes"))
+
+        # Set default starting category
+        self.update_page("#current-category-icon", "attr", "src", data_source + "/categories/accessories.svg")
+
+        ############################################
+        # Push UI strings to translate
+        ############################################
+
+        ############################################
+        # Stock the Boutique Apps
+        ############################################
+
+        index = boutique.IndexMeta(dbg, data_source + "applications.json")
+        index.read_index()
+        a = index.read_info("Accessories", "pluma")
+
+    def set_base_ui_theme(self):
+        """
+        Adjusts the colours for other (MATE default) themes.
+        """
+        if self.is_ubuntu_mate:
+            try:
+                dconf = Gio.Settings.new('org.mate.interface')
+                theme = str(dconf.get_value('gtk-theme')).strip("'")
+            except:
+                theme = 'Ambiant-MATE'
+        else:
+            theme = 'Ambiant-MATE'
+
+        # Adapt the header/footer if a different theme is in use.
+        def light_theme():
+            self.update_page('#header', 'css', 'color', 'black')
+            self.update_page('#header a', 'css', 'color', 'black')
+            self.update_page('#footer', 'css', 'color', 'black')
+            self.update_page('#footer a', 'css', 'color', 'black')
+            #~ self.update_page('.btn-inverse', 'removeClass', 'btn-inverse')
+
+        if theme == 'BlackMATE':
+            self.update_page('#header', 'css', 'background-color', '#3D3D3F')
+            self.update_page('#footer', 'css', 'background-color', '#3D3D3F')
+        elif theme == 'BlueMenta':
+            self.update_page('#header', 'css', 'background-color', '#D2D2D2')
+            self.update_page('#footer', 'css', 'background-color', '#D2D2D2')
+            light_theme()
+        elif theme == 'Blue-Submarine':
+            self.update_page('#header', 'css', 'background-color', '#2C404F')
+            self.update_page('#footer', 'css', 'background-color', '#2C404F')
+        elif theme == 'GreenLaguna':
+            self.update_page('#header', 'css', 'background-color', '#EAF0E8')
+            self.update_page('#footer', 'css', 'background-color', '#EAF0E8')
+            light_theme()
+        elif theme == 'ContrastHigh':
+            self.update_page('#header', 'css', 'background-color', 'white')
+            self.update_page('#footer', 'css', 'background-color', 'white')
+            light_theme()
+        elif theme == 'ContrastHighInverse':
+            self.update_page('#header', 'css', 'background-color', 'black')
+            self.update_page('#footer', 'css', 'background-color', 'black')
+        elif theme == 'Menta':
+            self.update_page('#header', 'css', 'background-color', '#D2D2D2')
+            self.update_page('#footer', 'css', 'background-color', '#D2D2D2')
+            light_theme()
+        elif theme == 'Radiant-MATE':
+            self.update_page('#header', 'css', 'background-color', '#DFD7CF')
+            self.update_page('#footer', 'css', 'background-color', '#DFD7CF')
+            light_theme()
+        elif theme == 'TraditionalGreen' or theme == 'TraditionalOk':
+            self.update_page('#header', 'css', 'background-color', '#E7E6E5')
+            self.update_page('#footer', 'css', 'background-color', '#E7E6E5')
+            light_theme()
+        elif theme == 'TraditionalOkTest':
+            self.update_page('#header', 'css', 'background-color', '#868883')
+            self.update_page('#footer', 'css', 'background-color', '#868883')
+        return
+
+
+class QueueOperationsThread(object):
+    """
+    Thread that monitors the queue and performs install operations
+    or update the UI.
+    """
+    def __init__(self):
+        return
+
+    # e.g. desktop notifications function
+    # e.g. toast function
 
 
 
-""" Parses parameters and terminal stdout. """
+
 class Debugging(object):
+    """
+    Parses parameters and outputs helpful debugging information to the terminal.
+    """
     def __init__(self):
         self.verbose_level = 0
         self.override_arch = None
@@ -273,20 +484,33 @@ class Debugging(object):
             print(col_start + msg + col_end)
 
 
-""" For quitting the application gracefully """
 def shutdown():
+    """
+    Quit the application gracefully.
+    """
     dbg.stdout("Closing Software Boutique...", 4, 1)
     Gtk.main_quit()
     sys.exit(0)
+
 
 if __name__ == "__main__":
     dbg = Debugging()
     dbg.parse_parameters()
     data_source = get_data_source()
     trans = Translations()
+    pref = preferences.Preferences(dbg)
+
+    # Prepare multi-threaded operations
+    queue_operations = Thread(target=QueueOperationsThread, args=())
+    for thread in [queue_operations]:
+        thread.daemon = True
+        thread.start()
 
     # On this thread
-    app = MainThread()
-    app.build()
-    webview = WebView(app)
-    app.run()
+    app = SoftwareBoutique()
+    webview = WebView()
+    main = ApplicationWindow()
+    main.build(webview)
+    app.webkit = webview
+    app.update_page = webview.update_page
+    main.run()

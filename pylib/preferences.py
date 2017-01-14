@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # -*- coding:utf-8 -*-
 #
-# Copyright 2015-2016 Luke Horwell <luke@ubuntu-mate.org>
+# Copyright 2015-2017 Luke Horwell <luke@ubuntu-mate.org>
 #
 # Software Boutique is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ class Preferences(object):
     def __init__(self, dbg_obj):
         self.dbg = dbg_obj
         self.config_folder = os.path.join(os.path.expanduser('~'), ".config", "software-boutique")
+        self.cache_folder = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
         self.config_file = os.path.join(self.config_folder, "preferences.json")
         self.config_data = {}
         self.load_from_disk()
@@ -96,3 +97,7 @@ class Preferences(object):
         else:
             self.dbg.stdout("Failed to create new preferences file:" + self.config_file, 1, 1)
             return False
+
+    def init_cache(self):
+        if not os.path.exists(self.cache_folder):
+            os.makedirs(self.cache_folder)
