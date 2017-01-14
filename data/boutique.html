@@ -4,23 +4,26 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="lib/font-awesome.min.css" rel="stylesheet" media="screen">
-    <link href="lib/boutique.css" rel="stylesheet" media="screen">
+    <link href="boutique.css" rel="stylesheet" media="screen">
 </head>
 <body>
     <div id="header">
         <div id="header-title">Software Boutique</div> <div id="header-subtitle"></div>
         <div class="right">
-            <button id="scroll-top" class="navigation" onclick=""><span class="fa fa-chevron-up"></span></button>
+            <button id="scroll-top" class="navigation disabled" onclick="backToTop()"><span class="fa fa-chevron-up"></span></button>
         </div>
     </div>
-    <div id="subheader">
+    <div id="subheader" >
         <div class="left">
-            <button id="change-category-button" class="dropdown with-text">
+            <button id="change-category-button" class="dropdown with-text" onclick="categoryOpen()">
                 <img id="current-category-icon" src="/usr/share/icons/Humanity/categories/24/applications-accessories.svg"/> <span id="current-category-text">Accessories</span> &nbsp;⏷
+            </button>
+            <button id="change-category-button-close" class="dropdown with-text" onclick="categoryClose()">
+                <span class="close-string">Close</span> &nbsp;⏶
             </button>
         </div>
         <div class="right">
-              <button id="browse-button" class="navigation with-text active" onclick="#"><img class="with-icon" src="img/boutique-mono.svg"/> Browse</button>
+              <button id="browse-button" class="navigation with-text active" onclick="#"><img class="with-icon" src="img/boutique-icon-mono.svg"/> Browse</button>
               <button id="installed-button" class="navigation with-text" onclick="#"><span class="fa fa-download"></span> Installed</button>
               <button id="queue-button" class="navigation with-text disabled" onclick="#"><span class="fa fa-clone"></span> Queue (0)</button>
               <button id="news-button" class="navigation with-text" onclick="#"><span class="fa fa-newspaper-o"></span> What's New?</button>
@@ -29,17 +32,129 @@
         </div>
     </div>
 
-    <div class="content" id="main-page">
+    <img id="backdrop-icon" src="img/boutique-icon.svg"/>
+
+    <div id="loading-page" hidden>
+        <img src="img/loading.svg" class="busy-ani"/>
+        <br>
+        <div id="init-progress-bar" class="progress-bar"><div id="init-progress-value" class="progress-bar-inner"></div></div>
+        <div id="init-text">Populating applications...</div>
+    </div>
+
+    <div id="firstrun-page" class="full-page overlay-page" hidden>
+        <div id="firstrun-page1" class="page-contents">
+            <img class="graphic" src="img/firstrun-page1.png"/>
+            <p class="text">The Software Boutique is xxxx</p>
+        </div>
+        <div id="firstrun-page2" class="page-contents" hidden>
+            <img class="graphic" src="img/firstrun-page1.png"/>
+            <p class="text">The Software Boutique is yyyyy</p>
+        </div>
+        <div id="firstrun-page3" class="page-contents" hidden>
+            <img class="graphic" src="img/firstrun-page1.png"/>
+            <p class="text">The Software Boutique is zzzzz</p>
+        </div>
+        <div class="blobs">
+            <div id="firstrun-blob-1" class="blob done"></div>
+            <div id="firstrun-blob-2" class="blob"></div>
+            <div id="firstrun-blob-3" class="blob"></div>
+        </div>
+        <div class="buttons">
+            <button id="firstrun-prev" class="dialog-theme disabled0" onclick="firstRunPrevPage()">Previous</button>
+            <button id="firstrun-skip" class="dialog-theme" onclick="firstRunDismiss()">Skip</button>
+            <button id="firstrun-next" class="dialog-theme green" onclick="firstRunNextPage()">Next</button>
+            <button id="firstrun-start" class="dialog-theme green" onclick="firstRunDismiss()" style="display:none">Begin</button>
+        </div>
+    </div>
+
+    <div id="distro-warning-page" class="content split-page overlay-page" hidden>
+        <div class="left">
+            <img src="img/other-distro.png"/>
+        </div>
+        <div class="right">
+            <h2>Your mileage may vary.</h2>
+            <p>Software Boutique is designed for Ubuntu MATE, but a different distribution was detected.</p>
+            <p>While a large selection of software will work on other Ubuntu-based distributions, we cannot guarantee our featured picks will work flawlessly on your system.</p>
+            <p>Thank you for choosing Software Boutique.</p>
+            <br>
+            <button class="dialog-theme">Continue</button>
+            <span id="distwarn-footnote">This message will not be shown again.</span>
+        </div>
+    </div>
+
+    <div id="main-page" class="content" hidden>
+    </div>
+
+    <div id="categories-page">
+        <!-- EXAMPLE
+        <div id="category-accessories" class="category">
+            <a onclick="changeCategory('accessories', 'Accessories')">
+                <div class="option">
+                    <img src="{0}/data/categories/accessories.svg"/> <label>Accessories</label>
+                </div>
+                <div id="category-preview-accessories" class="app-previews">
+                    <img src="{0}/data/app-icons/audacity.png" title="Audacity"/>
+                    <img src="{0}/data/app-icons/bleachbit.png" title="BleachBit"/>
+                </div>
+            </a>
+        </div> -->
+    </div>
+
+    <div id="browse-listing" class="content" hidden>
+        <div id="category-welcome" class="category-contents">
+            <h1>Welcome</h1>
+        </div>
+        <div id="category-accessories" class="category-contents">
+            <h1>Accessories</h1>
+        </div>
+    </div>
+
+    <div id="browse-details" class="content" hidden>
+        ...
+    </div>
+
+    <div id="installed-page" class="content" hidden>
+        ...
+    </div>
+
+    <div id="queue-page" class="content" hidden>
+        ...
+    </div>
+
+    <div id="news-page" class="content" hidden>
+        ...
+    </div>
+
+    <div id="search-page" class="content" hidden>
+        ...
+    </div>
+
+    <div id="preferences-page" class="content" hidden>
+        ...
     </div>
 
     <div id="footer">
-        <div id="footer-left">
+        <div id="footer-left" style="display:none">
+            <span id="queue-ready" class="fa fa-clone"></span>
+            <span id="queue-success" class="fa fa-check-circle" style="display:none"></span>
+            <span id="queue-failure" class="fa fa-warning" style="display:none"></span>
+            <img  id="queue-inprogress" class="busy-ani" src="img/loading.svg" style="display:none"/>
+            <span id="queue-status-text">Ready</span>
+            <br>
+            <div class="progress-bar" style="display:none"><div id="queue-progress" class="progress-bar-inner"></div></div>
         </div>
-        <div id="footer-right">
+        <div id="footer-right" style="display:none">
+          <button class="checkbox" id="non-free-toggle" onclick="toggleNonFree();"
+              onmouseover="$('#nonfree-info-popup').fadeIn('fast')"
+              onmouseout="$('#nonfree-info-popup').fadeOut('fast')" >
+            <i id="nonFreeCheckBox" class="fa fa-square fa-va"></i> &zwnj;Hide Proprietary Software&zwnj;
+          </button>
+          <button id="show-misc-cmds" hidden><i id="MiscCheckbox" class="fa fa-square fa-va"></i> &zwnj;Show Terminal Commands&zwnj;</button>
+          <span id="footer-global-right"></span>
         </div>
     </div>
 
     <script src="lib/jquery-3.1.1.min.js"></script>
-    <script src="lib/boutique.js"></script>
+    <script src="boutique.js"></script>
 </body>
 </html>
