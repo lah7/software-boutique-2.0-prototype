@@ -57,14 +57,13 @@ for folder in ["icons", "screenshots", "source-lists", "index"]:
     os.mkdir(compiled_folder + folder)
 
 # Validate and add each application.
+faults = False
 for category in categories:
     new_index[category] = {}
     apps = os.listdir(os.path.join(source_folder, category))
     apps.sort()
 
     for appid in apps:
-        faults = False
-
         # Spaces are not allowed in app IDs.
         if appid.find(" ") != -1:
             print_msg(1, "{0}/{1} = Spaces are not allowed in app ID.".format(category, appid))
@@ -134,8 +133,11 @@ for category in categories:
 
             # If a required field, check there is actually data there.
             if key_type in [str, list] and is_required:
-                if len(target) == 0:
-                    print_msg(3, "{0}/{1} = Warning: No data for '{2}'. Skipping!".format(category, appid, key))
+                try:
+                    if len(target) == 0:
+                        print_msg(3, "{0}/{1} = Warning: No data for '{2}'. Skipping!".format(category, appid, key))
+                except Exception:
+                    print_msg(1, "{0}/{1} = Invalid data: '{2}'".format(category, appid, key, target))
 
         check_field("listed", bool, True)
         check_field("name", str, True)
@@ -155,11 +157,6 @@ for category in categories:
         check_field("installation", dict, True, "all")
         check_field("post-install", list, False)
         check_field("post-remove", list, False)
-
-        if faults:
-            print_msg(1, "\nIndex validation failed!")
-            print_msg(0, "Please fix or unlist the faulty software.\n")
-            exit(1)
 
         if index.get("method") == "apt":
             codenames = index["installation"].keys()
@@ -216,7 +213,10 @@ for category in categories:
             if arch not in known_arch:
                 print_msg(3, "{0}/{1} = Unrecognised architecture '{2}'".format(category, appid, arch))
 
-        # Add to compiled index
+        # Add to compiled index if successful
+        if faults:
+            continue
+
         new_index[category][appid] = index
         source_dir = os.path.join(source_folder, category, appid)
         shutil.copyfile(os.path.join(source_dir, "icon.png"), os.path.join(compiled_folder, "icons", appid + ".png"))
@@ -225,6 +225,12 @@ for category in categories:
             if filename.startswith("screenshot-"):
                 screenshot_no = filename.split("-")[1][:1]
                 shutil.copyfile(os.path.join(source_dir, filename), os.path.join(compiled_folder, "screenshots", appid + "-" + str(screenshot_no) + ".jpg"))
+
+# If validation fails, abort compiling.
+if faults:
+    print_msg(1, "\nIndex validation failed!")
+    print_msg(0, "Please fix or unlist the faulty software.\n")
+    exit(1)
 
 # Compile statistics
 categories_no = 0
