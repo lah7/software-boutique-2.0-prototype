@@ -668,7 +668,7 @@ class SoftwareBoutique(object):
             "<div class='left'><img id='app-icon' src='{icon_path}' /></div>" \
             "<div class='right'>" \
                 "<h2 id='app-name'>{name}</h2>" \
-                "<button id='app-developer' class='link' onclick='cmd('link?{dev_url}')'>{dev_name}</button>" \
+                "<button id='app-developer' class='link' onclick='cmd(\"web?{dev_url}\")'>{dev_name}</button>" \
                 "<p id='app-description'>{description}</p>".format(
                     icon_path = app_obj.icon_path,
                     name = app_obj.name,
