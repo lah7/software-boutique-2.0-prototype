@@ -70,7 +70,6 @@ function animate(element, ani_class, direction) {
 ************************/
 // Page finished loading
 $(document).ready(function() {
-
     // Show back to top button on page scroll
     $('.content').scroll(function () {
         if ($(this).scrollTop() > 90) {
@@ -79,6 +78,9 @@ $(document).ready(function() {
           $('#scroll-top').addClass('disabled');
         }
     });
+
+    $('#loading-page').fadeIn(200);
+    cmd('init-boutique');
 });
 
 /************************
