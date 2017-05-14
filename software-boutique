@@ -1,8 +1,8 @@
-#! /usr/bin/python3
+#!/usr/bin/python3
 # -*- coding:utf-8 -*-
 #
-# Copyright 2015-2017 Luke Horwell <luke@ubuntu-mate.org>
-# Copyright 2015-2016 Martin Wimpress <code@flexion.org>
+# Copyright (C) 2015-2017 Luke Horwell <luke@ubuntu-mate.org>
+# Copyright (C) 2015-2016 Martin Wimpress <code@flexion.org>
 #
 # Software Boutique is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,43 +25,73 @@
 import gi
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
+gi.require_version("Notify", "0.7")
 gi.require_version("WebKit2", "4.0")
+from gi.repository import GLib, Gio, GObject, Gdk, Gtk, Notify, WebKit2
+
 import gettext
 import inspect
+import json
 import locale
 import os
+import platform
+import random
 import setproctitle
 import signal
+import subprocess
 import sys
-from gi.repository import GLib, Gio, GObject, Gdk, Gtk, Notify, WebKit2
+import time
+from datetime import datetime
+import traceback
 from threading import Thread
 
 try:
     import pylib.boutique as boutique
     import pylib.preferences as preferences
+    relative_path = True
 except ImportError:
     import software_boutique.boutique as boutique
     import software_boutique.preferences as preferences
+    relative_path = False
 
-supported_arch=["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
-supported_codenames=["xenial", "yakkety", "zesty"]
-
+supported_arch = ["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
+supported_codenames = ["xenial", "yakkety", "zesty", "artful"]
+support_url = "https://ubuntu-mate.community"
 
 def get_data_source():
     """
     Retrieves the data source for assets used by the application.
     """
-    current_folder = os.path.dirname( os.path.abspath(inspect.getfile(inspect.currentframe())) )
-    if( os.path.exists( os.path.join(current_folder, 'data/' ) ) ):
+    current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    if( os.path.exists( os.path.join(current_folder, "data/" ) ) ):
         dbg.stdout("Using relative path for data source. Non-production testing.", 4, 1)
-        data_path = os.path.join(current_folder, 'data/')
-    elif( os.path.exists('/usr/share/ubuntu-mate-welcome/') ):
+        data_path = os.path.join(current_folder, "data/")
+    elif( os.path.exists("/usr/share/ubuntu-mate-welcome/") ):
         dbg.stdout("Using /usr/share/ubuntu-mate-welcome/ for data source.", 4, 1)
-        data_path = '/usr/share/ubuntu-mate-welcome/'
+        data_path = "/usr/share/ubuntu-mate-welcome/"
     else:
         dbg.stdout("Unable to source the ubuntu-mate-welcome data directory.", 1)
         sys.exit(1)
     return data_path
+
+
+def spawn_thread(target, daemon=True, args=[]):
+    """
+    Creates another thread to prevent holding up the main thread (and GUI)
+    """
+    dbg.stdout("Spawning thread: {0} (daemon {1}, args={2})".format(target.__name__, daemon, args), 3, 2)
+    newthread = Thread(target=target, args=(args))
+    if daemon:
+        newthread.daemon = True
+    newthread.start()
+
+
+def make_html_safe(string):
+    """
+    Returns a string that is HTML safe that won't cause interference.
+    For example, when used in JavaScript attributes.
+    """
+    return string.replace("'", "&#145;")
 
 
 class Translations(object):
@@ -77,18 +107,19 @@ class Translations(object):
             self.locale = dbg.override_locale
         else:
             self.locale = str(locale.getlocale()[0])
+        dbg.stdout("Locale set: " + self.locale, 4, 1)
 
         # Use relative translations for development.
-        if os.path.exists(os.path.join(data_source, '../locale/')):
+        if os.path.exists(os.path.join(data_source, "../locale/")):
             dbg.stdout("Using relative path for translations.", 4, 1)
-            self.locale_path = os.path.join(data_source, '../locale/')
+            self.locale_path = os.path.join(data_source, "../locale/")
         else:
             dbg.stdout("Using system path for translations or falling back to 'en_US'.", 4, 1)
-            self.locale_path = '/usr/share/locale/'
+            self.locale_path = "/usr/share/locale/"
 
         # Initialise i18n
         global _
-        t = gettext.translation('software-boutique', localedir=self.locale_path, fallback=True)
+        t = gettext.translation("software-boutique", localedir=self.locale_path, fallback=True)
         _ = t.gettext
 
 
@@ -100,23 +131,33 @@ class WebView(WebKit2.WebView):
         self.webkit = WebKit2
         self.webkit.WebView.__init__(self)
 
-        # Connect signals to application
-        self.connect('notify::title', self._on_title_change)
-        self.connect('context-menu', self._on_context_menu)
-        self.connect('load-changed', self.on_finish_load)
+        # Python <--> WebView communication
+        self.connect("notify::title", self._on_title_change)
+        self.connect("context-menu", self._on_context_menu)
+        self.connect("load-changed", self.on_finish_load)
 
         # Enable keyboard navigation
         self.get_settings().set_enable_spatial_navigation(True)
         self.get_settings().set_enable_caret_browsing(True)
 
         # Show console messages in stdout if we're debugging.
-        if dbg.verbose_level == 2:
+        if dbg.verbose_level >= 2:
             self.get_settings().set_enable_write_console_messages_to_stdout(True)
 
 
+        # Enable web inspector for debugging
+        if dbg.verbose_level == 3:
+            self.get_settings().set_property("enable-developer-extras", True)
+            inspector = self.get_inspector()
+            inspector.show()
+
+
+        dbg.stdout("Finished webkit2 initalisation.", 2, 1)
+
     def update_page(self, element, function, parm1=None, parm2=None):
-        """ Runs a JavaScript jQuery function on the page,
-            ensuring correctly parsed quotes. """
+        """
+        Runs a JavaScript jQuery function on the page, ensuring correctly parsed quotes.
+        """
         if parm1 and parm2:
             self.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
         if parm1:
@@ -124,15 +165,19 @@ class WebView(WebKit2.WebView):
         else:
             self.run_javascript('$("' + element + '").' + function + '()')
 
-    """ Callback: Page changed """
     def on_finish_load(self, view, frame):
+        """
+        Callback: On page change.
+        """
         if not self.is_loading():
-            dbg.stdout("Initalisation finished.", 3, 1)
-            app.start_loading()
+            dbg.stdout("Finished page initalisation.", 2, 1)
 
     def _on_title_change(self, view, frame):
+        """
+        Callback: When page title is changed, used for communicating with Python.
+        """
         title = self.get_title()
-        if title != 'null' and title != '' and title != None:
+        if title != "null" and title != "" and title != None:
             dbg.stdout("Command: '{0}'".format(title), 3, 2)
             app.process_command(title)
 
@@ -152,13 +197,17 @@ class ApplicationWindow(object):
         title = _("Software Boutique")
         width = 900
         height = 600
-        index_file = 'boutique.html'
+        html_file = "boutique.html"
+
+        # Nice process name
+        setproctitle.setproctitle("software-boutique")
+
 
         w = Gtk.Window()
         w.set_position(Gtk.WindowPosition.CENTER)
-        w.set_wmclass('software-boutique', 'software-boutique')
+        w.set_wmclass("software-boutique", "software-boutique")
         w.set_title(title)
-        w.set_icon_from_file(os.path.join(data_source, 'img', 'boutique-icon.svg'))
+        w.set_icon_from_file(os.path.join(data_source, "img", "boutique-icon.svg"))
 
         # http://askubuntu.com/questions/153549/how-to-detect-a-computers-physical-screen-size-in-gtk
         s = Gdk.Screen.get_default()
@@ -170,8 +219,8 @@ class ApplicationWindow(object):
         self.webkit = webview_obj
 
         # Load the starting page
-        index_path = 'file://' + os.path.abspath(os.path.join(data_source, index_file))
-        self.webkit.load_uri(index_path)
+        html_path = "file://" + os.path.abspath(os.path.join(data_source, html_file))
+        self.webkit.load_uri(html_path)
 
         # Build scrolled window widget and add our appview container
         sw = Gtk.ScrolledWindow()
@@ -201,116 +250,352 @@ class SoftwareBoutique(object):
     throughout the program.
     """
     def __init__(self):
+        ## Placeholders (these are set in start_loading() so UI appears quicker)
         self.webkit = None
         self.update_page = None
 
         # Hardware Environment
         self.current_arch = "unknown" # E.g. amd64
 
-        # OS Environment
-        self.current_os_version = "unknown" # E.g. 16.04
-        self.current_os_codename = "unknown" # E.g. xenial
-
-        # Software Environment
-        self.is_ubuntu_mate = True
+        ## Software Environment
+        self.backend = None                 # boutique.SoftwareInstallation.Backend()
+        self.is_ubuntu_mate = False
         self.boutique_ppa_enabled = False
         self.internet_connected = False
 
         # User Preferences
-        self.advanced_mode = True
+        if pref.read("advanced-mode", False) == True:
+            self.advanced_mode = True
+        else:
+            self.advanced_mode = False
+
 
     def process_command(self, cmd):
-        if cmd == 'init-boutique':
-            self.start_loading()
-        elif cmd == 'exit':
+        if cmd == "init-boutique":
+            spawn_thread(self.start_loading)
+
+        elif cmd == "force-boutique-restart":
+            os.execv(__file__, sys.argv)
+
+        elif cmd == "dismiss-unsupported-msg":
+            pref.write("already-warned-distro", True)
+            self.close_message_page()
+
+        elif cmd == "finished-introduction":
+            self.close_introduction_page()
+
+        elif cmd == "exit":
             shutdown()
+
+        elif cmd.startswith("details?"):
+            cmd = cmd.split("?")
+            categoryid = cmd[1]
+            appid = cmd[2]
+            self.show_app_details(categoryid, appid)
+
+        elif cmd == "close-details":
+            self.hide_app_details()
+
+        elif cmd.startswith("launch?"):
+            # FIXME
+            return
+
+        elif cmd.startswith("web?"):
+            # FIXME
+            return
+
+        elif cmd.startswith("install?"):
+            # FIXME
+            return
+
+        elif cmd.startswith("upgrade?"):
+            # FIXME
+            return
+
+        elif cmd.startswith("remove?"):
+            # FIXME
+            return
+
+        elif cmd.startswith("screenshot?"):
+            # FIXME!
+            return
+
+        else:
+            dbg.stdout("Unimplemented function!", 1, 2)
 
     def override_for_debugging(self):
         if dbg.override_arch:
             self.current_arch = dbg.override_arch
         if dbg.override_codename:
-            self.current_os_codename = dbg.override_codename
+            boutique.current_os_codename = dbg.override_codename
         if dbg.override_internet_on == True:
             self.internet_connected = True
         if dbg.override_internet_on == False:
             self.internet_connected = False
 
     def start_loading(self):
-        # Assume we're using Ubuntu MATE unless the metapackages are not present.
-        print('fixme:is_ubuntu_mate')
 
-        # Adapt header/footer to current theme.
-        self.set_base_ui_theme()
+        # Load the Software Index
+        boutique.screenshot_file_listing = os.listdir(os.path.join(data_source, "apps", "screenshots"))
+        index_path = os.path.join(data_source, "apps/index/", boutique.system_locale + ".json")
+        fallback_path = os.path.join(data_source, "apps/index/en.json")
 
-        # Check whether Welcome/Boutique PPA is present.
-        # -- This is our way of ensuring the user gets up-to-date listings.
-        ppa_file = '/etc/apt/sources.list.d/ubuntu-mate-dev-ubuntu-welcome-' + self.current_os_codename + '.list'
-        if os.path.exists(ppa_file):
-            if os.path.getsize(ppa_file) > 0:
-                self.boutique_ppa_enabled = True
+        if not os.path.exists(index_path):
+            index_path = fallback_path
 
-        # Prepare user cache folder
-        pref.init_cache()
+        try:
+            dbg.stdout("Reading software index...", 3, 2)
+            self.index = boutique.read_index(index_path)
+            dbg.stdout("Successfully loaded software index.", 2, 2)
+        except Exception as e:
+            dbg.stdout("Software Index corrupt or missing, Boutique cannot continue.", 1, 0)
+            exit(1)
 
-        # Advanced mode shows more verbose details.
-        def loading_update_state(string, verbose_only=False, progress_shown=False, progress_val=0, progress_max=1):
-            if verbose_only and not self.advanced_mode:
-                return
-            app.update_page("#init-text", "html", string)
-            if progress_shown:
-                app.update_page("#init-progress-bar", "show")
-                percent = int((progress_val / progress_max) * 100) + "%"
-                app.update_page("#init-progress-value", "style", "width", percent)
+        try:
+            # Determine Environment
+            dbg.stdout("Starting backend module...", 4, 1)
+            self.backend = boutique.SoftwareInstallation.Backend()
 
-        loading_update_state(_("Populating applications..."))
+            dbg.stdout("Starting application...", 4, 1)
+            self.is_ubuntu_mate = boutique.SoftwareInstallation.PackageKit._is_running_ubuntu_mate()
+            self.boutique_ppa_enabled = boutique.SoftwareInstallation.PackageKit._is_boutique_subscribed()
 
-        ############################################
-        # Prepare Categories
-        ############################################
-        loading_update_state(_("Preparing categories..."), True)
+            # Assume we're using Ubuntu MATE unless the metapackages are not present.
+            if not self.is_ubuntu_mate and not pref.read("already-warned-distro", False):
+                self.show_message_page("other-distro.png", _("Unsupported Distribution"),
+                                        [
+                                            _("Software Boutique is designed for software tested on Ubuntu MATE, " \
+                                              "however a different distribution was detected."),
 
-        def add_category(internal_name, human_name):
-            # Categories Selection Page
-            html = "<div id=\"category-{1}\" class=\"category\">" + \
-                        "<a onclick=\"changeCategory('{1}', '{2}')\">" + \
-                            "<div class=\"option\">" + \
-                                "<img src=\"{0}/categories/{1}.svg\"/> <label>{2}</label>" + \
-                            "</div>" + \
-                            "<div id=\"category-preview-{1}\" class=\"app-previews\"></div>" + \
-                        "</a>" + \
-                    "</div>"
-            html = html.replace('{0}', data_source).replace('{1}', internal_name).replace('{2}', human_name)
-            self.update_page("#categories-page", "append", html)
+                                            _("While a large selection of software will work on other Ubuntu-based " \
+                                              "distributions, we cannot guarantee our featured picks will work as intended " \
+                                              "on your system."),
 
-        add_category('start-page', _("Start Page"))
-        add_category('accessories', _("Accessories"))
-        add_category('education', _("Education"))
-        add_category('games', _("Games"))
-        add_category('graphics', _("Graphics"))
-        add_category('internet', _("Internet"))
-        add_category('office', _("Office"))
-        add_category('development', _("Programming"))
-        add_category('multimedia', _("Sound & Video"))
-        add_category('system', _("System Tools"))
-        add_category('accessibility', _("Universal Access"))
-        add_category('server', _("Servers"))
-        add_category('more-software', _("More Software"))
-        add_category('fixes', _("Fixes"))
+                                            _("Thank you for choosing Software Boutique.")
+                                        ],
+                                        [
+                                            ["Continue", "dismiss-unsupported-msg", "dialog-theme inverted"]
+                                        ]
+                                      )
 
-        # Set default starting category
-        self.update_page("#current-category-icon", "attr", "src", data_source + "/categories/accessories.svg")
+            # Adapt header/footer to current theme.
+            self.set_base_ui_theme()
 
-        ############################################
-        # Push UI strings to translate
-        ############################################
+            # Introduce user on first run.
+            if not pref.read("introduced", False):
+                self.show_introduction_page()
 
-        ############################################
-        # Stock the Boutique Apps
-        ############################################
+            # Prepare user cache folder
+            pref.init_cache()
 
-        index = boutique.IndexMeta(dbg, data_source + "applications.json")
-        index.read_index()
-        a = index.read_info("Accessories", "pluma")
+            ############################################
+            # Stock the Boutique Categories & Apps
+            ############################################
+            installed_apps = []
+
+            dbg.stdout("Populating categories...", 3, 2)
+            self._append_category('start-page', _("Start Page"))
+            self._append_category('accessories', _("Accessories"))
+            self._append_category('education', _("Education"))
+            self._append_category('games', _("Games"))
+            self._append_category('graphics', _("Graphics"))
+            self._append_category('internet', _("Internet"))
+            self._append_category('office', _("Office"))
+            self._append_category('development', _("Programming"))
+            self._append_category('multimedia', _("Sound & Video"))
+            self._append_category('system', _("System Tools"))
+            self._append_category('accessibility', _("Universal Access"))
+            self._append_category('server', _("Servers"))
+            self._append_category('more-software', _("More Software"))
+            self._append_category('fixes', _("Fixes"))
+            dbg.stdout("Finished populating categories.", 2, 2)
+
+            # Set default starting category
+            self.update_page("#current-category-icon", "attr", "src", data_source + "/categories/accessories.svg")
+
+            ############################################
+            # Push translated strings
+            ############################################
+            # Header Buttons
+            self.update_page("#browse-button", "append", _("Browse"))
+            self.update_page("#installed-button", "append", _("Installed"))
+            self.update_page("#queue-button", "append", _("Queue") + "&nbsp;<span id='queued-items'>(0)</span>")
+            self.update_page("#news-button", "append", _("What's New?"))
+
+            # Header Tooltips
+            self.update_page("#change-category-button", "attr", "title", _("Choose another category"))
+            self.update_page("#browse-button", "attr", "title", _("Explore a variety of hand-picked software"))
+            self.update_page("#installed-button", "attr", "title", _("Lists software installed via Software Boutique"))
+            self.update_page("#queue-button", "attr", "title", _("Lists software with pending changes"))
+            self.update_page("#news-button", "attr", "title", _("See what changes have been made to the software selection"))
+            self.update_page("#search-button", "attr", "title", _("Search Boutique"))
+            self.update_page("#settings-button", "attr", "title", _("Settings"))
+            self.update_page("#scroll-top", "attr", "title", _("Top of Page"))
+
+            # Page Titles
+            self.update_page("#browse-button", "attr", "data-title", _("Browse"))
+            self.update_page("#installed-button", "attr", "data-title", _("Installed Software"))
+            self.update_page("#queue-button", "attr", "data-title", _("Queued Changes"))
+            self.update_page("#news-button", "attr", "data-title", _("What's New?"))
+            self.update_page("#search-button", "attr", "data-title", _("Search"))
+            self.update_page("#settings-button", "attr", "data-title", _("Settings"))
+
+            ############################################
+            # Populate Boutique News
+            ############################################
+            # fixme: news page
+
+            ############################################
+            # Populate Installed Page
+            ############################################
+            # fixme: use global function
+
+            ############################################
+            # Build Settings Page
+            ############################################
+            # fixme: settings
+
+            ############################################
+            # Load Finished
+            ############################################
+            self.webkit.run_javascript("smoothFade('#loading-page', '#browse-page')")
+            self.webkit.run_javascript("changeCategory('start-page', '" + _("Start Page") + "')")
+            self.update_page("#header .left", "fadeIn")
+            self.update_page("#header .right", "fadeIn")
+            self.update_page("#footer .left", "fadeIn")
+            #~ self.update_page("#footer .right", "fadeIn")
+
+        except Exception:
+            details = traceback.format_exc()
+            dbg.stdout("----------------------------------------", 1, 0)
+            dbg.stdout(_("Software Boutique failed to start!"), 1, 0)
+            dbg.stdout(_("Please file a bug report with this stacktrace to help resolve the problem."), 1, 0)
+            dbg.stdout("----------------------------------------", 1, 0)
+            #~ traceback.print_exc()
+            print(details)
+            dbg.stdout("----------------------------------------", 1, 0)
+            self.show_message_page("serious-error.png", _("Something went wrong."),
+                                    [
+                                        _("Sorry! Software Boutique could not be started due to a serious problem."),
+                                        _("Please report this to the Ubuntu MATE Team:"),
+                                        "<pre>" + details.replace('\n', '<br>') + "</pre>"
+                                    ],
+                                    [
+                                        ["Retry", "force-boutique-restart", "dialog-theme"],
+                                        ["Quit", "exit", "dialog-theme"]
+                                    ]
+                                  )
+
+    def _generate_html_app_card(self, app_obj):
+        """
+        Generates the HTML for an "app card", seen when browsing lists.
+
+        app_obj = boutique.get_application_details object
+        """
+        installed = app_obj.installation.is_installed()
+
+        html = "<div class='app-card {installed_class} {app_uuid}' title='{hover_tooltip}' onclick='{hover_click_cmd}' >" \
+                        "<i class='fa fa-check-circle fa-2x install_checkmark' {show_if_installed} ></i>" \
+                        "<img class='icon' src='{icon}' />" \
+                        "<div class='title'>{name}</div>" \
+                        "<div class='summary'>{summary}</div>" \
+                        "<div class='actions'>{install_buttons}</div>" \
+                    "</div>".format(
+                        app_uuid = app_obj.categoryid + "-" + app_obj.appid,
+                        icon = app_obj.icon_path,
+                        name = app_obj.name,
+                        summary = app_obj.summary,
+                        show_if_installed = "style='display:none'" if not installed else "",
+                        hide_if_installed = "style='display:none'" if installed else "",
+                        installed_class = "installed" if installed else "",
+                        install_buttons = boutique.print_app_installation_buttons(app_obj, module_strings, True),
+                        hover_tooltip = _("Learn more about this application"),
+                        hover_click_cmd = 'cmd("details?' + app_obj.categoryid + '?' + app_obj.appid + '")'
+                    )
+
+        return(html)
+
+    def _append_category(self, internal_name, human_name):
+        """
+        Generates and appends the HTML for populating category listings.
+
+        internal_name   =   Category name in index. e.g. accessories
+        human_name      =   Nice name for the user. e.g. Accessories
+        """
+        # Adds to the categories selection page
+        safe_human_name = make_html_safe(human_name)
+        html = "<div id=\"category-{1}\" class=\"category\">" + \
+                 "<a onclick=\"changeCategory('{1}', '{2}')\">" + \
+                   "<div class=\"option\"><img src=\"{0}/categories/{1}.svg\"/> <label>{2}</label></div>" + \
+                 "</a>" + \
+               "</div>"
+
+        html = html.replace('{0}', data_source).replace('{1}', internal_name).replace('{2}', safe_human_name)
+        self.update_page("#categories-container", "append", html)
+
+        # Skip special categories (no apps are listed here)
+        if internal_name in ["start-page", "fixes", "unlisted"]:
+            return
+
+        # Begin building category page
+        browse_html = "<div id='category-page-{0}' class='category-contents' hidden>".format(internal_name)
+        browse_html += "<h1>{0}</h1>".format(safe_human_name)
+
+        # Generate application "cards"
+        appids = self.index.get(internal_name)
+        for appid in appids.keys():
+            app = boutique.get_application_details(self.backend, self.index, internal_name, appid)
+            browse_html += self._generate_html_app_card(app)
+
+        # Append to actual category
+        browse_html += "</div>"
+        self.update_page("#browse-page", "append", browse_html)
+
+    def show_message_page(self, icon_name, title, body_lines, buttons):
+        """
+        Shows an overlay message for providing important details.
+
+        icon_name   = (str)     Filename in "img" folder.
+        title       = (str)     Page title.
+        body_lines  = (list)    Each new line of text.
+        buttons     = (group)   {"button1-label": "function1", "button2-label": "function2"}
+        """
+        self.update_page("#message-page .left img", "attr", "src", os.path.join(data_source, "img", icon_name))
+        self.update_page("#message-page .right", "html", " ")
+        self.update_page("#message-page .right", "append", "<h2>" + title + "</h2>")
+        for line in body_lines:
+            self.update_page("#message-page .right", "append", "<p>" + line + "</p>")
+        for button in buttons:
+            label = button[0]
+            onclick = button[1]
+            classname = button[2]
+            self.update_page("#message-page .right", "append", "<button class='{0}' onclick='cmd(\"{1}\")'>{2}</button>".format(classname, onclick, label))
+        self.update_page("#message-page", "fadeIn")
+        self.update_page(".navigation", "addClass", "disabled")
+        self.update_page("#change-category-button", "addClass", "disabled")
+
+    def close_message_page(self):
+        self.update_page("#message-page", "fadeOut")
+        self.update_page(".navigation", "removeClass", "disabled")
+        self.update_page("#change-category-button", "removeClass", "disabled")
+
+    def show_introduction_page(self):
+        self.update_page("#firstrun-page", "fadeIn", "fast")
+        self.update_page(".navigation", "addClass", "disabled")
+        self.update_page("#change-category-button", "addClass", "disabled")
+        self.update_page("#firstrun-page1 .text", "html", _("There is an abundance of software avaliable for your computer. That's an overwhelming choice for many users."))
+        self.update_page("#firstrun-page2 .text", "html", _("Software Boutique aims to collate the best-in-class applications that complement your Ubuntu MATE experience that have been tested and integrate well."))
+        self.update_page("#firstrun-page3 .text", "html", _("Not everything is listed here. If you can't find what you're looking for, install a software center to explore the complete Ubuntu catalogue."))
+        self.update_page("#firstrun-prev", "html", _("Previous"))
+        self.update_page("#firstrun-skip", "html", _("Skip"))
+        self.update_page("#firstrun-next", "html", _("Next"))
+        self.update_page("#firstrun-start", "html", _("Begin"))
+
+    def close_introduction_page(self):
+        pref.write("introduced", True)
+        self.update_page("#firstrun-page", "fadeOut", "fast")
+        self.update_page(".navigation", "removeClass", "disabled")
+        self.update_page("#change-category-button", "removeClass", "disabled")
 
     def set_base_ui_theme(self):
         """
@@ -371,6 +656,265 @@ class SoftwareBoutique(object):
             self.update_page('#footer', 'css', 'background-color', '#868883')
         return
 
+    def show_app_details(self, categoryid, appid):
+        app_obj = boutique.get_application_details(self.backend, self.index, categoryid, appid)
+        self.webkit.run_javascript("animate('#app-details-page', 'enter-more-info', 'in')")
+        self.webkit.run_javascript("hideCategoryTitle(true)")
+        self.update_page("#header-title", "html", app_obj.name)
+        installed = app_obj.is_installed()
+
+        # Start top section
+        html = "<div id='app-overview'>" \
+            "<div class='left'><img id='app-icon' src='{icon_path}' /></div>" \
+            "<div class='right'>" \
+                "<h2 id='app-name'>{name}</h2>" \
+                "<button id='app-developer' class='link' onclick='cmd('link?{dev_url}')'>{dev_name}</button>" \
+                "<p id='app-description'>{description}</p>".format(
+                    icon_path = app_obj.icon_path,
+                    name = app_obj.name,
+                    dev_name = app_obj.developer_name,
+                    dev_url = app_obj.developer_url,
+                    website_url = app_obj.urls.get("info"),
+                    description = app_obj.description,
+                )
+
+        ### Alternate to
+        if app_obj.alternate_to:
+            html += "<p id='app-alternate'>" + app_obj.alternate_to + "</p>"
+
+        ### Install Date
+        def _get_install_date_string(installed_time):
+            current_time = int(time.time())
+            if pref.read("prefer-precise-time", False):
+                # TODO: Improve date format
+                return(datetime.fromtimestamp(installed_time).ctime())
+
+            else:
+                if installed_time == 0:
+                    return _("Installed.")
+
+                elif installed_time > current_time:
+                    return _("A wicked time traveller claims this will be installed in the future.")
+
+                elif current_time - 300 < installed_time:       # Past 5 minutes
+                    return _("Installed just now.")
+
+                elif current_time - 3600 < installed_time:      # Past hour
+                    text = _("Installed [0] minutes ago.")
+                    text = text.replace("[0]", str(int((current_time - installed_time) / 60)))
+                    return(text)
+
+                elif current_time - 86400 < installed_time:     # Past week
+                    text = _("Installed [0] hours ago.")
+                    text = text.replace("[0]", str(int((current_time - installed_time) / 60 / 60)))
+                    return(text)
+
+                elif current_time - 604800 < installed_time:    # Past month
+                    text = _("Installed [0] days ago.")
+                    text = text.replace("[0]", str(int((current_time - installed_time) / 60 / 60 / 24)))
+                    return(text)
+
+                else:
+                    # TODO: Improve date format
+                    return(datetime.fromtimestamp(installed_time).ctime())
+
+        # Show installed check/date if applicable.
+        if installed:
+            html += "<div id='app-installed'><span class='fa fa-check-circle'></span> " + _get_install_date_string(install_time.read(app_obj.uuid, 0)) + "</div>"
+
+        ### Action Buttons
+        if installed:
+            html += boutique.print_app_installation_buttons(app_obj, module_strings, False)
+
+        ### End top section
+        html += "</div><hr/>"
+
+        ### Screenshots
+        html += "<div id='app-screenshots'>"
+        if len(app_obj.screenshot_filenames) == 0:
+            html += "<div id='empty'>There are no screenshots to display.</div>"
+        else:
+            for filename in app_obj.screenshot_filenames:
+                path = os.path.join(data_source, "apps", "screenshots", filename)
+                html += "<button class='screenshot-preview' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
+            html += "<hr/>"
+        html += "</div>"
+
+        ### Start table section
+        html += "<table>"
+
+        ### License
+        label = _("License")
+        if app_obj.proprietary:
+            data = _("Proprietary")
+        else:
+            data = _("Open Source")
+
+        html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ### Supported Platforms
+        def _print_arch_label(arch, use_img_file, icon_name, label):
+            if use_img_file:
+                img_path = os.path.join(data_source, "img", icon_name)
+                this = "<div class='platform'><img class='like-fa' src='{0}'/> {1}</div>".format(img_path, label)
+            else:
+                this = "<div class='platform'><i class='fa fa-{0}'/> {1}</div>".format(icon_name, label)
+
+            if arch == boutique.system_arch:
+                return("<div class='current-arch'>" + this + "</div>")
+            else:
+                return(this)
+
+        label = _("Platform")
+        data = ""
+        for arch in app_obj.arch:
+            if arch == "i386":
+                data += _print_arch_label(arch, False, "laptop", _("32-bit"))
+
+            elif arch == "amd64":
+                data += _print_arch_label(arch, False, "laptop", _("64-bit"))
+
+            elif arch == "armhf":
+                data += _print_arch_label(arch, True, "rpi.png", _("Raspberry Pi and ARM devices"))
+
+            elif arch == "arm64":
+                data += _print_arch_label(arch, False, "laptop", _("ARM64"))
+
+            elif arch == "powerpc":
+                data += _print_arch_label(arch, False, "desktop", _("PowerPC"))
+
+            elif arch == "ppc64el":
+                data += _print_arch_label(arch, False, "desktop", _("PowerPC 64-bit"))
+
+            else:
+                data += _print_arch_label(arch, False, "microchip", arch)
+
+        try:
+            url = app_obj.urls["android-app"]
+            if url:
+                data += "<button class='link' onclick='cmd(\"web?{2}\")'><div class='platform'><i class='fa fa-{0}'/> {1}</div></button>".format("android", "Android", url)
+        except Exception:
+            # Not required.
+            pass
+
+        try:
+            url = app_obj.urls["ios-app"]
+            if url:
+                data += "<button class='link' onclick='cmd(\"web?{2}\")'><div class='platform'><i class='fa fa-{0}'/> {1}</div></button>".format("apple", "iOS", url)
+        except Exception:
+            # Not required.
+            pass
+
+        html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ## Tags
+        label = _("Tags")
+        data = ""
+        for tag in app_obj.tags:
+            data += "<div class='tag'>" + tag + "</div>"
+        html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ## Website Info
+        label = _("Website")
+        data = "<button class='link' onclick='cmd(\"web?{0}\")'>{0}</button>".format(app_obj.urls["info"])
+        html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ## Application Type (Advanced only)
+        if self.advanced_mode:
+            label = _("Type")
+            if app_obj.method == "dummy":
+                data = "<span class='fa fa-{0}'></span> {1}".format("cogs", _("Dummy Application"))
+            elif app_obj.method == "apt":
+                data = "<span class='fa fa-{0}'></span> {1}".format("cube", _("Debian Packaged Application"))
+            elif app_obj.method == "snap":
+                data = "<span class='fa fa-{0}'></span> {1}".format("puzzle-piece", _("Snap Application"))
+            elif app_obj.method == "web":
+                data = "<span class='fa fa-{0}'></span> {1}".format("globe", _("Web Application"))
+            else:
+                data = "<span class='fa fa-{0}'></span> {1}".format("question-circle", _("Unknown"))
+            html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ### Sources
+        if app_obj.method == "apt" and not boutique.force_dummy:
+            label = _("Source")
+            grp_data = app_obj.installation._get_instructions_for_this_codename()
+            source = grp_data["source"]
+
+            ubuntu_logo = os.path.join(data_source, "img", "ubuntu.png")
+            canonical_logo = os.path.join(data_source, "img", "ubuntu.png")
+
+            if source == "main":
+                data = "<img class='like-fa' src='{0}'> {1}".format(ubuntu_logo, _("Ubuntu 'Main' Repository"))
+
+            elif source == "universe":
+                data = "<img class='like-fa' src='{0}'> {1}".format(ubuntu_logo, _("Ubuntu 'Universe' Repository"))
+
+            elif source == "restricted":
+                data = "<img class='like-fa' src='{0}'> {1}".format(ubuntu_logo, _("Ubuntu 'Restricted' Repository"))
+
+            elif source == "multiverse":
+                data = "<img class='like-fa' src='{0}'> {1}".format(ubuntu_logo, _("Ubuntu 'Multiverse' Repository"))
+
+            elif source == "partner":
+                data = "<img class='like-fa' src='{0}'> {1}".format(canonical_logo, _("Canonical Partner Repository"))
+
+            elif source.startswith("ppa"):
+                repo_author = source.split("ppa:")[1].split("/")[0]
+                repo_name = source.split("ppa:")[1].split("/")[1]
+                url = "https://launchpad.net/~{0}/+archive/ubuntu/{1}".format(repo_author, repo_name)
+                data = "<span class='fa fa-{0}'></span> <button class='link' onclick='cmd(\"web?{2}\")'>{1}</button>".format("cube", source, url)
+
+            elif source == "manual":
+                try:
+                    url = grp_data["list-key-url"]
+                except Exception:
+                    url = grp_data["list-key-server"][0]
+
+                data = "<span class='fa fa-{0}'></span> {1}".format("globe", url)
+
+            else:
+                # It would be ironic if this happened.
+                data = ""
+
+            html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ## Package Listings (Advanced and Apt only)
+        if self.advanced_mode:
+            if app_obj.method == "apt" and not boutique.force_dummy:
+                label = _("To be installed")
+                data = ""
+                for package in app_obj.installation._get_package_list("install"):
+                    data += "<div class='tag'>" + package + "</div>"
+                html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+                label = _("To be removed")
+                data = ""
+                for package in app_obj.installation._get_package_list("remove"):
+                    data += "<div class='tag'>" + package + "</div>"
+                html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+                if app_obj.installation._is_upgradable():
+                    label = _("To be upgraded")
+                    data = ""
+                    for package in app_obj.installation._get_package_list("upgrade"):
+                        data += "<div class='tag'>" + package + "</div>"
+                    html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ### Launch Command (Advanced only)
+        if self.advanced_mode and app_obj.launch_cmd:
+            label = _("Launch Command")
+            data = "<code>" + app_obj.launch_cmd + "</code>"
+            html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
+
+        ### End table section
+        html += "</table>"
+
+        self.update_page("#app-details-page", "html", html)
+
+    def hide_app_details(self):
+        self.webkit.run_javascript("animate('#app-details-page', 'exit-more-info', 'out')")
+        self.webkit.run_javascript("showCategoryTitle()")
+
 
 class QueueOperationsThread(object):
     """
@@ -382,8 +926,6 @@ class QueueOperationsThread(object):
 
     # e.g. desktop notifications function
     # e.g. toast function
-
-
 
 
 class Debugging(object):
@@ -400,52 +942,56 @@ class Debugging(object):
 
     def parse_parameters(self):
         for arg in sys.argv:
-            if arg in ['-h', '--help']:
-                print("\nSoftware Boutique Parameters\n\n")
-                print("\nUsage: software-boutique [arguments]")
-                #     | Command                      | Help Text                                     |
-                print("  -h, --help                   Show this help text.")
-                print("  --arch=ARCH                  Show listings for a specific architecture.")
-                print("                                -- Examples: i386, amd64, powerpc, armhf")
-                print("  --codename=CODENAME          Show listings for a specific release.")
-                print("                                -- Examples: trusty, xenial, zesty")
-                print("  --force-net                  Force an internet connection to be present.")
-                print("  --force-no-net               Force no internet connection.")
-                print("  --locale=CODE                Locale to use. e.g. fr_FR.")
-                print("  --simulate                   Simulate software package changes without")
-                print("                               modifying the system.")
-                print("  -v, --verbose                Show details to stdout (for diagnosis).")
-                print("  -vv, --debug                 Show more details to stdout (for debugging).")
+            if arg in ["-h", "--help"]:
+                print("Usage: software-boutique [arguments]\n")
+                #      | Command             |------| Help Text                                             |
+                print("  -h, --help           " + _("Show this help text."))
+                print("  --arch=ARCH          " + _("Show listings for a specific architecture."))
+                print("                       " + _(" -- Examples: i386, amd64, powerpc, armhf"))
+                print("  --codename=CODENAME  " + _("Show listings for a specific release."))
+                print("                       " + _(" -- Examples: trusty, xenial, zesty"))
+                print("  --force-net          " + _("Force an internet connection to be present."))
+                print("  --locale=CODE        " + _("Locale to use. e.g. fr_FR."))
+                print("  --simulate           " + _("Simulate software changes without system modification."))
+                print("  -v, --verbose        " + _("Show details to stdout (for diagnosis)."))
+                print("  -vv, --debug         " + _("Show more details to stdout (for debugging)."))
+                print("")
+                exit(0)
 
-            elif arg.startswith('--arch'):
+            elif arg.startswith("--arch"):
                 self.override_arch = arg.split("--arch=")[1]
-                dbg.stdout("Showing listings for arch: " + self.override_arch, 4)
+                dbg.stdout("=> Showing listings for arch: " + self.override_arch, 4)
 
-            elif arg.startswith('--codename'):
+            elif arg.startswith("--codename"):
                 self.override_codename = arg.split("--codename=")[1]
-                dbg.stdout("Showing listings for release: " + self.override_codename, 4)
+                dbg.stdout("=> Showing listings for release: " + self.override_codename, 4)
 
-            elif arg == '--force-net':
+            elif arg == "--force-net":
                 self.override_internet_on = True
-                dbg.stdout("Forcing internet connection.", 4)
+                dbg.stdout("=> Forcing internet connection.", 4)
 
-            elif arg == '--force-no-net':
+            elif arg == "--force-no-net":  # DEBUG ONLY
                 self.override_internet_on = False
-                dbg.stdout("Forcing no internet connection.", 4)
+                dbg.stdout("=> Forcing no internet connection.", 4)
 
-            elif arg.startswith('locale'):
+            elif arg.startswith("--locale"):
                 self.override_locale = arg.split("--locale=")[1]
-                dbg.stdout("Forcing locale: " + self.override_locale, 4)
+                boutique.system_locale = self.override_locale
+                dbg.stdout("=> Forcing locale: " + self.override_locale, 4)
 
-            elif arg == '--simulate':
-                self.simulate_only = True
-                dbg.stdout("Starting in simulation mode...", 4)
+            elif arg == "--simulate":
+                boutique.force_dummy = True
+                dbg.stdout("=> Simulating software changes.", 4)
 
-            elif arg in ['-v', '--verbose']:
+            elif arg in ["-v", "--verbose"]:
                 self.verbose_level = 1
 
-            elif arg in ['-vv', '-d', '--debug']:
+            elif arg in ["-vv", "-d", "--debug"]:
                 self.verbose_level = 2
+
+            elif arg == "--inspect":
+                # For development only!
+                self.verbose_level = 3
 
     def stdout(self, msg, color=0, verbosity=0):
         # msg           String containing message for stdout.
@@ -495,10 +1041,28 @@ def shutdown():
 
 if __name__ == "__main__":
     dbg = Debugging()
-    dbg.parse_parameters()
+    boutique.dbg = dbg
     data_source = get_data_source()
+    dbg.parse_parameters()
     trans = Translations()
-    pref = preferences.Preferences(dbg)
+    pref = preferences.Preferences(dbg, "preferences")
+    install_time = preferences.Preferences(dbg, "install_time")
+
+    # String dictonary when passing to boutique.py module
+    module_strings = {
+        "details_text": _("Details"),
+        "details_tooltip": _("Learn more about this application"),
+        "install_text": _("Install"),
+        "install_tooltip": _("Install this application on your computer"),
+        "upgrade_text": _("Upgrade"),
+        "upgrade_tooltip": _("Adds a repository to install a newer version of this software"),
+        "reinstall_text": "",
+        "reinstall_tooltip": _("Reinstall this application"),
+        "remove_text": "",
+        "remove_tooltip": _("Remove this application"),
+        "launch_text": "Launch",
+        "launch_tooltip": _("Runs the application")
+    }
 
     # Prepare multi-threaded operations
     queue_operations = Thread(target=QueueOperationsThread, args=())

@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# This script compiles essential files needed before launching the Software Boutique
+# for development.
+#
+# To prepare the software for use (e.g. packaging), pass "--build-only".
+# To test the software, pass "--run-tests"
+#
+# Standard Boutique parameters can be passed.
+#
+params=$*
+
+# Print help with "--help".
+if [ "$1" == "--help" ]; then
+    echo "Software Boutique Development Script"
+    echo "  <no parameters>     Start Boutique (dev version)"
+    echo "  --build-only        Only build (for deployment)"
+    exit 0
+fi
+
+# Build CSS from LESS.
+if [ "$(which lessc)" == "" ]; then
+    echo "'lessc' not installed. Please install 'node-less'."
+    exit 1
+else
+    echo -e "\033[94mCompiling CSS..."
+    src=./sources/boutique.less
+    dest=./data/boutique.css
+    if [ -f "$dest" ]; then rm "$dest"; fi
+    lessc $src $dest
+    if [ ! -f "$dest" ]; then exit 1; fi
+fi
+
+# Assemble Application Index
+python3 ./scripts/compile-app-index.py
+
+# Run the Boutique
+if [ "$1" == "--build-only" ]; then
+    # Assemble translations
+    ./scripts/generate-translation-templates.sh
+    exit 0
+
+else
+    echo " "
+    ./software-boutique -d $params
+fi
+

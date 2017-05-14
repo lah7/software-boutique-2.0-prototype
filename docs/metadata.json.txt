@@ -1,0 +1,104 @@
+
+Software Boutique Application Index Format
+============
+
+File:       metadata.json
+Revision:   3
+Date:       April 2017
+
+
+### Compiled Structure Overview
+
+  {
+    "Category" {
+      "application-id" {                          - Unique identifier. Also used for icon/screenshot filenames.
+        "variable": "data",
+        "list": ["Item 1", "Item 2"]
+        "group": { "variable": "data" }
+       }
+     }
+  }
+
+ * Standard JSON rules apply. Watch out for the commas.
+ * Use &#8217; instead of ' for any apostrophe characters.
+
+
+### Variable Index
+
+ Non-required values should null.
+
+ Variable                   Type        Required?    Description
+ -----------------------    ----------  ----------   ---------------------------------------------
+ ㇗ listed                  boolean     Yes          false = Do not include in Boutique listings.
+ |                                                   true  = Show this application in Boutique.
+ |                                                   (This is ignored for "unlisted" category)
+ |
+ ㇗ name                    string      Yes          Name of the application as displayed to the user.
+ ㇗ summary                 string      Yes          A brief one-liner that describes the application.
+ ㇗ description             string      Yes          A more in-depth description of the application.
+ ㇗ developer-name          string      Yes          Author's name, whether it's an individual or company.
+ ㇗ developer-url           string      Yes          Website for the author or company.
+ ㇗ tags                    list        Yes          Categories for this application, e.g. "texteditor", "System", "Office", "Application".
+ ㇗ launch-cmd              string      No           Command to launch the installed program.
+ ㇗ alternate-to            string      No           Mention the app is similar to another product.
+ ㇗ proprietary             boolean     Yes          Is this non-free software?
+ ㇗ urls                    list        Yes
+ |  |
+ |  ㇗ info                 string      Yes          URL to the web page for more information.
+ |  ㇗ android-app          string      No           URL if there is an associated Android app.
+ |  ㇗ ios-app              string      No           URL if there is an associated iOS app.
+ |
+ ㇗ arch                    list        Yes          Architectures to show for this app.
+ ㇗ releases                list        Yes          Versions of Ubuntu MATE to show this application.
+ ㇗ method                  string      Yes          How is this software installed?
+ |                                                       - "apt"
+ |                                                       - "snap"
+ ㇗ installation            group       Yes
+ |  ㇗ all,xenial,yakkety   group                    Define how this software is installed.
+ |                                                       - Comma seperated.
+ |                                                       - "all" required, if a codename is specified, it will use that.
+ |
+ |     (For Apt)
+ |     ㇗ source               string      Yes         Valid options:
+ |     |                                                  - "main"         ㇕
+ |     |                                                  - "universe"      | - Enables them if they
+ |     |                                                  - "restricted"    |   are disabled.
+ |     |                                                  - "multiverse"   ㇘
+ |     |                                                  - "partner"           Canonical Partner Repo.
+ |     |                                                  - "ppa:<author/ppa>"  Enables a PPA
+ |     |                                                  - "manual"            Manually write a source.list
+ |     |
+ |     ㇗ list-file            string      ↑ Manual    The source file to be written, including the extension (.list)
+ |     |                                                  - This expects a source file to be saved alongside.
+ |     |                                                  - The filename and contents may use placeholders.
+ |     ㇗ list-key-url         string      ↑ Manual    URL for retrieving the signing key.
+ |     ㇗ list-key-server      list        ↑ Manual    OR use this to retrieve the signing key from a server.
+ |     |                                                  [<server>, <key>]. E.g. ["keyserver.ubuntu.com", "D2C19886"]
+ |     |
+ |     ㇗ main-package         string      Yes         The package used for checking whether it's installed.
+ |     ㇗ install-packages     list        Yes         To be installed.
+ |     ㇗ remove-packages      list        Yes         To be removed.
+ |     |
+ |     ㇗ upgrade-packages     string      No (→)     To be upgraded. If specified, this will be treated as an opt-in upgrade.
+ |     |                                               This will ignore "install-packages" and "remove-packages".
+ |     ㇗ extras               group       No          Extra packages that the user can install in addition.
+ |     |  ㇗ "pkg" = "Name"                            - Item  = Packages, comma delimited (','), e.g. "gimp-plugins,gimp-plugins-extra"
+ |     |                                               - Value = Name of packages. e.g. "Extra plugins for GIMP"
+ |
+ |     (For Snaps)
+ |     ㇗ name                 string                  Name of the snap.
+ |
+ ㇗ post-install               list        No          A list of commands to run after successful removal.
+    post-remove                list        No
+    |
+    ㇗ "cmd-goes-here"         string
+    ㇗ "cmd2-goes-here"        string
+
+
+### Placeholders
+
+    Where noted, these strings can be used and will be substituted:
+
+    CODENAME        =   Current Ubuntu release, e.g. "xenial".
+    OSVERSION       =   Current Ubuntu version, e.g "16.04".
+

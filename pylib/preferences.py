@@ -20,12 +20,15 @@
 import os
 import json
 
+dbg = object()
+
 class Preferences(object):
-    def __init__(self, dbg_obj):
-        self.dbg = dbg_obj
+    def __init__(self, dbg_obj, config_name):
+        global dbg
+        dbg = dbg_obj
         self.config_folder = os.path.join(os.path.expanduser('~'), ".config", "software-boutique")
         self.cache_folder = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
-        self.config_file = os.path.join(self.config_folder, "preferences.json")
+        self.config_file = os.path.join(self.config_folder, config_name + ".json")
         self.config_data = {}
         self.load_from_disk()
 
@@ -39,7 +42,7 @@ class Preferences(object):
                 with open(self.config_file) as stream:
                     self.config_data = json.load(stream)
             except Exception as e:
-                self.dbg.stdout("Failed to read preferences file. Re-creating.", 1, 1)
+                dbg.stdout("Failed to read preferences file. Re-creating.", 1, 1)
                 self.init_config()
         else:
             self.init_config()
@@ -70,7 +73,7 @@ class Preferences(object):
             self.config_data[setting] = value
             self.save_to_disk()
         except:
-            self.dbg.stdout("Failed to write '{0}' = '{1}'.".format(setting, value), 1, 1)
+            dbg.stdout("Failed to write '{0}' = '{1}'.".format(setting, value), 1, 1)
 
     def read(self, setting, default_value=None):
         """
@@ -81,7 +84,7 @@ class Preferences(object):
             return value
         except:
             # Should it be non-existent, use the default value instead.
-            self.dbg.stdout("No value exists for '{0}'. Writing '{1}'.".format(setting, default_value), 1, 2)
+            dbg.stdout("No value exists for '{0}'. Writing '{1}'.".format(setting, default_value), 1, 2)
             self.write(setting, default_value)
             return default_value
 
@@ -92,10 +95,10 @@ class Preferences(object):
             pass
         self.config_data = {}
         if self.save_to_disk():
-            self.dbg.stdout(("Successfully created new preferences file: " + self.config_file), 1, 3)
+            dbg.stdout(("Successfully created new preferences file: " + self.config_file), 1, 3)
             return True
         else:
-            self.dbg.stdout("Failed to create new preferences file:" + self.config_file, 1, 1)
+            dbg.stdout("Failed to create new preferences file:" + self.config_file, 1, 1)
             return False
 
     def init_cache(self):

@@ -1,0 +1,7 @@
+{
+    "introduced": true,                 // Whether the user has opened Boutique before.
+    "already-warned-distro": false,     // If running on non-Ubuntu MATE, has the message been shown?
+    "hide-proprietary": false,          // Hide non-free software.
+    "last-version": "zesty",            // Which codename of Ubuntu was last used?
+    "immediate-queue": true             // Whether software should install straight away, or treat as a queue before taking action.
+}

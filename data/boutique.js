@@ -59,9 +59,7 @@ function animate(element, ani_class, direction) {
 
     if ( direction == 'in' ) {
         $(element).fadeIn(500);
-    }
-
-    if ( direction == 'out' ) {
+    } else if ( direction == 'out' ) {
         $(element).fadeOut(500);
     }
 }
@@ -137,7 +135,7 @@ function firstRunPrevPage() {
 }
 
 function firstRunDismiss() {
-    cmd('first-run-complete');
+    cmd('finished-introduction');
 }
 
 /************************
@@ -145,23 +143,65 @@ function firstRunDismiss() {
 ************************/
 function categoryOpen() {
     smoothFade('#change-category-button', '#change-category-button-close', 'faster');
-    $('#categories-page').slideDown();
-    $('#categories-page').scrollTop(0);
+    $('#categories-page').fadeIn(500);
+    animate('#categories-container', 'top-in', 'in');
 }
 
 function categoryClose() {
     smoothFade('#change-category-button-close', '#change-category-button', 'faster');
-    $('#categories-page').slideUp();
+    $('#categories-page').fadeOut(600);
+    animate('#categories-container', 'top-out', 'out');
 }
 
 function changeCategory(internal_name, human_name) {
     $('#current-category-icon').attr('src', 'categories/' + internal_name + '.svg');
     $('#current-category-text').html(human_name);
     categoryClose();
-    smoothFade('.category-contents', '#category-' + internal_name, 'fast');
+    $('.category-contents').fadeOut(499);
     $('#backdrop-icon').fadeOut();
+    $('#content').animate({
+        scrollTop: 0
+    }, 1000);
     setTimeout(function() {
+        $('#category-page-' + internal_name).fadeIn(500);
         $('#backdrop-icon').attr('src', 'categories/' + internal_name + '.svg');
         $('#backdrop-icon').fadeIn();
-    }, 300);
+    }, 500);
 }
+
+function changeTab(target) {
+    $('.navigation').removeClass('active');
+    $('#' + target + '-button').addClass('active');
+    smoothFade('.content', '#' + target + '-page', 'fast');
+
+    var title = $('#' + target + '-button').attr('data-title');
+
+    if (target == 'browse') {
+        showCategoryTitle()
+    } else {
+        hideCategoryTitle(false)
+    }
+
+    setTimeout(function() {
+        $('#header-title').html(title);
+    }, 250);
+}
+
+function showCategoryTitle() {
+    smoothFade('#header-title', '#change-category-button', 500);
+    setTimeout(function() {
+        $('#back-button').fadeOut(250);
+    }, 250);
+}
+
+function hideCategoryTitle(showBackBtn) {
+    smoothFade('#change-category-button', '#header-title', 500);
+    smoothFade('#header-title', '#header-title', 500);
+
+    if (showBackBtn == true) {
+        setTimeout(function() {
+            $('#back-button').fadeIn(500);
+        }, 500);
+    }
+}
+

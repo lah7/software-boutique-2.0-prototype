@@ -1,0 +1,1023 @@
+/************************
+ * Colours
+*************************/
+/* General */
+@background: #F4F4F4;
+@link-color: #758A53;
+@link-color-focused: #44522E;
+
+@header-text: #DED9CB;
+@ubuntu-mate: #667E40;
+@ubuntu-mate-lighter: #87A556;
+
+/* Button Colours */
+@button-border: #D4D3D0;
+@button-border-focused: #A9A9A9;
+
+@button-bg: white, #F5F4F3;
+@button-bg-clicked: #E4E4E4, #E9E9E9;
+
+@button-bg-inverted: #585858, #3C3B37;
+@button-bg-inverted-clicked: #3C3B37, #585858;
+
+@button-bg-green: #87A556, #6F8647;
+@button-bg-green-clicked:#6F8647, #87A556;
+
+@button-bg-yellow: #FBB24C, #F8970D;
+@button-bg-yellow-clicked: #F8970D, #FBB24C;
+
+@button-bg-red: #ED5E5A, #C03831;
+@button-bg-red-clicked: #C03831, #ED5E5A;
+
+/* Scroll Bars */
+@scroll-bar-gradient: #F1F0EE, #FDFDFD;
+@scroll-bar-gray: #C9C6C3;
+
+/* Tables */
+@table-row: #FFFFFF;
+@table-row-alt: #F9F9F9;
+@table-row-border: #D0D0D0;
+
+/* Ambiance Theme */
+@header-bg: #3C3B37;
+@header-colour: #DED9CB;
+@footer-colour: #7F7F7D;
+
+/* Progress Bars */
+@progress-bar-bg: #F2F1F0;
+@progress-bar: #919191;
+@progress-bar-dark-bg: @footer-colour;
+@progress-bar-dark: #476717;
+
+/* "Card" Box Shadows */
+@card-border: #F0F0F0;
+@card-border-focus: lightgray;
+@card-shadow: 1px 1px 1px rgba(192,192,192,0.5);
+
+/************************
+ * Common
+*************************/
+.center-align(@pos_type) {
+    position: @pos_type;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+/************************
+ * General
+*************************/
+html {
+    overflow: hidden;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+
+    /* Behave more like an application by preventing text highlighting / dragging. */
+    -webkit-user-select: none;
+    cursor: default;
+}
+
+img, a {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+body, button, input {
+    font-family: 'Ubuntu', sans-serif;
+}
+
+p {
+    font-size: 1em;
+}
+
+pre {
+    padding: 1em;
+    -webkit-user-select: initial;;
+    cursor: text;
+    overflow-x: scroll;
+}
+
+
+/************************
+ * Buttons
+*************************/
+/* Buttons behave like anchors */
+button {
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    border: 1px solid transparent;
+    cursor: default !important;
+    color: @link-color;
+    font-size: 14px;
+}
+
+.link {
+    &:hover {
+        cursor: pointer !important;
+        text-decoration: underline;
+    }
+
+    &:focus {
+        text-decoration: underline;
+        font-style: bold;
+        outline: 0;
+        color: #44522E;
+    }
+
+    &:active {
+        border: 1px solid #87A556;
+        text-decoration: underline;
+    }
+}
+
+/* Button Theme - Dialog */
+button.dialog-theme {
+    background: linear-gradient(@button-bg);
+    border: 2px solid @button-border;
+    color: black;
+    border-radius: 8px;
+    padding: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+
+    &:focus,
+    &:hover,
+    &:active {
+        border: 2px solid @button-border-focused;
+        outline: 0;
+    }
+
+    &:active {
+        background: linear-gradient(@button-bg-clicked);
+    }
+
+    img {
+        float: left;
+        width: 20px;
+        height: 20px;
+        margin-right: 2px;
+    }
+}
+
+/* Button Theme - Header/Footer */
+button.inverted {
+    background: linear-gradient(@button-bg-inverted);
+    color: white;
+
+    &:active {
+        background: linear-gradient(@button-bg-inverted-clicked);
+        color: white;
+    }
+}
+
+/* Button Theme - Green */
+button.green {
+    background: linear-gradient(@button-bg-green);
+    color: white;
+
+    &:active {
+        background: linear-gradient(@button-bg-green-clicked);
+        color: white;
+    }
+}
+
+/* Button Theme - Yellow */
+button.yellow {
+    background: linear-gradient(@button-bg-yellow);
+    color: white;
+
+    &:active {
+        background: linear-gradient(@button-bg-yellow-clicked);
+        color: white;
+    }
+}
+
+/* Button Theme - Red */
+button.red {
+    background: linear-gradient(@button-bg-red);
+    color: white;
+
+    &:active {
+        background: linear-gradient(@button-bg-red-clicked);
+        color: white;
+    }
+}
+
+/* Button Theme - Dropdown */
+button.dropdown {
+    color: @header-text;
+
+    &:hover {
+        color: white;
+    }
+}
+
+
+/* Buttons for navigation/header/footer */
+button.navigation {
+    width: 40px;
+    height: 30px;
+    color: @header-text;
+    display: inline-block;
+    padding: 4px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    line-height: 20px;
+    vertical-align: middle;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+        color: #fff;
+
+        img {
+            filter: brightness(2);
+        }
+    }
+
+    &:focus {
+        border: 1px solid @ubuntu-mate-lighter;
+    }
+
+    &:active,
+    &.active {
+        background-color: @ubuntu-mate;
+        color: #fff;
+
+        img {
+            filter: brightness(2);
+        }
+    }
+
+    &.with-text {
+        width: auto;
+    }
+
+    img {
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        float: left;
+    }
+}
+
+/* Checkbox controls for footer */
+button.checkbox {
+    &:focus,
+    &:hover,
+    &:active {
+        opacity: 0.9;
+    }
+
+    &:focus {
+        text-decoration: underline !important;
+    }
+}
+
+
+/************************
+ * Scroll Bar Integration
+*************************/
+::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+  z-index: 100;
+  background: -webkit-linear-gradient(@scroll-bar-gradient);
+  border: 1px solid #CBC8C6;
+}
+
+::-webkit-scrollbar-thumb {
+  height: 6px;
+  border: 1px solid @ubuntu-mate;
+  background-color: @ubuntu-mate-lighter;
+  background-clip: padding-box;
+  -webkit-border-radius: 0px;
+  z-index: 100;
+}
+
+::-webkit-scrollbar-button {
+  width: 13px;
+  height: 18px;
+  background: -webkit-linear-gradient(@scroll-bar-gradient);
+  border: 1px solid @scroll-bar-gray;
+  z-index: 100;
+}
+
+::-webkit-scrollbar-button:horizontal:start:decrement {
+    background: url(img/scrollbar-left.png);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar-button:horizontal:end:increment {
+    background: url(img/scrollbar-right.png);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar-button:vertical:start:decrement {
+    background: url(img/scrollbar-up.png);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar-button:vertical:end:increment {
+    background: url(img/scrollbar-down.png);
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+  z-index: 100;
+}
+
+/************************
+ * Header
+*************************/
+#header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 8px;
+    width: 100%;
+    height: 32px;
+    padding: 8px;
+    margin-bottom: 8px;
+    z-index: 10;
+    box-shadow: -8px 2px 10px rgba(0,0,0,0.5);
+    z-index: 100;
+    background-color: @header-bg;
+    font-size: 24px;
+    font-weight: normal;
+    color: @header-colour;
+    -webkit-animation-name: header-in;
+
+    > .left {
+        float: left;
+        margin-left: 4px;
+    }
+
+    > .right {
+        float: right;
+        margin-right: 16px;
+    }
+
+    &.with-icon {
+        width: 18px;
+        height: 18px;
+        float: left;
+        margin-right: 2px;
+    }
+}
+
+#header-title {
+    font-size: 18px;
+    padding-left: 4px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+#scroll-top {
+    transition: 1s linear opacity;
+}
+
+.category-dropdown {
+    .icon {
+        width: 22px;
+        height: auto;
+        max-height: 22px;
+        float: left;
+        position: relative;
+        top: -4px;
+    }
+
+    .text {
+        float: left;
+        margin-left: 4px;
+        position: relative;
+        top: -1px;
+    }
+
+    .chevron {
+        position: relative;
+        top: -2px;
+    }
+}
+
+/************************
+ * Content
+*************************/
+.content {
+    top: 48px;
+    bottom: 54px;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    position: fixed;
+    height: auto;
+    width: auto;
+    z-index: 50;
+}
+
+#backdrop-icon {
+    position: fixed;
+    right: 16px;
+    bottom: 80px;
+    height: 250px;
+    width: 250px;
+    opacity: 0.1;
+    filter: grayscale(1);
+}
+
+
+/************************
+ * Footer
+*************************/
+#footer {
+    background-color: @header-bg;
+    color: @footer-colour;
+    font-size: 14px;
+    position: fixed;
+    bottom: 0;
+    height: 38px;
+    width: 100%;
+    padding: 8px;
+    z-index: 100;
+    box-shadow: -8px 2px 10px 4px rgba(0,0,0,0.5);
+    -webkit-animation-name: footer-in;
+
+    > .left {
+        padding: 4px;
+        transition: 1s linear color;
+
+        .active {
+            color: white;
+        }
+    }
+
+    > .right {
+        padding: 4px;
+        display: inline-block;
+        position: absolute;
+        right: 16px;
+        bottom: 28px;
+    }
+
+    button {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 8px;
+    }
+
+    label {
+        display: inline-block;
+        padding-left: 0;
+        margin-bottom: 0;
+        vertical-align: middle;
+        margin-right: 8px;
+        color: #fff;
+    }
+}
+
+#queue-status-text {
+    margin-left: 2px;
+}
+
+/* Queue busy icon */
+#queue-inprogress {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-bottom: 3px;
+    filter: brightness(2);
+}
+
+/* Queue progress bar */
+.progress-bar {
+    background-color: @progress-bar-dark-bg;
+    margin-top: 8px;
+    width: 300px;
+    height: 4px;
+}
+
+.progress-bar-inner {
+    background-color: @progress-bar-dark;
+    width: 200px;
+    height: 100%;
+}
+
+
+/************************
+ * Busy Animation
+*************************/
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+.busy-ani {
+    -webkit-animation-name: spin;
+    -webkit-animation-duration: 1s;
+    -webkit-animation-repeat: infinite;
+    -webkit-animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+}
+
+
+/************************
+ * Custom Page Layouts
+*************************/
+#loading-page {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 48px;
+    bottom: 54px;
+    margin: auto;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    z-index: 60;
+    z-index: 60;
+
+    > #init-text {
+        font-size: 14px;
+        color: gray;
+        margin-top: 8px;
+    }
+
+    .progress-bar {
+        margin: auto;
+        margin-top: 8px;
+        display: none;
+        background-color: @progress-bar-bg !important;
+        border: 1px solid black;
+    }
+
+    .progress-bar-inner {
+        background-color: @progress-bar !important;
+    }
+}
+
+.split-page {
+    height: 460px;
+    width: 853px;
+    .center-align(absolute);
+
+    .left {
+        width: 42%;
+        text-align: center;
+        float: left;
+    }
+
+    .right {
+        width: 56%;
+        float: right;
+    }
+}
+
+.full-page {
+    position: fixed;
+    top: 48px;
+    bottom: 54px;
+    left: 0; right: 0;
+    padding: 16px;
+    z-index: 95;
+}
+
+.overlay-page {
+    background-color: @background;
+    z-index: 90;
+}
+
+
+/************************
+ * First Run Page
+*************************/
+#firstrun-page {
+    background-color: @background;
+
+    > .page-contents {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        bottom: 170px;
+        margin: auto;
+        width: 650px;
+        height: 360px;
+    }
+
+    .graphic {
+        max-width: 100%;
+    }
+
+    .text {
+        margin-top: 2.5em;
+        text-align: center;
+    }
+
+    .buttons {
+        position: fixed;
+        bottom: 100px;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+
+    .buttons > button {
+        width: 100px;
+        transition: 0.2s linear all;
+    }
+
+    .blobs {
+        position: fixed;
+        bottom: 150px;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+
+    .blob {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: @scroll-bar-gray;
+        border-radius: 100%;
+    }
+
+    .blob.done {
+        background-color: @ubuntu-mate-lighter;
+    }
+}
+
+
+/************************
+ * Choose a Category
+*************************/
+#categories-page {
+    position: fixed;
+    top: 48px;
+    bottom: 64px;
+    left: 0;
+    right: 0;
+    height: auto;
+    width: auto;
+    padding: 16px;
+    background: -webkit-linear-gradient(white, white, rgba(255,255,255,0.5));;
+    z-index: 90;
+    overflow-y: hidden;
+
+    .category {
+         .option {
+            float: left;
+            width: 180px;
+            border: 2px solid @card-border;
+            background-color: white;
+            box-shadow: @card-shadow;
+            margin: 6px;
+            padding: 8px;
+            display: inline-block;
+            transition: border-color 0.1s linear;
+
+            &:hover,
+            &:focus {
+                border-color: @card-border-focus;
+            }
+
+            > img {
+                width: 24px;
+                height: 24px;
+            }
+
+             > label {
+                position: relative;
+                bottom: 4px;
+            }
+        }
+    }
+}
+
+
+/*****************************
+ * Animations
+     Used for:
+       * Introduction
+       * Changing categories
+       * Header/Footer
+******************************/
+@-webkit-keyframes left-in {
+    0% { -webkit-transform: translateX(100%); opacity: 0; }
+    100% { -webkit-transform: translateX(0%); opacity: 1; }
+}
+.left-in { -webkit-animation-name: left-in; }
+
+@-webkit-keyframes left-out {
+    0% { -webkit-transform: translateX(0%); opacity: 1; }
+    100% { -webkit-transform: translateX(-100%); opacity: 0; }
+}
+.left-out { -webkit-animation-name: left-out; }
+
+@-webkit-keyframes right-in {
+    0% { -webkit-transform: translateX(-100%); opacity: 0; }
+    100% { -webkit-transform: translateX(0%); opacity: 1; }
+}
+.right-in { -webkit-animation-name: right-in; }
+
+@-webkit-keyframes right-out {
+    0% { -webkit-transform: translateX(0%); opacity: 1; }
+    100% { -webkit-transform: translateX(100%); opacity: 0; }
+}
+.right-out { -webkit-animation-name: right-out; }
+
+@-webkit-keyframes top-in {
+    0% { -webkit-transform: translateY(10px); opacity: 0; }
+    100% { -webkit-transform: translateY(0px); opacity: 1; }
+}
+.top-in { -webkit-animation-name: top-in; }
+
+@-webkit-keyframes top-out {
+    0% { -webkit-transform: translateY(0px); opacity: 1; }
+    100% { -webkit-transform: translateY(10px); opacity: 0; }
+}
+.top-out { -webkit-animation-name: top-out; }
+
+/* Global Settings */
+.left-in, .left-out,
+.right-in, .right-out,
+.top-in, .top-out {
+    -webkit-animation-duration: 0.5s;
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-backface-visibility: hidden;
+    -webkit-animation-iteration-count: 1;
+    -webkit-animation-fill-mode: forwards;
+}
+
+/* Header/Footer */
+@-webkit-keyframes header-in {
+    0% { -webkit-transform: translateY(-50px); opacity: 0; }
+    100% { -webkit-transform: translateY(0px); opacity: 1; }
+}
+@-webkit-keyframes footer-in {
+    0% { -webkit-transform: translateY(50px); opacity: 0; }
+    100% { -webkit-transform: translateY(0px); opacity: 1; }
+}
+
+#header,
+#footer,
+.enter-more-info,
+.exit-more-info {
+    -webkit-animation-duration: 0.25s;
+    -webkit-animation-timing-function: ease-out-in;
+    -webkit-backface-visibility: hidden;
+    -webkit-animation-iteration-count: 1;
+    -webkit-animation-fill-mode: forwards;
+}
+
+/* Viewing more details about an application */
+@-webkit-keyframes enter-more-info {
+    0% { -webkit-transform: scale(0.9); opacity: 0; }
+    100% { -webkit-transform: scale(1); opacity: 1; }
+}
+.enter-more-info { -webkit-animation-name: enter-more-info; }
+
+@-webkit-keyframes exit-more-info {
+    0% { -webkit-transform: scale(1); opacity: 1; }
+    100% { -webkit-transform: scale(0.9); opacity: 0; }
+}
+.exit-more-info { -webkit-animation-name: exit-more-info; }
+
+
+/************************
+ * Application Cards
+*************************/
+.app-card {
+    position: relative;
+    min-width: 200px;
+    width: 97%;
+    height: 110px;
+    background-color: white;
+    border: 2px solid @card-border;
+    box-shadow: @card-shadow;
+    transition: all 0.1s linear;
+    padding: 8px;
+    margin: 8px;
+    color: black;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+        text-decoration: none;
+        box-shadow: 0px 0px 10px rgba(192,192,192,1); /* Inconsistant */
+
+        > img {
+            -webkit-filter: brightness(1.1);
+        }
+    }
+
+    &:active {
+        box-shadow: 0px 0px 20px @ubuntu-mate;
+    }
+
+    &.installed {
+        border: 2px solid @ubuntu-mate;
+    }
+
+    .icon {
+        position: relative;
+        top: 0;
+        bottom: 0;
+        width: 64px;
+        height: 64px;
+        padding: 10px 24px;
+        display: inline-block;
+        float: left;
+    }
+
+    .title {
+        padding: 0.5em 0;
+        font-weight: bold;
+    }
+
+    .summary {
+        padding: 0.5em 0;
+        font-size: 0.9em;
+    }
+
+    .actions {
+        padding: 0.5em 0;
+        text-align: right;
+        float: right;
+    }
+
+    .install_checkmark {
+        position: absolute;
+        top: 65px;
+        left: 80px;
+        color: @ubuntu-mate;
+        z-index: 10;
+    }
+/*
+
+    > span {
+        float: left;
+        margin-right: 6px;
+        font-size: 2em;
+    }
+
+    > img {
+        float: left;
+        margin-right: 6px;
+        width: 36px;
+        height: 36px;
+        top: -4px;
+        position: relative;
+    }
+
+    > p {
+        float: left;
+        padding-top: 4px;
+        padding-right: 24px;
+    }
+*/
+}
+
+/************************
+ * Application Details
+*************************/
+#app-overview {
+    .left {
+        float: left;
+        display: inline-block;
+        width: 4em;
+        margin: 1em;
+        margin-left: 0.5em;
+        margin-right: 1.5em;
+
+        img {
+            width: 64px;
+            height: 64px;
+        }
+    }
+
+    .right {
+        width: calc(~'100% - 6em');
+        display: inline-block;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    tr {
+        font-size: 0.9em;
+        border-bottom: 1px solid @scroll-bar-gray;
+        background-color: @table-row;
+    }
+
+    tr:first-child,
+    tr:nth-child(2n+3) {
+        background-color: @table-row-alt;
+    }
+
+    th {
+        width: 8em;
+        text-align: left;
+    }
+
+    th, td {
+        border-spacing: 0;
+        border-collapse: collapse;
+        padding: 8px;
+    }
+}
+
+#app-icon {}
+
+#app-name {
+    margin: 16px 0 8px;
+}
+
+#app-developer {}
+
+#app-description {
+    font-size: 0.9em;
+}
+
+#app-buttons {}
+
+#app-installed {
+    font-size: 0.8em;
+    color: gray;
+    padding-bottom: 1em;
+}
+
+#app-screenshots {
+    .screenshot-preview {
+        width: 20%;
+        height: auto;
+        border: 2px solid #C0C0C0;
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+
+        &:hover,
+        &:focus {
+            border-color: @ubuntu-mate;
+        }
+    }
+
+    #empty {
+        color: lightgray;
+        text-align: center;
+    }
+}
+
+.tag {
+    width: auto;
+    font-size: 0.8em;
+    display: inline-block;
+    padding: 4px 8px;
+    box-shadow: @card-shadow;
+    background-color: white;
+}
+
+.platform {
+    display: inline-block;
+    padding: 8px;
+}
+
+img.like-fa {
+    width: 16px;
+    height: 16px;
+    vertical-align: bottom;
+}
+
+.current-arch {
+    display: inline-block;
+    font-weight: bold;
+}

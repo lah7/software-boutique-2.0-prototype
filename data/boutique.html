@@ -8,51 +8,51 @@
 </head>
 <body>
     <div id="header">
-        <div id="header-title">Software Boutique</div> <div id="header-subtitle"></div>
-        <div class="right">
-            <button id="scroll-top" class="navigation disabled" onclick="backToTop()"><span class="fa fa-chevron-up"></span></button>
-        </div>
-    </div>
-    <div id="subheader" >
-        <div class="left">
-            <button id="change-category-button" class="dropdown with-text" onclick="categoryOpen()">
-                <img id="current-category-icon" src="/usr/share/icons/Humanity/categories/24/applications-accessories.svg"/> <span id="current-category-text">Accessories</span> &nbsp;⏷
+        <div class="left" style="display:none">
+            <button id="back-button" class="navigation" onclick="cmd('close-details')" style="display:none">
+                <span class="fa fa-chevron-left"></span>
             </button>
-            <button id="change-category-button-close" class="dropdown with-text" onclick="categoryClose()">
-                <span class="close-string">Close</span> &nbsp;⏶
+            <div id="header-title" style="display:none">Test Page</div>
+            <button id="change-category-button" class="dropdown with-text category-dropdown" onclick="categoryOpen()">
+                <img id="current-category-icon" class="icon" src=""/>
+                <span id="current-category-text" class="text"></span>
+                &nbsp;<span class="chevron">⏷</span>
+            </button>
+            <button id="change-category-button-close" class="dropdown with-text category-dropdown" onclick="categoryClose()" hidden>
+                <span class="close-string text">Close</span>
+                &nbsp;<span class="chevron">⏶</span>
             </button>
         </div>
-        <div class="right">
-              <button id="browse-button" class="navigation with-text active" onclick="#"><img class="with-icon" src="img/boutique-icon-mono.svg"/> Browse</button>
-              <button id="installed-button" class="navigation with-text" onclick="#"><span class="fa fa-download"></span> Installed</button>
-              <button id="queue-button" class="navigation with-text disabled" onclick="#"><span class="fa fa-clone"></span> Queue (0)</button>
-              <button id="news-button" class="navigation with-text" onclick="#"><span class="fa fa-newspaper-o"></span> What's New?</button>
-              <button id="search-button" class="navigation" onclick="#"><span class="fa fa-search"></span></button>
-              <button id="settings-button" class="navigation" onclick="#"><span class="fa fa-gear"></span></button>
+        <div class="right" style="display:none">
+          <button id="browse-button" class="navigation with-text active" onclick="changeTab('browse')"><img src="img/boutique-icon-mono.svg"/>&nbsp;</button>
+          <button id="installed-button" class="navigation with-text" onclick="changeTab('installed')"><span class="fa fa-download"></span>&nbsp;</button>
+          <button id="queue-button" class="navigation with-text disabled" onclick="changeTab('queue')"><span class="fa fa-clone"></span>&nbsp;</button>
+          <button id="news-button" class="navigation with-text" onclick="changeTab('news')"><span class="fa fa-newspaper-o"></span>&nbsp;</button>
+          <button id="search-button" class="navigation" onclick="changeTab('search')"><span class="fa fa-search"></span></button>
+          <button id="settings-button" class="navigation" onclick="changeTab('settings')"><span class="fa fa-gear"></span></button>
+          <button id="scroll-top" class="navigation disabled" onclick="backToTop()"><span class="fa fa-chevron-up"></span></button>
         </div>
     </div>
 
-    <img id="backdrop-icon" src="img/boutique-icon.svg"/>
+    <img id="backdrop-icon" src="" style="display:none" />
 
+    <!-- Overlay -->
     <div id="loading-page" hidden>
         <img src="img/loading.svg" class="busy-ani"/>
-        <br>
-        <div id="init-progress-bar" class="progress-bar"><div id="init-progress-value" class="progress-bar-inner"></div></div>
-        <div id="init-text">Populating applications...</div>
     </div>
 
     <div id="firstrun-page" class="full-page overlay-page" hidden>
         <div id="firstrun-page1" class="page-contents">
             <img class="graphic" src="img/firstrun-page1.png"/>
-            <p class="text">The Software Boutique is xxxx</p>
+            <p class="text"></p>
         </div>
         <div id="firstrun-page2" class="page-contents" hidden>
-            <img class="graphic" src="img/firstrun-page1.png"/>
-            <p class="text">The Software Boutique is yyyyy</p>
+            <img class="graphic" src="img/firstrun-page2.png"/>
+            <p class="text"></p>
         </div>
         <div id="firstrun-page3" class="page-contents" hidden>
-            <img class="graphic" src="img/firstrun-page1.png"/>
-            <p class="text">The Software Boutique is zzzzz</p>
+            <img class="graphic" src="img/firstrun-page3.png"/>
+            <p class="text"></p>
         </div>
         <div class="blobs">
             <div id="firstrun-blob-1" class="blob done"></div>
@@ -60,57 +60,45 @@
             <div id="firstrun-blob-3" class="blob"></div>
         </div>
         <div class="buttons">
-            <button id="firstrun-prev" class="dialog-theme disabled0" onclick="firstRunPrevPage()">Previous</button>
-            <button id="firstrun-skip" class="dialog-theme" onclick="firstRunDismiss()">Skip</button>
-            <button id="firstrun-next" class="dialog-theme green" onclick="firstRunNextPage()">Next</button>
-            <button id="firstrun-start" class="dialog-theme green" onclick="firstRunDismiss()" style="display:none">Begin</button>
+            <button id="firstrun-prev" class="dialog-theme disabled" onclick="firstRunPrevPage()"></button>
+            <!--button id="firstrun-skip" class="dialog-theme" onclick="firstRunDismiss()">Skip</button-->
+            <button id="firstrun-next" class="dialog-theme green" onclick="firstRunNextPage()"></button>
+            <button id="firstrun-start" class="dialog-theme green" onclick="firstRunDismiss()" style="display:none"></button>
         </div>
     </div>
 
-    <div id="distro-warning-page" class="content split-page overlay-page" hidden>
-        <div class="left">
-            <img src="img/other-distro.png"/>
-        </div>
-        <div class="right">
-            <h2>Your mileage may vary.</h2>
-            <p>Software Boutique is designed for Ubuntu MATE, but a different distribution was detected.</p>
-            <p>While a large selection of software will work on other Ubuntu-based distributions, we cannot guarantee our featured picks will work flawlessly on your system.</p>
-            <p>Thank you for choosing Software Boutique.</p>
-            <br>
-            <button class="dialog-theme">Continue</button>
-            <span id="distwarn-footnote">This message will not be shown again.</span>
+    <div id="message-page" class="content overlay-page" hidden>
+        <div class="split-page">
+            <div class="left">
+                <img src=""/>
+            </div>
+            <div class="right">
+                <!-- Generated in Python -->
+            </div>
         </div>
     </div>
 
-    <div id="main-page" class="content" hidden>
-    </div>
-
-    <div id="categories-page">
-        <!-- EXAMPLE
-        <div id="category-accessories" class="category">
-            <a onclick="changeCategory('accessories', 'Accessories')">
-                <div class="option">
-                    <img src="{0}/data/categories/accessories.svg"/> <label>Accessories</label>
-                </div>
-                <div id="category-preview-accessories" class="app-previews">
-                    <img src="{0}/data/app-icons/audacity.png" title="Audacity"/>
-                    <img src="{0}/data/app-icons/bleachbit.png" title="BleachBit"/>
-                </div>
-            </a>
-        </div> -->
-    </div>
-
-    <div id="browse-listing" class="content" hidden>
-        <div id="category-welcome" class="category-contents">
-            <h1>Welcome</h1>
-        </div>
-        <div id="category-accessories" class="category-contents">
-            <h1>Accessories</h1>
+    <div id="app-details-page" class="content full-page overlay-page" hidden>
+        <div id="app-overview">
+            <!-- Generated in Python -->
         </div>
     </div>
 
-    <div id="browse-details" class="content" hidden>
-        ...
+    <div id="categories-page" hidden>
+        <div id="categories-container">
+            <!-- Generated in Python -->
+        </div>
+    </div>
+
+    <!-- Tabbed -->
+    <div id="browse-page" class="content" hidden>
+        <div id="category-page-start-page" class="category-contents" hidden>
+            <div id="apps-list"></div>
+            <h3>Welcome to the Software Boutique.</h3>
+            <p>Start page is incomplete.</p>
+        </div>
+
+        <!-- Categories generated in Python -->
     </div>
 
     <div id="installed-page" class="content" hidden>
@@ -129,13 +117,15 @@
         ...
     </div>
 
-    <div id="preferences-page" class="content" hidden>
+    <div id="settings-page" class="content" hidden>
         ...
     </div>
 
+    <!-- End -->
+
     <div id="footer">
-        <div id="footer-left" style="display:none">
-            <span id="queue-ready" class="fa fa-clone"></span>
+        <div class="left" style="display:none">
+            <span id="queue-ready" class="fa fa-check-circle"></span>
             <span id="queue-success" class="fa fa-check-circle" style="display:none"></span>
             <span id="queue-failure" class="fa fa-warning" style="display:none"></span>
             <img  id="queue-inprogress" class="busy-ani" src="img/loading.svg" style="display:none"/>
@@ -143,7 +133,7 @@
             <br>
             <div class="progress-bar" style="display:none"><div id="queue-progress" class="progress-bar-inner"></div></div>
         </div>
-        <div id="footer-right" style="display:none">
+        <div class="right" style="display:none">
           <button class="checkbox" id="non-free-toggle" onclick="toggleNonFree();"
               onmouseover="$('#nonfree-info-popup').fadeIn('fast')"
               onmouseout="$('#nonfree-info-popup').fadeOut('fast')" >

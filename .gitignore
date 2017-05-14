@@ -1,4 +1,10 @@
+# Ignore compiled stuff
 __pycache__
-*.old
 *.mo
+data/apps/
+data/boutique.css
+
+
+# Ignore backups
+*.old
 *~
