@@ -239,11 +239,16 @@ class SoftwareInstallation():
         @staticmethod
         def _is_running_ubuntu_mate():
             """
-            Determines whether the user is actually running Ubuntu MATE assuming on metapackages.
+            Determines whether the user is actually running Ubuntu MATE determined if the
+            2 main metapackages are installed and whether the session is running MATE.
 
             => Returns bool
             """
-            return False
+            # FIXME: if ubuntu-mate-desktop or ubuntu-mate-core are not installed and not running MATE => return False
+            if os.environ.get('DESKTOP_SESSION') != "mate":
+                return False
+            else:
+                return True
 
         @staticmethod
         def _is_boutique_subscribed():
