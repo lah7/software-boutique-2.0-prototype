@@ -256,6 +256,17 @@ class SoftwareBoutique(object):
 
         # Hardware Environment
         self.current_arch = "unknown" # E.g. amd64
+        # If the app isn't even compiled, stop.
+        # If the app mysterously lost its data, also stop.
+        if not os.path.exists(os.path.join(data_source, "boutique.css")) or not os.path.exists(os.path.join(data_source, "apps")):
+            if data_source.startswith("/usr"):
+                dbg.stdout(_("Software Boutique is missing critical data at this path:"), 1, 0)
+                dbg.stdout("  => " + data_source, 4, 0)
+                dbg.stdout(_("The application cannot start. Please try re-installing Software Boutique."), 1, 0)
+            else:
+                dbg.stdout("Silly developer! You forgot to compile me, please run 'software-boutique-dev' instead.", 1, 0)
+            exit(1)
+
 
         ## Software Environment
         self.backend = None                 # boutique.SoftwareInstallation.Backend()
