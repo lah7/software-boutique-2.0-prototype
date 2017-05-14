@@ -12,11 +12,12 @@ function cmd(instruction) {
 
 // Scroll to top of page
 function backToTop() {
-    $('#content').animate({
+    $('.content').animate({
         scrollTop: 0
     }, 600);
-    $('#scroll-top').addClass('active');
-    return false;
+    setTimeout(function() {
+        $('#scroll-top').removeClass('active');
+    }, 600);
 };
 
 // Smoothly fade between two elements (by ID)
@@ -71,7 +72,7 @@ function animate(element, ani_class, direction) {
 $(document).ready(function() {
 
     // Show back to top button on page scroll
-    $('#content').scroll(function () {
+    $('.content').scroll(function () {
         if ($(this).scrollTop() > 90) {
           $('#scroll-top').removeClass('disabled');
         } else {
@@ -159,7 +160,7 @@ function changeCategory(internal_name, human_name) {
     categoryClose();
     $('.category-contents').fadeOut(499);
     $('#backdrop-icon').fadeOut();
-    $('#content').animate({
+    $('.content').animate({
         scrollTop: 0
     }, 1000);
     setTimeout(function() {
