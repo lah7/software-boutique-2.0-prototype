@@ -553,8 +553,13 @@ class SoftwareBoutique(object):
         browse_html += "<h1>{0}</h1>".format(safe_human_name)
 
         # Generate application "cards"
-        appids = self.index.get(internal_name)
-        for appid in appids.keys():
+        appids = self.index.get(internal_name).keys()
+        ordered_appids = []
+        for appid in appids:
+            ordered_appids.append(appid)
+
+        ordered_appids.sort()
+        for appid in ordered_appids:
             app = boutique.get_application_details(self.backend, self.index, internal_name, appid)
             browse_html += self._generate_html_app_card(app)
 
