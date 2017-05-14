@@ -197,7 +197,7 @@ class SoftwareInstallation():
             return
 
         def is_installed(self):
-            return True
+            return False
 
         def do_install(self, ui_obj):
             time.sleep(2)
@@ -375,9 +375,11 @@ def print_app_installation_buttons(app_obj, string_dict, show_details_btn):
                 )
 
     if app_obj.is_installed():
-        html += _generate_button_html(
-                    "launch", app_obj, "inverted", None, string_dict["launch_text"], string_dict["launch_tooltip"]
-                )
+        # For detail view, show icon on the far left.
+        if not show_details_btn and app_obj.launch_cmd:
+            html += _generate_button_html(
+                        "launch", app_obj, "inverted", None, string_dict["launch_text"], string_dict["launch_tooltip"]
+                    )
 
         html += _generate_button_html(
                     "install", app_obj, "yellow", "fa-refresh", string_dict["reinstall_text"], string_dict["reinstall_tooltip"]
@@ -386,6 +388,12 @@ def print_app_installation_buttons(app_obj, string_dict, show_details_btn):
         html += _generate_button_html(
                     "remove", app_obj, "red", "fa-trash", string_dict["remove_text"], string_dict["remove_tooltip"]
                 )
+
+        # For card view, show icon on the far right.
+        if show_details_btn and app_obj.launch_cmd:
+            html += _generate_button_html(
+                        "launch", app_obj, "inverted", None, string_dict["launch_text"], string_dict["launch_tooltip"]
+                    )
 
     else:
         html += _generate_button_html(

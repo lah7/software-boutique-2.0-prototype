@@ -723,8 +723,7 @@ class SoftwareBoutique(object):
             html += "<div id='app-installed'><span class='fa fa-check-circle'></span> " + _get_install_date_string(install_time.read(app_obj.uuid, 0)) + "</div>"
 
         ### Action Buttons
-        if installed:
-            html += boutique.print_app_installation_buttons(app_obj, module_strings, False)
+        html += boutique.print_app_installation_buttons(app_obj, module_strings, False)
 
         ### End top section
         html += "</div><hr/>"
