@@ -118,9 +118,16 @@ button {
     cursor: default !important;
     color: @link-color;
     font-size: 14px;
+    margin: 0;
+}
+
+.app-card button + button {
+    margin-left: 8px;
 }
 
 .link {
+    margin: 0;
+
     &:hover {
         cursor: pointer !important;
         text-decoration: underline;
@@ -962,7 +969,7 @@ button.checkbox {
 
 #app-developer {}
 
-#app-description {
+#app-description, ul, li {
     font-size: 0.9em;
 }
 
