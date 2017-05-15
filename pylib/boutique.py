@@ -33,11 +33,12 @@ cache_path = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique"
 installed_index = os.path.join(os.path.expanduser('~'), ".config", "software-boutique", "installed.json")
 data_source = "/usr/share/ubuntu-mate-welcome/"
 
+
 # Session Details
 force_dummy = False
 dbg = object() # Until main runtime replaces this.
-system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 system_locale = "en"
+system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 current_os_version = platform.dist()[1] # E.g. 16.04
 current_os_codename = platform.dist()[2] # E.g. xenial
 

@@ -56,6 +56,7 @@ except ImportError:
 
 supported_arch = ["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
 supported_codenames = ["xenial", "yakkety", "zesty", "artful"]
+default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
 
 def get_data_source():
@@ -254,8 +255,6 @@ class SoftwareBoutique(object):
         self.webkit = None
         self.update_page = None
 
-        # Hardware Environment
-        self.current_arch = "unknown" # E.g. amd64
         # If the app isn't even compiled, stop.
         # If the app mysterously lost its data, also stop.
         if not os.path.exists(os.path.join(data_source, "boutique.css")) or not os.path.exists(os.path.join(data_source, "apps")):
@@ -345,6 +344,33 @@ class SoftwareBoutique(object):
             self.internet_connected = False
 
     def start_loading(self):
+        # Check Boutique is running on a supported version / architecture
+        if boutique.system_arch not in supported_arch:
+            self.show_message_page("other-distro.png", _("Unsupported Architecture"),
+                                    [
+                                        _("Sorry, Software Boutique cannot continue as it is not compatible with the {0} architecture.").replace(
+                                            "{0}", boutique.system_arch)
+                                    ],
+                                    [
+                                        [_("Visit Community"), "web?" + support_url, "dialog-theme green"],
+                                        [_("Quit"), "exit", "dialog-theme inverted"]
+                                    ]
+                                  )
+
+        if boutique.current_os_codename not in supported_codenames and not pref.read("already-warned-distro", False):
+            self.show_message_page("other-distro.png", _("Unsupported Version"),
+                                    [
+                                        _("Software Boutique has detected your system is running {version}, " \
+                                        "but the Ubuntu MATE team have not tested our application picks for this version.").replace(
+                                            "{version}", "<b>" + boutique.current_os_codename.title() + "</b>"),
+                                        _("The software you see will be based on {version}'s listings, however, we cannot guarantee stability or compatibility.").replace(
+                                            "{version}", default_codename.title())
+                                    ],
+                                    [
+                                        [_("Continue"), "dismiss-unsupported-msg", "dialog-theme green"],
+                                        [_("Quit"), "exit", "dialog-theme inverted"]
+                                    ]
+                                  )
 
         # Load the Software Index
         boutique.screenshot_file_listing = os.listdir(os.path.join(data_source, "apps", "screenshots"))
