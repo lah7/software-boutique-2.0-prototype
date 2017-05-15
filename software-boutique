@@ -266,7 +266,6 @@ class SoftwareBoutique(object):
                 dbg.stdout("Silly developer! You forgot to compile me, please run 'software-boutique-dev' instead.", 1, 0)
             exit(1)
 
-
         ## Software Environment
         self.backend = None                 # boutique.SoftwareInstallation.Backend()
         self.is_ubuntu_mate = False
@@ -356,6 +355,7 @@ class SoftwareBoutique(object):
                                         [_("Quit"), "exit", "dialog-theme inverted"]
                                     ]
                                   )
+            return
 
         if boutique.current_os_codename not in supported_codenames and not pref.read("already-warned-distro", False):
             self.show_message_page("other-distro.png", _("Unsupported Version"),
