@@ -1,0 +1,10 @@
+data/* usr/share/software-boutique/
+hicolor/* usr/share/icons/hicolor/
+#locale/* usr/share/locale/
+#mate-settings-boutique.menu etc/xdg/menus/
+#org.ubuntu-mate.boutique.policy usr/share/polkit-1/actions/
+pylib/* usr/lib/python3/dist-packages/software-boutique/
+software-boutique usr/bin/
+software-boutique-helper usr/lib/ubuntu-mate/
+man/software-boutique.1 usr/share/man/man1/
+software-boutique.desktop usr/share/applications/

@@ -1,0 +1,31 @@
+Source: software-boutique
+Section: x11
+Priority: optional
+Maintainer: Ubuntu MATE Team <ubuntu-mate-dev@lists.launchpad.net>
+Build-Depends: debhelper (>= 9),
+               python3,
+               python3-polib,
+               gettext,
+               node-less,
+               translate-toolkit
+Standards-Version: 3.9.8
+Homepage: https://bitbucket.org/ubuntu-mate/software-boutique
+Vcs-Browser: https://bitbucket.org/ubuntu-mate/software-boutique/src
+
+Package: software-boutique
+Architecture: all
+Pre-Depends: mate-menus,
+Depends: gir1.2-gtk-3.0,
+         gir1.2-notify-0.7,
+         gir1.2-webkit2-4.0,
+         policykit-1,
+         python3,
+         python3-gi,
+         python3-polib,
+         python3-setproctitle,
+         software-properties-common,
+         ${misc:Depends},
+Description: Curated software selection for Ubuntu MATE
+ A simple piece of software for listing a custom picked
+ selection of software compatible with Ubuntu MATE.
+
