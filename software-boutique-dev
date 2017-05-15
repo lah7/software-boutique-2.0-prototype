@@ -13,8 +13,11 @@ params=$*
 # Print help with "--help".
 if [ "$1" == "--help" ]; then
     echo "Software Boutique Development Script"
-    echo "  <no parameters>     Start Boutique (dev version)"
-    echo "  --build-only        Only build (for deployment)"
+    echo "  <no parameters>         Start Boutique (dev version)"
+    echo "                            + Compiles CSS and index."
+    echo "  --build-only            Only build (for deployment)"
+    echo "  --run-tests             Run tests (for CI and local)"
+    echo "  --run-extended-tests    Run more rigorous tests (for package checks)"
     exit 0
 fi
 
@@ -34,12 +37,20 @@ fi
 # Assemble Application Index
 python3 ./scripts/compile-app-index.py
 
-# Run the Boutique
+# Any special operations for development
 if [ "$1" == "--build-only" ]; then
-    # Assemble translations
     ./scripts/generate-translation-templates.sh
     exit 0
 
+elif [ "$1" == "--run-tests" ]; then
+    ./tests/run-tests.sh --quick
+    exit 0
+
+elif [ "$1" == "--run-extended-tests" ]; then
+    ./tests/run-tests.sh --extended
+    exit 0
+
+# Run the Boutique
 else
     echo " "
     ./software-boutique -d $params
