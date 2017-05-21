@@ -794,12 +794,16 @@ class SoftwareBoutique(object):
         html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
 
         ### Supported Platforms
-        def _print_arch_label(arch, use_img_file, icon_name, label):
+        def _print_arch_label(arch, use_img_file, icon_name, label, tooltip):
+            if tooltip:
+                tooltip = "title='{0}'".format(tooltip)
+            else:
+                tooltip = ""
             if use_img_file:
                 img_path = os.path.join(data_source, "img", icon_name)
-                this = "<div class='platform'><img class='like-fa' src='{0}'/> {1}</div>".format(img_path, label)
+                this = "<div class='platform' {2}><img class='like-fa' src='{0}'/> {1}</div>".format(img_path, label, tooltip)
             else:
-                this = "<div class='platform'><i class='fa fa-{0}'/> {1}</div>".format(icon_name, label)
+                this = "<div class='platform' {2}><i class='fa fa-{0}'/> {1}</div>".format(icon_name, label, tooltip)
 
             if arch == boutique.system_arch:
                 return("<div class='current-arch'>" + this + "</div>")
@@ -810,25 +814,25 @@ class SoftwareBoutique(object):
         data = ""
         for arch in app_obj.arch:
             if arch == "i386":
-                data += _print_arch_label(arch, False, "laptop", _("32-bit"))
+                data += _print_arch_label(arch, False, "laptop", _("32-bit"), _("i386 / x86"))
 
             elif arch == "amd64":
-                data += _print_arch_label(arch, False, "laptop", _("64-bit"))
+                data += _print_arch_label(arch, False, "laptop", _("64-bit"), _("amd64 / x86_64"))
 
             elif arch == "armhf":
-                data += _print_arch_label(arch, True, "rpi.png", _("Raspberry Pi and ARM devices"))
+                data += _print_arch_label(arch, True, "rpi.png", _("Raspberry Pi and ARM devices"), ("armhf"))
 
             elif arch == "arm64":
-                data += _print_arch_label(arch, False, "laptop", _("ARM64"))
+                data += _print_arch_label(arch, False, "laptop", _("ARM64"), None)
 
             elif arch == "powerpc":
-                data += _print_arch_label(arch, False, "desktop", _("PowerPC"))
+                data += _print_arch_label(arch, False, "desktop", _("PowerPC"), None)
 
             elif arch == "ppc64el":
-                data += _print_arch_label(arch, False, "desktop", _("PowerPC 64-bit"))
+                data += _print_arch_label(arch, False, "desktop", _("PowerPC 64-bit"), None)
 
             else:
-                data += _print_arch_label(arch, False, "microchip", arch)
+                data += _print_arch_label(arch, False, "microchip", arch, None)
 
         try:
             url = app_obj.urls["android-app"]
