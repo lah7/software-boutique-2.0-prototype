@@ -5,6 +5,8 @@
 @background: #F4F4F4;
 @link-color: #758A53;
 @link-color-focused: #44522E;
+@grey-light: #D4D3D0;
+@grey-dark: #A9A9A9;
 
 @header-text: #DED9CB;
 @ubuntu-mate: #667E40;
@@ -14,8 +16,8 @@
 @button-spacing: 0.5em;
 
 /* Button Colours */
-@button-border: #D4D3D0;
-@button-border-focused: #A9A9A9;
+@button-border: @grey-light;
+@button-border-focused: @grey-dark;
 
 @button-bg: white, #F5F4F3;
 @button-bg-clicked: #E4E4E4, #E9E9E9;
@@ -104,6 +106,10 @@ pre {
     -webkit-user-select: initial;;
     cursor: text;
     overflow-x: scroll;
+}
+
+hr {
+    border-top: 1px solid @grey-light;
 }
 
 
@@ -1006,8 +1012,9 @@ button.checkbox {
     }
 
     #empty {
-        color: lightgray;
+        color: @grey-dark;
         text-align: center;
+        font-size: 0.9em;
     }
 }
 
