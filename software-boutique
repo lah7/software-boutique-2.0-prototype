@@ -706,13 +706,32 @@ class SoftwareBoutique(object):
         installed = app_obj.is_installed()
 
         # Start top section
-        html = "<div id='app-overview'>" \
-            "<div class='left'><img id='app-icon' src='{icon_path}' /></div>" \
-            "<div class='right'>" \
-                "<h2 id='app-name'>{name}</h2>" \
+        html = "<div id='app-overview'>"
+        html += "<div class='left'><img id='app-icon' src='{icon_path}' /></div>" \
+                "<div class='right'>".format(
+                    icon_path = app_obj.icon_path
+                )
+
+        ### Screenshots
+        html += "<div id='app-screenshots'>"
+        if len(app_obj.screenshot_filenames) == 0:
+            html += "<div id='screenshot-empty'>{0}</div>".format(_("No screenshot available"))
+
+        else:
+            path = os.path.join(data_source, "apps", "screenshots", app_obj.screenshot_filenames[0])
+            html += "<button id='screenshot-preview' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
+
+        if len(app_obj.screenshot_filenames) >= 2:
+            html += "<hr/>"
+            for filename in app_obj.screenshot_filenames:
+                path = os.path.join(data_source, "apps", "screenshots", filename)
+                html += "<button class='screenshot-chooser' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
+        html += "</div>"
+
+        ### App Details
+        html += "<h2 id='app-name'>{name}</h2>" \
                 "<button id='app-developer' class='link' onclick='cmd(\"web?{dev_url}\")'>{dev_name}</button>" \
                 "<p id='app-description'>{description}</p>".format(
-                    icon_path = app_obj.icon_path,
                     name = app_obj.name,
                     dev_name = app_obj.developer_name,
                     dev_url = app_obj.developer_url,
@@ -769,17 +788,6 @@ class SoftwareBoutique(object):
 
         ### End top section
         html += "</div><hr/>"
-
-        ### Screenshots
-        html += "<div id='app-screenshots'>"
-        if len(app_obj.screenshot_filenames) == 0:
-            html += "<div id='empty'>There are no screenshots to display.</div><hr/>"
-        else:
-            for filename in app_obj.screenshot_filenames:
-                path = os.path.join(data_source, "apps", "screenshots", filename)
-                html += "<button class='screenshot-preview' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
-            html += "<hr/>"
-        html += "</div>"
 
         ### Start table section
         html += "<table>"

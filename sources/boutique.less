@@ -103,7 +103,7 @@ p {
 
 pre {
     padding: 1em;
-    -webkit-user-select: initial;;
+    -webkit-user-select: initial;
     cursor: text;
     overflow-x: scroll;
 }
@@ -982,7 +982,10 @@ button.checkbox {
 
 #app-developer {}
 
-#app-description, ul, li {
+#app-description,
+#app-description + ul,
+#app-description + ul li, {
+    width: 70%;
     font-size: 0.9em;
 }
 
@@ -995,10 +998,25 @@ button.checkbox {
 }
 
 #app-screenshots {
-    .screenshot-preview {
-        width: 20%;
-        height: auto;
+    float: right;
+    width: 30%;
+    min-height: 100px;
+    margin-left: 1em;
+    margin-top: 1em;
+
+    #screenshot-preview {
+        cursor: pointer !important;
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+    }
+
+    .screenshot-chooser {
+        width: 33%;
         border: 2px solid #C0C0C0;
+        cursor: pointer !important;
 
         img {
             width: 100%;
@@ -1011,10 +1029,24 @@ button.checkbox {
         }
     }
 
-    #empty {
+    #screenshot-empty {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border: 1px solid @grey-dark;
         color: @grey-dark;
         text-align: center;
         font-size: 0.9em;
+
+        var {
+            position: absolute;
+            margin: auto;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            text-align: center;
+        }
     }
 }
 

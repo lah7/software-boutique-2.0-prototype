@@ -91,6 +91,7 @@ def get_application_details(backend, index_data, category, appid):
     for filename in screenshot_file_listing:
         if filename.startswith(appid + "-"):
             app.screenshot_filenames.append(filename)
+    app.screenshot_filenames.sort()
 
     installation_data = data.get("installation")
     if app.method == "dummy" or force_dummy:
