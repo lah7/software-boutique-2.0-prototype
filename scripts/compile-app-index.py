@@ -86,10 +86,10 @@ for category in categories:
         # If unlisted, skip this.
         try:
             if index["listed"] == False:
-                print_msg(3, "{0}/{1} = Marked as unlisted, skipping...".format(category, appid))
+                print_msg(3, "{0}/{1} = Marked as unlisted.".format(category, appid))
                 continue
         except Exception:
-            print_msg(1, "{0}/{1} = No 'listed' key. Skipping...".format(category, appid))
+            print_msg(1, "{0}/{1} = No 'listed' key.".format(category, appid))
             break
 
         # Check the required fields are present.
@@ -135,12 +135,13 @@ for category in categories:
             if key_type in [str, list] and is_required:
                 try:
                     if len(target) == 0:
-                        print_msg(3, "{0}/{1} = Warning: No data for '{2}'. Skipping!".format(category, appid, key))
+                        print_msg(3, "{0}/{1} = Blank data: '{2}'.".format(category, appid, key))
                 except Exception:
                     print_msg(1, "{0}/{1} = Invalid data: '{2}'".format(category, appid, key, target))
 
         check_field("listed", bool, True)
         check_field("name", str, True)
+        check_field("summary", str, True)
         check_field("description", str, True)
         check_field("developer-name", str, True)
         check_field("developer-url", str, True)
