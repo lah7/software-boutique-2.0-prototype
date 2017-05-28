@@ -3,8 +3,8 @@ Software Boutique Application Index Format
 ============
 
 File:       metadata.json
-Revision:   3
-Date:       April 2017
+Revision:   4
+Date:       May 2017
 
 
 ### Compiled Structure Overview
@@ -38,7 +38,8 @@ Date:       April 2017
  ㇗ description             string      Yes          A more in-depth description of the application.
  ㇗ developer-name          string      Yes          Author's name, whether it's an individual or company.
  ㇗ developer-url           string      Yes          Website for the author or company.
- ㇗ tags                    list        Yes          Categories for this application, e.g. "texteditor", "System", "Office", "Application".
+ ㇗ tags                    string      Yes          Categories for this application and searh key words.
+ |                                                      e.g. "texteditor", "System", "Office", "Application"
  ㇗ launch-cmd              string      No           Command to launch the installed program.
  ㇗ alternate-to            string      No           Mention the app is similar to another product.
  ㇗ proprietary             boolean     Yes          Is this non-free software?

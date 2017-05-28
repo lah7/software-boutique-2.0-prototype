@@ -144,7 +144,7 @@ for category in categories:
         check_field("description", str, True)
         check_field("developer-name", str, True)
         check_field("developer-url", str, True)
-        check_field("tags", list, True)
+        check_field("tags", str, True)
         check_field("launch-cmd", str, False)
         check_field("alternate-to", str, False)
         check_field("proprietary", bool, True)

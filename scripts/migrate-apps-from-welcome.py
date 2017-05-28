@@ -73,7 +73,7 @@ new_structure = '{' + \
 '    "developer-name": "",\n' + \
 '    "developer-url": "",\n' + \
 '    "description": "",\n' + \
-'    "tags": [],\n' + \
+'    "tags": "",\n' + \
 '    "launch-cmd": "",\n' + \
 '    "proprietary": false,\n' + \
 '    "alternate-to": null,\n' + \
@@ -120,7 +120,7 @@ for category in categories:
         metadata_json["urls"]["info"] = old_appdata["url-info"]
         metadata_json["urls"]["android-app"] = old_appdata["url-android"]
         metadata_json["urls"]["ios-app"] = old_appdata["url-ios"]
-        metadata_json["tags"] = [old_appdata["subcategory"]]
+        metadata_json["tags"] = old_appdata["subcategory"]
 
         if old_appdata["open-source"] == True:
             metadata_json["proprietary"] = False

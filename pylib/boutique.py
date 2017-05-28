@@ -75,7 +75,7 @@ def get_application_details(backend, index_data, category, appid):
     app.description = data.get("description")
     app.developer_name = data.get("developer-name")
     app.developer_url = data.get("developer-url")
-    app.tags = data.get("tags")
+    app.tags = data.get("tags").split(",")
     app.launch_cmd = data.get("launch-cmd")
     app.proprietary = data.get("proprietary")
     app.urls = data.get("urls")
@@ -129,7 +129,7 @@ class ApplicationData():
     description = ""
     developer_name = ""
     developer_url = ""
-    tags = []
+    tags = ""
     launch_cmd = None
     proprietary = False
     alternate_to = None
