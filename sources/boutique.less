@@ -59,6 +59,13 @@
 @card-border-focus: lightgray;
 @card-shadow: 1px 1px 1px rgba(192,192,192,0.5);
 
+/* Actions */
+@success: green;
+@danger: red;
+@warning: yellow;
+@info: blue;
+
+
 /************************
  * Common
 *************************/
@@ -434,6 +441,63 @@ button.checkbox {
         top: -2px;
     }
 }
+
+#queue-button {
+    &.pulse-positive {
+        -webkit-animation: pulse-positive 2s 1;
+    }
+
+    &.pulse-negative {
+        -webkit-animation: pulse-negative 1s 3;
+    }
+
+    &.pulse-added {
+        -webkit-animation: pulse-added 2s 1;
+    }
+}
+
+@-webkit-keyframes pulse-positive {
+    0% {
+        background-color: @header-bg;
+    }
+
+    50% {
+        background-color: @success;
+    }
+
+    100% {
+        background-color: @header-bg;
+    }
+}
+
+@-webkit-keyframes pulse-negative {
+    0% {
+        background-color: @header-bg;
+    }
+
+    50% {
+        background-color: @danger;
+    }
+
+    100% {
+        background-color: @header-bg;
+    }
+}
+
+@-webkit-keyframes pulse-added {
+    0% {
+        border-color: @header-bg;
+    }
+
+    50% {
+        border-color: white;
+    }
+
+    100% {
+        border-color: @header-bg;
+    }
+}
+
 
 /************************
  * Content
@@ -889,7 +953,18 @@ button.checkbox {
     .actions {
         padding: 0.5em 0;
         text-align: right;
-        float: right;
+        position: absolute;
+        bottom: 0em;
+        right: 0.4em;
+
+        .operation-buttons {
+            display: inline-block;
+        }
+    }
+
+    button + button,
+    button + .operation-buttons {
+        margin-left: @button-spacing;
     }
 
     .install_checkmark {
@@ -899,29 +974,12 @@ button.checkbox {
         color: @ubuntu-mate;
         z-index: 10;
     }
-/*
+}
 
-    > span {
-        float: left;
-        margin-right: 6px;
-        font-size: 2em;
-    }
-
-    > img {
-        float: left;
-        margin-right: 6px;
-        width: 36px;
-        height: 36px;
-        top: -4px;
-        position: relative;
-    }
-
-    > p {
-        float: left;
-        padding-top: 4px;
-        padding-right: 24px;
-    }
-*/
+.queue-plan {
+    margin-bottom: 1em;
+    font-size: 0.9em;
+    color: gray;
 }
 
 /************************

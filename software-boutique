@@ -313,17 +313,28 @@ class SoftwareBoutique(object):
             # FIXME
             return
 
-        elif cmd.startswith("install?"):
-            # FIXME
-            return
+        elif cmd.startswith("install?") or cmd.startswith("upgrade?") or cmd.startswith("remove?"):
+            cmd = cmd.split("?")
+            operation = cmd[0]
+            categoryid = cmd[1]
+            appid = cmd[2]
+            app_uuid = categoryid + "-" + appid
 
-        elif cmd.startswith("upgrade?"):
-            # FIXME
-            return
+            if self.queue.is_already_queued(app_uuid):
+                dbg.stdout(app_uuid + " is already queued. It must be unqueued first.", 1, 0)
+            else:
+                self.queue.add_item(operation, self.queue._get_appdata(categoryid, appid))
+                self.webkit.run_javascript("animateClass('#queue-button', 'pulse-added', 2000)")
 
-        elif cmd.startswith("remove?"):
-            # FIXME
-            return
+        elif cmd.startswith("drop-queue?"):
+            cmd = cmd.split("?")
+            operation = cmd[0]
+            categoryid = cmd[1]
+            appid = cmd[2]
+            app_uuid = categoryid + "-" + appid
+
+            self.queue.remove_item(app_uuid)
+            self.webkit.run_javascript("animateClass('#queue-button', 'pulse-added', 2000)")
 
         elif cmd.startswith("screenshot?"):
             # FIXME!
@@ -456,7 +467,7 @@ class SoftwareBoutique(object):
             # Header Buttons
             self.update_page("#browse-button", "append", _("Browse"))
             self.update_page("#installed-button", "append", _("Installed"))
-            self.update_page("#queue-button", "append", _("Queue") + "&nbsp;<span id='queued-items'>(0)</span>")
+            self.update_page("#queue-button", "append", _("Queue") + "&nbsp;(<span id='queued-items'>0</span>)")
             self.update_page("#news-button", "append", _("What's New?"))
 
             # Header Tooltips
@@ -491,6 +502,12 @@ class SoftwareBoutique(object):
             # Build Settings Page
             ############################################
             # fixme: settings
+
+            ############################################
+            # Queue Monitor
+            ############################################
+            self.queue = QueueOperationsThread(self.update_page)
+            spawn_thread(self.queue.watch_queue)
 
             ############################################
             # Load Finished
@@ -536,7 +553,7 @@ class SoftwareBoutique(object):
                         "<img class='icon' src='{icon}' />" \
                         "<div class='title'>{name}</div>" \
                         "<div class='summary'>{summary}</div>" \
-                        "<div class='actions'>{install_buttons}</div>" \
+                        "<div class='actions'>{details_button} {install_buttons}</div>" \
                     "</div>".format(
                         app_uuid = app_obj.categoryid + "-" + app_obj.appid,
                         icon = app_obj.icon_path,
@@ -545,9 +562,8 @@ class SoftwareBoutique(object):
                         show_if_installed = "style='display:none'" if not installed else "",
                         hide_if_installed = "style='display:none'" if installed else "",
                         installed_class = "installed" if installed else "",
-                        install_buttons = boutique.print_app_installation_buttons(app_obj, module_strings, True),
-                        hover_tooltip = _("Learn more about this application"),
-                        hover_click_cmd = 'cmd("details?' + app_obj.categoryid + '?' + app_obj.appid + '")'
+                        details_button = boutique.print_more_details_button(app_obj, module_strings),
+                        install_buttons = boutique.print_app_installation_buttons(app_obj, module_strings)
                     )
 
         return(html)
@@ -784,7 +800,7 @@ class SoftwareBoutique(object):
             html += "<div id='app-installed'><span class='fa fa-check-circle'></span> " + _get_install_date_string(install_time.read(app_obj.uuid, 0)) + "</div>"
 
         ### Action Buttons
-        html += boutique.print_app_installation_buttons(app_obj, module_strings, False)
+        html += boutique.print_app_installation_buttons(app_obj, module_strings)
 
         ### End top section
         html += "</div><hr/>"
@@ -971,11 +987,105 @@ class SoftwareBoutique(object):
 
 class QueueOperationsThread(object):
     """
-    Thread that monitors the queue and performs install operations
-    or update the UI.
+    Thread that monitors the queue and performs Boutique operations.
+
+    The queue is a list, each item is a list describing the desired operation, e.g:
+
+    [<operation>, <object>]
+
+    0   operation   str     Describes what to do with this object.
+                            "install"
+                            "remove"
+                            "upgrade"
+
+    1   object      obj     Associated object for this operation, e.g. could
+                            be ApplicationData() or a function.
     """
-    def __init__(self):
-        return
+    def __init__(self, update_page_obj):
+        self.update_page = update_page_obj
+        self.queue = []
+
+    def watch_queue(self):
+        """
+        Looped function that monitors the queue and performs operations.
+        """
+        while True:
+            time.sleep(1)
+
+    def get_count(self):
+        """
+        Returns the number of items in the queue.
+        """
+        return len(self.queue)
+
+    def update_count(self):
+        """
+        Updates the queue counter in UI.
+        """
+        self.update_page("#queued-items", "html", str(self.get_count()))
+
+    def _get_appdata(self, categoryid, appid):
+        """
+        Returns the ApplicationData() based on the "category-appname"
+        """
+        return boutique.get_application_details(app.backend, app.index, categoryid, appid)
+
+    def add_item(self, operation, app_object):
+        """
+        Adds an application to the queue.
+
+        operation   str     Describes what to do.
+        object      obj     ApplicationData() object.
+        """
+        self.queue.append([operation, app_object])
+        self.update_count()
+        self.ui_update_buttons(app_object)
+        dbg.stdout("Added item to queue: " + app_object.uuid, 4, 1)
+
+    def remove_item(self, app_uuid):
+        """
+        Removes a specific application from the queue.
+
+        app_uuid    str     Value of appid provided in ApplicationData()
+        """
+        no = 0
+        for item in self.queue:
+            try:
+                if item[1].uuid == app_uuid:
+                    self.queue.pop(no)
+                    self.update_count()
+                    self.ui_update_buttons(item[1])
+                    dbg.stdout("Removed item from queue: " + app_uuid, 4, 1)
+                    return
+                no += 1
+            except:
+                # This is not an ApplicationData() object.
+                pass
+
+    def is_already_queued(self, app_uuid):
+        """
+        Returns a boolean to indicate if the item is already in the queue.
+
+        app_uuid    str     Value of appid provided in ApplicationData()
+        """
+        for item in self.queue:
+            try:
+                if item[1].uuid == app_uuid:
+                    dbg.stdout("Already in queue: " + app_uuid, 4, 1)
+                    return True
+            except:
+                # This is not an ApplicationData() object.
+                pass
+        return False
+
+    def ui_update_buttons(self, app_object):
+        """
+        Updates the buttons when changes are being made.
+
+        app_object  obj     ApplicationData() object
+        """
+        self.update_page(".buttons-" + app_object.uuid, "html", boutique.print_app_installation_buttons(app_object, module_strings, self.queue))
+
 
     # e.g. desktop notifications function
     # e.g. toast function
@@ -1114,14 +1224,16 @@ if __name__ == "__main__":
         "remove_text": "",
         "remove_tooltip": _("Remove this application"),
         "launch_text": "Launch",
-        "launch_tooltip": _("Runs the application")
+        "launch_tooltip": _("Runs the application"),
+        "remove_queue": _("Remove from queue"),
+        "remove_queue_tooltip": _("Cancels any changes for this application"),
+        "installing": _("Installing..."),
+        "upgrading": _("Upgrading..."),
+        "removing": _("Uninstalling..."),
+        "queued-install": _("Will be installed."),
+        "queued-remove": _("Will be removed."),
+        "queued-upgrade": _("Will be upgraded.")
     }
-
-    # Prepare multi-threaded operations
-    queue_operations = Thread(target=QueueOperationsThread, args=())
-    for thread in [queue_operations]:
-        thread.daemon = True
-        thread.start()
 
     # On this thread
     app = SoftwareBoutique()

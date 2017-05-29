@@ -340,7 +340,40 @@ class SoftwareInstallation():
             #~ return
 
 
-def print_app_installation_buttons(app_obj, string_dict, show_details_btn):
+def _generate_button_html(action, app_obj, colour_class, fa_icon, text, tooltip):
+    """
+    Generates a HTML for installation button options.
+
+    action          =   JS command to execute
+    app_obj         =   ApplicationData() object
+    colour_class    =   Class name for button colour.
+    fa_icon         =   True/False whether it should use FA class or use application icon.
+    text            =   Text shown on button.
+    tooltip         =   Tooltip when hovering button.
+    """
+    if fa_icon:
+        icon_html = "<span class='fa {0}'></span>".format(fa_icon)
+    else:
+        icon_html = "<img src='{0}'/>".format(app_obj.icon_path)
+
+    # In format: "action?category?appid"
+    cmd = "{0}?{1}?{2}".format(action, app_obj.categoryid, app_obj.appid)
+
+    return "<button class='dialog-theme {1}' onclick='cmd(\"{0}\")' title='{4}'>{2} {3}</button>".format(
+        cmd, colour_class, icon_html, text, tooltip
+    )
+
+
+def print_more_details_button(app_obj, string_dict):
+    """
+    Returns the HTML for the "Details" button.
+    """
+    return _generate_button_html(
+                "details", app_obj, "white", "fa-info-circle", string_dict["details_text"], string_dict["details_tooltip"]
+            )
+
+
+def print_app_installation_buttons(app_obj, string_dict, queue=None):
     """
     Returns the HTML for the buttons that determines the installation/launch options.
 
@@ -351,32 +384,20 @@ def print_app_installation_buttons(app_obj, string_dict, show_details_btn):
                         details_text = "Details",
                         details_tooltip = "Learn more about this application",
                         install_text = "Install",
-                        install_tooltip = "Install this application on your computer",
-                        upgrade_text = "Upgrade",
-                        upgrade_tooltip = "Adds a repository which will install a newer version of this software.",
-                        reinstall_text = "",
-                        reinstall_tooltip = "Reinstall this application",
-                        remove_text = "",
-                        remove_tooltip = "Remove this application",
+                        install_tooltip = "Install this application on your computer"
                     }
-    show_details_btn = True/False whether the details button should be shown here.
+    queue            = (Optional) If specified, check this list if the item is
+                        queued and show its status / option to "remove from queue" instead.
     """
-    html = ""
+    html = "<div class='operation-buttons buttons-{0}'>".format(app_obj.uuid)
 
-    def _generate_button_html(cmd, app_obj, colour_class, fa_icon, text, tooltip):
-        if fa_icon:
-            icon_html = "<span class='fa {0}'></span>".format(fa_icon)
-        else:
-            icon_html = "<img src='{0}'/>".format(app_obj.icon_path)
-
-        return "<button class='dialog-theme {2}' onclick='cmd(\"{0}?{1}\")' title='{5}'>{3} {4}</button>".format(
-            cmd, app_obj.categoryid + "?" + app_obj.appid, colour_class, icon_html, text, tooltip
-        )
-
-    if show_details_btn:
-        html += _generate_button_html(
-                    "details", app_obj, "white", "fa-info-circle", string_dict["details_text"], string_dict["details_tooltip"]
-                )
+    # If this software is queued for changes, only show the option to cancel.
+    if queue:
+        for item in queue:
+            if item[1].uuid == app_obj.uuid:
+                html += "<div class='queue-plan'><span class='fa fa-check-circle'></span> " + string_dict["queued-" + item[0]] + "</div>"
+                html += _generate_button_html("drop-queue", app_obj, "white", "fa-clone", string_dict["remove_queue"], string_dict["remove_queue_tooltip"])
+                return(html)
 
     if app_obj.is_installed():
         # For detail view, show icon on the far left.
@@ -404,5 +425,5 @@ def print_app_installation_buttons(app_obj, string_dict, show_details_btn):
                     "install", app_obj, "green", "fa-download", string_dict["install_text"], string_dict["install_tooltip"]
                 )
 
+    html += "</div>"
     return(html)
-

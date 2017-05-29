@@ -52,6 +52,7 @@ function setCursorNormal() {
     $('a').removeClass('cursor-wait');
 }
 
+// Animate in/out with a class for keyframes
 function animate(element, ani_class, direction) {
     $(element).addClass(ani_class);
     setTimeout(function() {
@@ -64,6 +65,15 @@ function animate(element, ani_class, direction) {
         $(element).fadeOut(500);
     }
 }
+
+// Animate using a class
+function animateClass(element, ani_class, wait_seconds) {
+    $(element).addClass(ani_class);
+    setTimeout(function() {
+        $(element).removeClass(ani_class);
+    }, wait_seconds);
+}
+
 
 /************************
  * Events
