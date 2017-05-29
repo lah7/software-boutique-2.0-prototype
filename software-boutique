@@ -503,6 +503,12 @@ class SoftwareBoutique(object):
             # fixme: settings
 
             ############################################
+            # Start Page
+            ############################################
+            self.generate_start_page_apps()
+            self.update_page("#welcome-text", "html", _("Welcome to the Software Boutique"))
+
+            ############################################
             # Queue Monitor
             ############################################
             self.queue = QueueOperationsThread(self.update_page)
@@ -982,6 +988,37 @@ class SoftwareBoutique(object):
     def hide_app_details(self):
         self.webkit.run_javascript("animate('#app-details-page', 'exit-more-info', 'out')")
         self.webkit.run_javascript("showCategoryTitle()")
+
+    def generate_start_page_apps(self):
+        def _add_app(random_app, position, direction):
+            categoryid = random_app[0]
+            appid = random_app[1]
+            app_obj = boutique.get_application_details(self.backend, self.index, categoryid, appid)
+            cmd = "cmd(\"{0}?{1}?{2}\")".format("details", app_obj.categoryid, app_obj.appid)
+            return "<button id='random-{4}-{3}' onclick='{2}' title='{0}'><img style='opacity:0.{3}' src='{1}'/></button>".format(app_obj.name, app_obj.icon_path, cmd, position, direction)
+
+        html = ""
+        random_apps = []
+
+        for category in ["accessories", "server", "games", "system", "multimedia", "internet",
+                         "development", "graphics", "office", "education", "more-software", "accessibility"]:
+            apps = list(self.index[category].keys())
+            random_apps.append([category, random.choice(apps)])
+
+        html += _add_app(random_apps[0], 1, "left")
+        html += _add_app(random_apps[1], 2, "left")
+        html += _add_app(random_apps[2], 3, "left")
+        html += _add_app(random_apps[3], 4, "left")
+        html += _add_app(random_apps[4], 5, "left")
+        html += _add_app(random_apps[5], 6, "left")
+        html +=  "<img id='welcome-logo' src='{0}'>".format(data_source + "img/ubuntu-mate-logo.svg")
+        html += _add_app(random_apps[6], 6, "right")
+        html += _add_app(random_apps[7], 5, "right")
+        html += _add_app(random_apps[8], 4, "right")
+        html += _add_app(random_apps[9], 3, "right")
+        html += _add_app(random_apps[10], 2, "right")
+        html += _add_app(random_apps[11], 1, "right")
+        self.update_page("#random-apps", "html", html)
 
 
 class QueueOperationsThread(object):

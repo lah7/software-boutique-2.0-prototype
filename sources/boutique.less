@@ -1159,3 +1159,97 @@ img.like-fa {
         }
     }
 }
+
+/************************
+ * Start Page
+*************************/
+#category-page-start-page {
+    #random-apps {
+        text-align: center;
+        width: 200%;
+        transform: translateX(-25%);
+
+        img {
+            width: 64px;
+            height: 64px;
+            vertical-align: middle;
+            margin: 0 0.5em;
+            transition: opacity 0.1s linear;
+
+            &:hover,
+            &:focus {
+                opacity: 1 !important;
+            }
+        }
+
+        #welcome-logo {
+            animation: hello-logo 1s ease-in-out;
+            width: 123px;
+            height: 130px;
+            z-index: 5;
+        }
+
+        @random-app-animation-left: random-apps-right 0.5s ease-out 0 1 normal forwards;
+        @random-app-animation-right: random-apps-left 0.5s ease-out 0 1 normal forwards;
+
+        button {
+            opacity: 0;
+        }
+
+        #random-left-6 {  animation: @random-app-animation-left;  animation-delay: 0.4s; }
+        #random-left-5 {  animation: @random-app-animation-left;  animation-delay: 0.8s; }
+        #random-left-4 {  animation: @random-app-animation-left;  animation-delay: 1.2s; }
+        #random-left-3 {  animation: @random-app-animation-left;  animation-delay: 1.6s; }
+        #random-left-2 {  animation: @random-app-animation-left;  animation-delay: 2.0s; }
+        #random-left-1 {  animation: @random-app-animation-left;  animation-delay: 2.4s; }
+        #random-left-0 {  animation: @random-app-animation-left;  animation-delay: 2.8s; }
+
+        #random-right-6 { animation: @random-app-animation-right; animation-delay: 0.4s; }
+        #random-right-5 { animation: @random-app-animation-right; animation-delay: 0.8s; }
+        #random-right-4 { animation: @random-app-animation-right; animation-delay: 1.2s; }
+        #random-right-3 { animation: @random-app-animation-right; animation-delay: 1.6s; }
+        #random-right-2 { animation: @random-app-animation-right; animation-delay: 2.0s; }
+        #random-right-1 { animation: @random-app-animation-right; animation-delay: 2.4s; }
+        #random-right-0 { animation: @random-app-animation-right; animation-delay: 2.8s; }
+    }
+
+    #welcome-text {
+        text-align: center;
+    }
+}
+
+@-webkit-keyframes random-apps-left {
+    0% {
+        transform: translateX(-50px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translate(0px);
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes random-apps-right {
+    0% {
+        transform: translateX(50px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translate(0px);
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes hello-logo {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
