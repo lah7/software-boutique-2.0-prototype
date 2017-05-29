@@ -1114,3 +1114,48 @@ img.like-fa {
     display: inline-block;
     font-weight: bold;
 }
+
+
+/************************
+ * Responsive Column Structure
+ * Original by Michael Tunnell
+*************************/
+@column-speed: 0.5s;
+@column-animation: ease-in-out;
+
+@media (max-width:1200px) {
+    .category-contents .app-card {
+        width: 100%;
+        box-sizing: border-box;
+        float: none;
+        transition: all @column-speed @column-animation;
+    }
+}
+
+@media (min-width:1201px) and (max-width:1600px) {
+    .category-contents .app-card {
+        width: 48%;
+        box-sizing: border-box;
+        float: left;
+        transition: all @column-speed @column-animation;
+
+        &:nth-child(even) {
+            clear: both;
+            float: left;
+        }
+    }
+}
+
+@media (min-width:1601px) {
+    .category-contents .app-card {
+        width: 32%;
+        box-sizing: border-box;
+        float: left;
+        transition: all @column-speed @column-animation;
+
+        &:nth-child(3n+5) {
+            clear: both;
+            float: left;
+        }
+    }
+}
