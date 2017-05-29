@@ -58,6 +58,8 @@
 @card-border: #F0F0F0;
 @card-border-focus: lightgray;
 @card-shadow: 1px 1px 1px rgba(192,192,192,0.5);
+@large-card-shadow: 0px 0px 10px rgba(192,192,192,0.5);
+@large-card-installed-shadow: 0px 0px 10px @ubuntu-mate;
 
 /* Actions */
 @success: green;
@@ -135,10 +137,6 @@ button {
     color: @link-color;
     font-size: 14px;
     margin: 0;
-}
-
-.app-card button + button {
-    margin-left: @button-spacing;
 }
 
 .link {
@@ -903,30 +901,14 @@ button.checkbox {
     width: 97%;
     height: 110px;
     background-color: rgba(255, 255, 255, 0.5);
-    border: 2px solid @card-border;
-    box-shadow: @card-shadow;
+    box-shadow: @large-card-shadow;
     transition: all 0.1s linear;
     padding: 8px;
     margin: 8px;
     color: black;
-    cursor: pointer;
-
-    &:hover,
-    &:focus {
-        text-decoration: none;
-        box-shadow: 0px 0px 10px rgba(192,192,192,1); /* Inconsistant */
-
-        > img {
-            -webkit-filter: brightness(1.1);
-        }
-    }
-
-    &:active {
-        box-shadow: 0px 0px 20px @ubuntu-mate;
-    }
 
     &.installed {
-        border: 2px solid @ubuntu-mate;
+        box-shadow: @large-card-installed-shadow;
     }
 
     .icon {

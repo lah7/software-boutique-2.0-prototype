@@ -254,6 +254,11 @@ class SoftwareBoutique(object):
         ## Placeholders (these are set in start_loading() so UI appears quicker)
         self.webkit = None
         self.update_page = None
+        self.queue = None                   # QueueOperationsThread()
+        self.backend = None                 # boutique.SoftwareInstallation.Backend()
+        self.is_ubuntu_mate = False
+        self.boutique_ppa_enabled = False
+        self.internet_connected = False
 
         # If the app isn't even compiled, stop.
         # If the app mysterously lost its data, also stop.
@@ -265,12 +270,6 @@ class SoftwareBoutique(object):
             else:
                 dbg.stdout("Silly developer! You forgot to compile me, please run 'software-boutique-dev' instead.", 1, 0)
             exit(1)
-
-        ## Software Environment
-        self.backend = None                 # boutique.SoftwareInstallation.Backend()
-        self.is_ubuntu_mate = False
-        self.boutique_ppa_enabled = False
-        self.internet_connected = False
 
         # User Preferences
         if pref.read("advanced-mode", False) == True:
@@ -548,7 +547,7 @@ class SoftwareBoutique(object):
         """
         installed = app_obj.installation.is_installed()
 
-        html = "<div class='app-card {installed_class} {app_uuid}' title='{hover_tooltip}' onclick='{hover_click_cmd}' >" \
+        html = "<div class='app-card {installed_class} {app_uuid}'>" \
                         "<i class='fa fa-check-circle fa-2x install_checkmark' {show_if_installed} ></i>" \
                         "<img class='icon' src='{icon}' />" \
                         "<div class='title'>{name}</div>" \
