@@ -180,6 +180,11 @@ function changeCategory(internal_name, human_name) {
         $('#backdrop-icon').attr('src', 'categories/' + internal_name + '.svg');
         $('#backdrop-icon').fadeIn();
     }, 500);
+
+    // Update start page on entry.
+    if (internal_name == "start-page") {
+        cmd("enter-start-page")
+    }
 }
 
 function changeTab(target) {
@@ -217,4 +222,3 @@ function hideCategoryTitle(showBackBtn) {
         }, 500);
     }
 }
-

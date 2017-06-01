@@ -292,6 +292,9 @@ class SoftwareBoutique(object):
         elif cmd == "finished-introduction":
             self.close_introduction_page()
 
+        elif cmd == "enter-start-page":
+            self.generate_start_page_apps()
+
         elif cmd == "exit":
             shutdown()
 
@@ -1004,6 +1007,7 @@ class SoftwareBoutique(object):
                          "development", "graphics", "office", "education", "more-software", "accessibility"]:
             apps = list(self.index[category].keys())
             random_apps.append([category, random.choice(apps)])
+        random.shuffle(random_apps)
 
         html += _add_app(random_apps[0], 1, "left")
         html += _add_app(random_apps[1], 2, "left")
