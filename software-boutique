@@ -1024,6 +1024,14 @@ class SoftwareBoutique(object):
         html += _add_app(random_apps[11], 1, "right")
         self.update_page("#random-apps", "html", html)
 
+    def notify_send(title, subtitle, icon_path):
+        try:
+            Notify.init(title)
+            notification=Notify.Notification.new(title, subtitle, icon_path)
+            notification.show()
+        except Exception as e:
+            dbg.stdout("Could not send notification: " + str(e), 0, 1)
+
 
 class QueueOperationsThread(object):
     """
@@ -1129,6 +1137,41 @@ class QueueOperationsThread(object):
 
     # e.g. desktop notifications function
     # e.g. toast function
+
+    def send_desktop_notification(self, app_obj, operation, successful):
+        """
+        Shows a notification on the user's desktop.
+
+        app_obj     obj     ApplicationData() object
+        operation   str     Operation name
+                              - "install"
+                              - "remove"
+                              - "upgrade"
+        successful  bln     True/False
+        """
+        def send_this(title, subtitle):
+            title = title.replace("{0}", app_obj.name)
+            subtitle = title.replace("{0}", app_obj.name)
+            icon_path = app_obj.icon_path
+            app.notify_send(title, subtitle, icon_path)
+
+        if operation == "install":
+            if successful:
+                notify_send(_("{0} successfully installed"), _("This application is ready to use."))
+            else:
+                notify_send(_("{0} failed to install"), _("There was a problem installing this application."))
+
+        elif operation == "remove":
+            if successful:
+                notify_send(_("{0} removed"), _("This application has been uninstalled."))
+            else:
+                notify_send(_("{0} failed to remove"), _("There was a problem removing this application."))
+
+        elif operation == "upgrade":
+            if successful:
+                notify_send(_("{0} upgraded"), _("From now on, {0} will stay up to date with the latest release."))
+            else:
+                notify_send(_("{0} failed to upgrade"), _("There was a problem installing the latest version of this application."))
 
 
 class Debugging(object):
