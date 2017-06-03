@@ -739,7 +739,7 @@ class SoftwareBoutique(object):
         ### Screenshots
         html += "<div id='app-screenshots'>"
         if len(app_obj.screenshot_filenames) == 0:
-            html += "<div id='screenshot-empty'>{0}</div>".format(_("No screenshot available"))
+            html += "<div id='screenshot-empty'><var>{0}</var></div>".format(_("No screenshot available"))
 
         else:
             path = os.path.join(data_source, "apps", "screenshots", app_obj.screenshot_filenames[0])
