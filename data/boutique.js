@@ -171,14 +171,13 @@ function changeCategory(internal_name, human_name) {
     $('#current-category-text').html(human_name);
     categoryClose();
     $('.category-contents').fadeOut(499);
-    $('#backdrop-icon').fadeOut();
+    $('#backdrop-icon-browse').fadeOut(500);
     $('.content').animate({
         scrollTop: 0
     }, 1000);
     setTimeout(function() {
         $('#category-page-' + internal_name).fadeIn(500);
-        $('#backdrop-icon').attr('src', 'categories/' + internal_name + '.svg');
-        $('#backdrop-icon').fadeIn();
+        $('#backdrop-icon-browse').attr('src', 'categories/' + internal_name + '.svg').fadeIn(500);
     }, 500);
 
     // Update start page on entry.
@@ -191,13 +190,19 @@ function changeTab(target) {
     $('.navigation').removeClass('active');
     $('#' + target + '-button').addClass('active');
     smoothFade('.content', '#' + target + '-page', 'fast');
+    $('#backdrop-icon-browse').fadeOut(500);
+    $('#backdrop-icon-tabs').fadeOut(500);
 
     var title = $('#' + target + '-button').attr('data-title');
 
     if (target == 'browse') {
         showCategoryTitle()
+        $('#backdrop-icon-browse').delay(500).fadeIn();
     } else {
         hideCategoryTitle(false)
+        setTimeout(function() {
+            $('#backdrop-icon-tabs').attr('class', $('#' + target + '-button > span').attr('class')).fadeIn(500);
+        }, 500);
     }
 
     setTimeout(function() {
