@@ -477,20 +477,26 @@ class SoftwareBoutique(object):
             installed_apps = []
 
             dbg.stdout("Populating categories...", 3, 2)
-            self._append_category('start-page', _("Start Page"))
-            self._append_category('accessories', _("Accessories"))
-            self._append_category('education', _("Education"))
-            self._append_category('games', _("Games"))
-            self._append_category('graphics', _("Graphics"))
-            self._append_category('internet', _("Internet"))
-            self._append_category('office', _("Office"))
-            self._append_category('development', _("Programming"))
-            self._append_category('multimedia', _("Sound & Video"))
-            self._append_category('system', _("System Tools"))
-            self._append_category('accessibility', _("Universal Access"))
-            self._append_category('server', _("Servers"))
-            self._append_category('more-software', _("More Software"))
-            self._append_category('fixes', _("Fixes"))
+            self.all_categories = [
+                ["start-page", _("Start Page")],
+                ["accessories", _("Accessories")],
+                ["education", _("Education")],
+                ["games", _("Games")],
+                ["graphics", _("Graphics")],
+                ["internet", _("Internet")],
+                ["office", _("Office")],
+                ["development", _("Programming")],
+                ["multimedia", _("Sound & Video")],
+                ["system", _("System Tools")],
+                ["accessibility", _("Universal Access")],
+                ["server", _("Servers")],
+                ["more-software", _("More Software")],
+                ["fixes", _("Fixes")]
+            ]
+
+            for category in self.all_categories:
+                self._append_category(category[0], category[1])
+
             dbg.stdout("Finished populating categories.", 2, 2)
 
             # Set default starting category
@@ -543,6 +549,35 @@ class SoftwareBoutique(object):
             ############################################
             self.generate_start_page_apps()
             self.update_page("#welcome-text", "html", _("Welcome to the Software Boutique"))
+            self.update_page("#welcome-description", "html", _("There is an abundance of software available for Ubuntu MATE" \
+                " and some people find that choice overwhelming. The Boutique is a"
+                " carefully curated selection of the best-in-class applications chosen because they"
+                " integrate well, complement Ubuntu MATE and enable you to self style your computing experience.")
+            )
+
+            html = ""
+            for category in self.all_categories:
+                if category[0] in ["start-page", "fixes", "more-software"]:
+                    continue
+                else:
+                    print(category[0])
+                    html += self._generate_category_html(category[0], category[1])
+
+            self.update_page("#start-page-categories", "append", html)
+
+            self.update_page("#start-page-fixes", "prepend", self._generate_category_html("fixes", _("Fixes")))
+            self.update_page("#start-page-fixes h4", "html", _("Something not working?"))
+            self.update_page("#start-page-fixes span", "html",
+                _("Just in case something goes wrong when updating or installing new software, we've put together" \
+                " some one-click fixes that usually solve most common problems.")
+            )
+
+            self.update_page("#start-page-more-software", "prepend", self._generate_category_html("more-software", _("More Software")))
+            self.update_page("#start-page-more-software h4", "html", _("Can't find what you're looking for?"))
+            self.update_page("#start-page-more-software span", "html",
+                _("As the Boutique is just a curvated collection of software, not everything is listed here. Install" \
+                " a full-fledged software center to explore the entire Ubuntu catalogue.")
+            )
 
             ############################################
             # Queue Monitor
@@ -610,6 +645,22 @@ class SoftwareBoutique(object):
 
         return(html)
 
+    def _generate_category_html(self, internal_name, human_name):
+        """
+        Generates the HTML for category "card" buttons.
+
+        internal_name   =   Category name in index. e.g. accessories
+        human_name      =   Nice name for the user. e.g. Accessories
+        """
+        safe_human_name = make_html_safe(human_name)
+        html = "<div id=\"category-{1}\" class=\"category\">" + \
+                 "<a onclick=\"changeCategory('{1}', '{2}')\">" + \
+                   "<div class=\"option\"><img src=\"{0}/categories/{1}.svg\"/> <label>{2}</label></div>" + \
+                 "</a>" + \
+               "</div>"
+        html = html.replace('{0}', data_source).replace('{1}', internal_name).replace('{2}', safe_human_name)
+        return html
+
     def _append_category(self, internal_name, human_name):
         """
         Generates and appends the HTML for populating category listings.
@@ -618,14 +669,8 @@ class SoftwareBoutique(object):
         human_name      =   Nice name for the user. e.g. Accessories
         """
         # Adds to the categories selection page
+        html = self._generate_category_html(internal_name, human_name)
         safe_human_name = make_html_safe(human_name)
-        html = "<div id=\"category-{1}\" class=\"category\">" + \
-                 "<a onclick=\"changeCategory('{1}', '{2}')\">" + \
-                   "<div class=\"option\"><img src=\"{0}/categories/{1}.svg\"/> <label>{2}</label></div>" + \
-                 "</a>" + \
-               "</div>"
-
-        html = html.replace('{0}', data_source).replace('{1}', internal_name).replace('{2}', safe_human_name)
         self.update_page("#categories-container", "append", html)
 
         # Skip special categories (no apps are listed here)

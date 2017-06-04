@@ -784,33 +784,34 @@ button.checkbox {
     background: -webkit-linear-gradient(white, white, rgba(255,255,255,0.5));;
     z-index: 90;
     overflow-y: hidden;
+}
 
-    .category {
-         .option {
-            float: left;
-            width: 180px;
-            border: 2px solid @card-border;
-            background-color: white;
-            box-shadow: @card-shadow;
-            margin: 6px;
-            padding: 8px;
-            display: inline-block;
-            transition: border-color 0.1s linear;
+.category {
+    display: inline-block;
 
-            &:hover,
-            &:focus {
-                border-color: @card-border-focus;
-            }
+     .option {
+        display: inline-block;
+        width: 180px;
+        border: 2px solid @card-border;
+        background-color: white;
+        box-shadow: @card-shadow;
+        margin: 6px;
+        padding: 8px;
+        transition: border-color 0.1s linear;
 
-            > img {
-                width: 24px;
-                height: 24px;
-            }
+        &:hover,
+        &:focus {
+            border-color: @card-border-focus;
+        }
 
-             > label {
-                position: relative;
-                bottom: 4px;
-            }
+        > img {
+            width: 24px;
+            height: 24px;
+        }
+
+         > label {
+            position: relative;
+            bottom: 4px;
         }
     }
 }
@@ -1247,6 +1248,11 @@ img.like-fa {
     #welcome-text {
         text-align: center;
     }
+
+    #welcome-description {
+        text-align: center;
+        font-size: 1em;
+    }
 }
 
 @-webkit-keyframes random-apps-left {
@@ -1282,6 +1288,24 @@ img.like-fa {
     100% {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+.category-embed {
+    .category {
+        display: inline-block;
+        width: 240px;
+        float: left;
+        margin-top: 2.5em;
+    }
+
+    .category-info {
+        width: calc(~'100% - 240px');
+        display: inline-block;
+    }
+
+    &+ .category-embed {
+        margin-top: 2em;
     }
 }
 
