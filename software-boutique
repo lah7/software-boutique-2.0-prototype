@@ -1330,6 +1330,7 @@ class Debugging(object):
     def parse_parameters(self):
         for arg in sys.argv:
             if arg in ["-h", "--help"]:
+                trans = Translations()
                 print("Usage: software-boutique [arguments]\n")
                 #      | Command             |------| Help Text                                             |
                 print("  -h, --help           " + _("Show this help text."))
@@ -1342,7 +1343,6 @@ class Debugging(object):
                 print("  --simulate           " + _("Simulate software changes without system modification."))
                 print("  -v, --verbose        " + _("Show details to stdout (for diagnosis)."))
                 print("  -vv, --debug         " + _("Show more details to stdout (for debugging)."))
-                print("")
                 exit(0)
 
             elif arg.startswith("--arch"):
