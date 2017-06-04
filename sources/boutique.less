@@ -962,7 +962,7 @@ button.checkbox {
         margin-left: @button-spacing;
     }
 
-    .install_checkmark {
+    .install-checkmark {
         position: absolute;
         top: 65px;
         left: 80px;
@@ -1025,6 +1025,24 @@ button.checkbox {
         border-collapse: collapse;
         padding: 8px;
     }
+
+    .operation-buttons button + button {
+        margin-left: @button-spacing;
+
+        &.inverted {
+            float: left;
+            margin-left: 0;
+            margin-right: @button-spacing;
+        }
+    }
+
+    .install-checkmark {
+        position: absolute;
+        top: 80px;
+        left: 75px;
+        color: @ubuntu-mate;
+        z-index: 10;
+    }
 }
 
 #app-icon {}
@@ -1041,8 +1059,6 @@ button.checkbox {
     width: 70%;
     font-size: 0.9em;
 }
-
-#app-buttons {}
 
 #app-installed {
     font-size: 0.8em;

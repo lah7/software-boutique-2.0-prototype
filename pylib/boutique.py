@@ -397,17 +397,20 @@ def print_app_installation_buttons(app_obj, string_dict, queue=None):
     if queue:
         for item in queue:
             if item[1].uuid == app_obj.uuid:
-                html += "<div class='queue-plan'><span class='fa fa-check-circle'></span> " + string_dict["queued-" + item[0]] + "</div>"
+                operation = item[0]
+                if operation == "remove":
+                    icon = "fa-warning"
+                else:
+                    icon = "fa-check-circle"
+
+                html += "<div class='queue-plan'><span class='fa {icon}'></span> {text}</div>".format(
+                            icon = icon,
+                            text = string_dict["queued-" + operation]
+                        )
                 html += _generate_button_html("drop-queue", app_obj, "white", "fa-clone", string_dict["remove_queue"], string_dict["remove_queue_tooltip"])
                 return(html)
 
     if app_obj.is_installed():
-        # For detail view, show icon on the far left.
-        if not show_details_btn and app_obj.launch_cmd:
-            html += _generate_button_html(
-                        "launch", app_obj, "inverted", None, string_dict["launch_text"], string_dict["launch_tooltip"]
-                    )
-
         html += _generate_button_html(
                     "install", app_obj, "yellow", "fa-refresh", string_dict["reinstall_text"], string_dict["reinstall_tooltip"]
                 )
@@ -417,7 +420,7 @@ def print_app_installation_buttons(app_obj, string_dict, queue=None):
                 )
 
         # For card view, show icon on the far right.
-        if show_details_btn and app_obj.launch_cmd:
+        if app_obj.launch_cmd:
             html += _generate_button_html(
                         "launch", app_obj, "inverted", None, string_dict["launch_text"], string_dict["launch_tooltip"]
                     )
