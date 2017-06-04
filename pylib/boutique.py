@@ -375,7 +375,7 @@ def print_more_details_button(app_obj, string_dict):
             )
 
 
-def print_app_installation_buttons(app_obj, string_dict, queue=None):
+def print_app_installation_buttons(app_obj, string_dict, queue):
     """
     Returns the HTML for the buttons that determines the installation/launch options.
 
@@ -388,8 +388,7 @@ def print_app_installation_buttons(app_obj, string_dict, queue=None):
                         install_text = "Install",
                         install_tooltip = "Install this application on your computer"
                     }
-    queue            = (Optional) If specified, check this list if the item is
-                        queued and show its status / option to "remove from queue" instead.
+    queue            = Check the queue and show "Remove from queue" if listed.
     """
     html = "<div class='operation-buttons buttons-{0}'>".format(app_obj.uuid)
 
@@ -408,6 +407,7 @@ def print_app_installation_buttons(app_obj, string_dict, queue=None):
                             text = string_dict["queued-" + operation]
                         )
                 html += _generate_button_html("drop-queue", app_obj, "white", "fa-clone", string_dict["remove_queue"], string_dict["remove_queue_tooltip"])
+                html += "</div>"
                 return(html)
 
     if app_obj.is_installed():

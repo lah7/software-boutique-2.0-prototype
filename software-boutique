@@ -473,6 +473,7 @@ class SoftwareBoutique(object):
             ############################################
             # Stock the Boutique Categories & Apps
             ############################################
+            self.queue = QueueOperationsThread(self.update_page)
             installed_apps = []
 
             dbg.stdout("Populating categories...", 3, 2)
@@ -546,7 +547,6 @@ class SoftwareBoutique(object):
             ############################################
             # Queue Monitor
             ############################################
-            self.queue = QueueOperationsThread(self.update_page)
             spawn_thread(self.queue.watch_queue)
             self.queue.update_queue_state()
 
@@ -605,7 +605,7 @@ class SoftwareBoutique(object):
                         hide_if_installed = "style='display:none'" if installed else "",
                         installed_class = "installed" if installed else "",
                         details_button = boutique.print_more_details_button(app_obj, module_strings),
-                        install_buttons = boutique.print_app_installation_buttons(app_obj, module_strings)
+                        install_buttons = boutique.print_app_installation_buttons(app_obj, module_strings, self.queue.queue)
                     )
 
         return(html)
@@ -843,7 +843,7 @@ class SoftwareBoutique(object):
             html += "<div id='app-installed'><span class='fa fa-check-circle'></span> " + _get_install_date_string(install_time.read(app_obj.uuid, 0)) + "</div>"
 
         ### Action Buttons
-        html += boutique.print_app_installation_buttons(app_obj, module_strings)
+        html += boutique.print_app_installation_buttons(app_obj, module_strings, self.queue.queue)
 
         ### End top section
         html += "</div><hr/>"
