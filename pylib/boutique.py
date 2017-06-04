@@ -22,6 +22,7 @@ import json
 import platform
 import subprocess
 import requests
+from random import choice
 
 # Apt Imports
 #~ from gi.repository import PackageKitGlib as packagekit
@@ -201,7 +202,8 @@ class SoftwareInstallation():
             return
 
         def is_installed(self):
-            return False
+            # Randomly determine this
+            return choice([True, False])
 
         def do_install(self, ui_obj):
             time.sleep(2)
