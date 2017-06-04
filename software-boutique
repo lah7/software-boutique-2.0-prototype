@@ -1140,16 +1140,15 @@ class QueueOperationsThread(object):
 
         app_uuid    str     Value of appid provided in ApplicationData()
         """
-        no = 0
-        for item in self.queue:
+        for index, item in enumerate(self.queue):
             try:
                 if item[1].uuid == app_uuid:
-                    self.queue.pop(no)
+                    self.queue.pop(index)
                     self.update_count()
                     self.ui_update_buttons(item[1])
                     dbg.stdout("Removed item from queue: " + app_uuid, 4, 1)
+                    self.update_queue_state()
                     return
-                no += 1
             except:
                 # This is not an ApplicationData() object.
                 pass
