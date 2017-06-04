@@ -58,8 +58,8 @@
 @card-border: #F0F0F0;
 @card-border-focus: lightgray;
 @card-shadow: 1px 1px 1px rgba(192,192,192,0.5);
-@large-card-shadow: 0px 0px 10px rgba(192,192,192,0.5);
-@large-card-installed-shadow: 0px 0px 10px @ubuntu-mate;
+@card-shadow: 0px 0px 10px rgba(192,192,192,0.5);
+@card-installed-shadow: 0px 0px 10px @ubuntu-mate;
 
 /* Actions */
 @success: green;
@@ -78,6 +78,10 @@
     top: 0;
     bottom: 0;
     margin: auto;
+}
+
+img.inverted {
+	filter: invert(100%);
 }
 
 /************************
@@ -910,14 +914,14 @@ button.checkbox {
     width: 97%;
     height: 110px;
     background-color: rgba(255, 255, 255, 0.5);
-    box-shadow: @large-card-shadow;
+    box-shadow: @card-shadow;
     transition: all 0.1s linear;
     padding: 8px;
     margin: 8px;
     color: black;
 
     &.installed {
-        box-shadow: @large-card-installed-shadow;
+        box-shadow: @card-installed-shadow;
     }
 
     .icon {
@@ -1263,4 +1267,115 @@ img.like-fa {
         transform: scale(1);
         opacity: 1;
     }
+}
+
+/************************
+ * Queue Page
+*************************/
+#queue-page {
+    .clear {
+        position: relative;
+        top: 1em;
+        float: right;
+    }
+}
+
+#queue-empty {
+    font-style: normal;
+    color: gray;
+    .center-align(absolute);
+    font-style: normal;
+    height: 70px;
+    text-align: center;
+}
+
+.queue-card {
+    position: relative;
+    min-width: 100px;
+    width: 97%;
+    height: 3em;
+    background-color: rgba(255, 255, 255, 0.5);
+    box-shadow: @card-shadow;
+    transition: all 0.1s linear;
+    padding: 8px;
+    margin: 8px;
+    color: black;
+
+    button {
+        color: black;
+    }
+
+    button.dialog-theme {
+        float: right;
+        clear: both;
+        position: relative;
+        top: 0.6em;
+    }
+
+    &.success {
+        border: 2px solid @success;
+    }
+
+    &.failed {
+        border: 2px solid @danger;
+    }
+
+    .icon {
+        float: left;
+        margin-left: 0.5em;
+        width: 3em;
+        height: 3em;
+    }
+
+    .title {
+        float: left;
+        margin-top: 1em;
+        margin-left: 1em;
+        height: 1em;
+    }
+
+    .status {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        right: 3em;
+        height: 1em;
+        font-size: 0.9em;
+        color: gray;
+    }
+
+    &.success,
+    &.failed {
+        .status {
+            right: 6em;
+        }
+    }
+
+    &.removed {
+        .title {
+            text-decoration: strike;
+        }
+    }
+
+    .close {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        height: 1.3em;
+        width: 1.5em;
+        right: 1em;
+        color: gray;
+    }
+}
+
+.queue-card.swiping {
+    -webkit-animation: swipe-right 0.5s forwards;
+}
+
+/* Header/Footer */
+@-webkit-keyframes swipe-right {
+    0% { -webkit-transform: translateX(0px); opacity: 1; }
+    100% { -webkit-transform: translateX(100px); opacity: 0; }
 }

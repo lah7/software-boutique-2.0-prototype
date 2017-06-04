@@ -59,6 +59,7 @@ supported_codenames = ["xenial", "yakkety", "zesty", "artful"]
 default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
 
+
 def get_data_source():
     """
     Retrieves the data source for assets used by the application.
@@ -75,7 +76,6 @@ def get_data_source():
         sys.exit(1)
     return data_path
 
-
 def spawn_thread(target, daemon=True, args=[]):
     """
     Creates another thread to prevent holding up the main thread (and GUI)
@@ -86,6 +86,12 @@ def spawn_thread(target, daemon=True, args=[]):
         newthread.daemon = True
     newthread.start()
 
+def delay_function(target, time_value):
+    """
+    Intentionally waits before running a function, e.g. for front-end.
+    """
+    time.sleep(time_value)
+    target()
 
 def make_html_safe(string):
     """
@@ -338,6 +344,32 @@ class SoftwareBoutique(object):
             self.queue.remove_item(app_uuid)
             self.webkit.run_javascript("animateClass('#queue-button', 'pulse-added', 2000)")
 
+        elif cmd == "clear-queue-pending":
+            self.update_page(".queue-card", "addClass", "swiping");
+            self.update_page(".queue-active", "removeClass", "swiping");
+
+            in_progress_item = None
+            # Remove all items, except the one that's in progress.
+            for item in self.queue.queue:
+                if self.queue.current_app_uuid == self.queue.queue[0][1].uuid:
+                    in_progress_item = item
+
+            if in_progress_item:
+                self.queue.queue = [in_progress_item]
+            else:
+                self.queue.queue = []
+
+            # Allow swipe animation to finish.
+            spawn_thread(delay_function, False, [self.queue.update_queue_state, 0.5])
+            spawn_thread(delay_function, False, [self.queue.update_count, 0.5])
+
+        elif cmd == "clear-queue-completed":
+            self.update_page(".queue-complete", "addClass", "swiping");
+            self.queue.finished_queue = []
+
+            # Allow swipe animation to finish before refreshing list.
+            spawn_thread(delay_function, False, [self.queue.update_queue_state, 0.5])
+
         elif cmd.startswith("screenshot?"):
             # FIXME!
             return
@@ -516,6 +548,7 @@ class SoftwareBoutique(object):
             ############################################
             self.queue = QueueOperationsThread(self.update_page)
             spawn_thread(self.queue.watch_queue)
+            self.queue.update_queue_state()
 
             ############################################
             # Load Finished
@@ -1039,19 +1072,29 @@ class QueueOperationsThread(object):
 
     The queue is a list, each item is a list describing the desired operation, e.g:
 
+    ** For queued items:
     [<operation>, <object>]
 
     0   operation   str     Describes what to do with this object.
-                            "install"
-                            "remove"
-                            "upgrade"
+                              - "install"
+                              - "remove"
+                              - "upgrade"
 
-    1   object      obj     Associated object for this operation, e.g. could
-                            be ApplicationData() or a function.
+    1   object      obj     ApplicationData() object.
+
+    ** For finished items:
+    [<operation>, <object>, <successful>]
+
+    This list has an extra boolean to indicate if it was successful or not.
+
     """
     def __init__(self, update_page_obj):
         self.update_page = update_page_obj
         self.queue = []
+        self.finished_queue = []
+        self.current_operation = "null"
+        self.current_app_uuid = "null"
+        self.status_text = _("Ready")
 
     def watch_queue(self):
         """
@@ -1088,6 +1131,7 @@ class QueueOperationsThread(object):
         self.queue.append([operation, app_object])
         self.update_count()
         self.ui_update_buttons(app_object)
+        self.update_queue_state()
         dbg.stdout("Added item to queue: " + app_object.uuid, 4, 1)
 
     def remove_item(self, app_uuid):
@@ -1134,9 +1178,106 @@ class QueueOperationsThread(object):
         """
         self.update_page(".buttons-" + app_object.uuid, "html", boutique.print_app_installation_buttons(app_object, module_strings, self.queue))
 
+    def update_queue_state(self):
+        """
+        Updates the queue list and current status text.
+        """
+        self.update_page("#queue-page", "html", " ")
+        html = ""
 
-    # e.g. desktop notifications function
-    # e.g. toast function
+        # Nothing in the queue
+        if len(self.queue) == 0:
+            strings = [
+                _("There's no items queued."),
+                _("Nothing queued, nothing to do!"),
+                _("Pick some software that interests you, and it'll start installing in here!"),
+                _("Nothing to see here!")
+            ]
+            html = "<div id='queue-empty'>{0}<br/><br/>{1}</div>".format(
+                random.choice(strings),
+                "<button class='dialog-theme' onclick='changeTab(\"browse\")'><img class='inverted' src='img/boutique-icon-mono.svg'/> " + _("Find Software") + "</button>"
+            )
+            self.update_page("#queue-page", "append", html)
+            return
+
+        # Pending Queue
+        html += "<button class='clear dialog-theme' onclick='cmd(\"{cmd}\")'>{span} {var}</button>" \
+                "<h3><span class='fa fa-clock-o'></span> {title}</h3>".format(
+                    title = _("In Progress"),
+                    cmd = "clear-queue-pending",
+                    span = "<span class='fa fa-times'></span>",
+                    var = _("Cancel All")
+                )
+
+        for item in self.queue:
+            operation = item[0]
+            app_obj = item[1]
+            html += "<div id='{uuid}' class='queue-card'>" \
+                        "<button onclick='cmd(\"{cmd_details}\")'>" \
+                            "<img class='icon' src='{icon}' />" \
+                            "<div class='title'>{name}</div>" \
+                        "</button>" \
+                        "<div class='status'>{status}</div>" \
+                        "<button class='close' onclick='cmd(\"{cmd_cancel}\")' title='{close_tooltip}'><span class='fa fa-close'></span></div>" \
+                    "</div>".format(
+                        uuid = "queue-" + app_obj.uuid,
+                        icon = app_obj.icon_path,
+                        name = app_obj.name,
+                        status = "Pending",
+                        close_tooltip = _("Cancel"),
+                        cmd_details = "details?{0}?{1}".format(app_obj.categoryid, app_obj.appid),
+                        cmd_cancel = "drop-queue?{0}?{1}".format(app_obj.categoryid, app_obj.appid)
+                    )
+        html += "<br/>"
+
+        # Finished Queue
+        if len(self.finished_queue) > 0:
+            html += "<button class='clear dialog-theme' onclick='cmd(\"{cmd}\")'>{span} {var}</button>" \
+                    "<h3><span class='fa fa-check'></span> {title}</h3>".format(
+                        title = _("Finished"),
+                        cmd = "clear-queue-completed",
+                        span = "<span class='fa fa-reorder'></span>",
+                        var = _("Clear")
+                    )
+
+            for item in self.finished_queue:
+                operation = item[0]
+                app_obj = item[1]
+                successful = item[2]
+
+                if successful:
+                    result_css = "success"
+                    status = _("Successfully installed")
+                else:
+                    result_css = "failed"
+                    status = _("Successfully removed")
+
+                html += "<div id='{uuid}' class='queue-card queue-complete {operation} {result_css}'>" \
+                            "<button onclick='{cmd_details}'>" \
+                                "<img class='icon' src='{icon}' />" \
+                                "<div class='title '>{name}</div>" \
+                            "</button>" \
+                            "<div class='status'>{status}</div>".format(
+                            uuid = "queue-" + app_obj.uuid,
+                            operation = operation,
+                            icon = app_obj.icon_path,
+                            name = app_obj.name,
+                            status = status,
+                            result_css = result_css,
+                            cmd_details = "details?{0}?{1}".format(app_obj.categoryid, app_obj.appid),
+                        )
+
+                # Only show "Launch" button if installed.
+                if operation == "install" or operation == "remove":
+                    html += "<button class='dialog-theme' onclick='cmd(\"{cmd_launch}\")'>{launch_text}</div>".format(
+                                launch_text = _("Launch"),
+                                cmd_launch = "launch?{0}?{1}".format(app_obj.categoryid, app_obj.appid)
+                            )
+
+                html += "</div>"
+
+        # Finish queue list
+        self.update_page("#queue-page", "append", html)
 
     def send_desktop_notification(self, app_obj, operation, successful):
         """
