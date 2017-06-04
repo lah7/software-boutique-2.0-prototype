@@ -9,19 +9,26 @@
 <body>
     <div id="header">
         <div class="left" style="display:none">
-            <button id="back-button" class="navigation" onclick="cmd('close-details')" style="display:none">
-                <span class="fa fa-chevron-left"></span>
-            </button>
-            <div id="header-title" style="display:none">Test Page</div>
-            <button id="change-category-button" class="dropdown with-text category-dropdown" onclick="categoryOpen()">
-                <img id="current-category-icon" class="icon" src=""/>
-                <span id="current-category-text" class="text"></span>
-                &nbsp;<span class="chevron">⏷</span>
-            </button>
-            <button id="change-category-button-close" class="dropdown with-text category-dropdown" onclick="categoryClose()" hidden>
-                <span class="close-string text">Close</span>
-                &nbsp;<span class="chevron">⏶</span>
-            </button>
+            <div class="navigation-title" id="back-title" style="display:none">
+                <button id="back-button" class="navigation" onclick="cmd('close-details')">
+                    <span class="fa fa-chevron-left"></span>
+                </button>
+                <div class="header-title"></div>
+            </div>
+            <div class="navigation-title" id="basic-title" style="display:none">
+                <div class="header-title"></div>
+            </div>
+            <div class="navigation-title" id="browse-title" style="display:none">
+                <button id="change-category-button" class="dropdown with-text category-dropdown" onclick="categoryOpen()">
+                    <img id="current-category-icon" class="icon" src=""/>
+                    <span id="current-category-text" class="text"></span>
+                    &nbsp;<span class="chevron">⏷</span>
+                </button>
+                <button id="change-category-button-close" class="dropdown with-text category-dropdown" onclick="categoryClose()" hidden>
+                    <span class="close-string text">Close</span>
+                    &nbsp;<span class="chevron">⏶</span>
+                </button>
+            </div>
         </div>
         <div class="right" style="display:none">
           <button id="browse-button" class="navigation with-text active" onclick="changeTab('browse')"><img src="img/boutique-icon-mono.svg"/>&nbsp;</button>

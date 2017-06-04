@@ -555,6 +555,7 @@ class SoftwareBoutique(object):
             ############################################
             self.webkit.run_javascript("smoothFade('#loading-page', '#browse-page')")
             self.webkit.run_javascript("changeCategory('start-page', '" + _("Start Page") + "')")
+            self.webkit.run_javascript("changeNavTitleType('browse')")
             self.update_page("#header .left", "fadeIn")
             self.update_page("#header .right", "fadeIn")
             self.update_page("#footer .left", "fadeIn")
@@ -758,8 +759,8 @@ class SoftwareBoutique(object):
     def show_app_details(self, categoryid, appid):
         app_obj = boutique.get_application_details(self.backend, self.index, categoryid, appid)
         self.webkit.run_javascript("animate('#app-details-page', 'enter-more-info', 'in')")
-        self.webkit.run_javascript("hideCategoryTitle(true)")
-        self.update_page("#header-title", "html", app_obj.name)
+        self.webkit.run_javascript("changeNavTitleType('back')")
+        self.update_page(".header-title", "html", app_obj.name)
         installed = app_obj.is_installed()
 
         # Start top section
@@ -1023,7 +1024,7 @@ class SoftwareBoutique(object):
 
     def hide_app_details(self):
         self.webkit.run_javascript("animate('#app-details-page', 'exit-more-info', 'out')")
-        self.webkit.run_javascript("showCategoryTitle()")
+        self.webkit.run_javascript("changeNavTitleType('browse')")
 
     def generate_start_page_apps(self):
         def _add_app(random_app, position, direction):
