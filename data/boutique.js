@@ -197,19 +197,19 @@ function changeTab(target) {
     $('.navigation').removeClass('active');
     $('#' + target + '-button').addClass('active');
     smoothFade('.content', '#' + target + '-page', 'fast');
-    $('#backdrop-icon-browse').fadeOut(500);
-    $('#backdrop-icon-tabs').fadeOut(500);
+    $('#backdrop-icon-browse').fadeOut(250);
+    $('#backdrop-icon-tabs').fadeOut(250);
 
     var title = $('#' + target + '-button').attr('data-title');
 
     if (target == 'browse') {
         changeNavTitleType('browse');
-        $('#backdrop-icon-browse').delay(500).fadeIn();
+        $('#backdrop-icon-browse').delay(250).fadeIn();
     } else {
         changeNavTitleType('basic');
         setTimeout(function() {
-            $('#backdrop-icon-tabs').attr('class', $('#' + target + '-button > span').attr('class')).fadeIn(500);
-        }, 500);
+            $('#backdrop-icon-tabs').attr('class', $('#' + target + '-button > span').attr('class')).fadeIn(250);
+        }, 250);
     }
 
     setTimeout(function() {
