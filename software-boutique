@@ -560,7 +560,6 @@ class SoftwareBoutique(object):
                 if category[0] in ["start-page", "fixes", "more-software"]:
                     continue
                 else:
-                    print(category[0])
                     html += self._generate_category_html(category[0], category[1])
 
             self.update_page("#start-page-categories", "append", html)
@@ -811,7 +810,7 @@ class SoftwareBoutique(object):
         # Start top section
         html = "<div id='app-overview'>"
         html += "<div class='left'>"
-        if app_obj.is_installed():
+        if installed:
             html += "<i class='fa fa-check-circle fa-2x install-checkmark'></i>"
         html += "<img id='app-icon' src='{0}'/>".format(app_obj.icon_path)
         html += "</div><div class='right'>"

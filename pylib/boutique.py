@@ -22,7 +22,8 @@ import json
 import platform
 import subprocess
 import requests
-from random import choice
+from time import time
+from time import sleep
 
 # Apt Imports
 #~ from gi.repository import PackageKitGlib as packagekit
@@ -198,23 +199,24 @@ class SoftwareInstallation():
             self.backend = backend
 
             # This dummy pretends to look busy.
-            import time
-            return
 
         def is_installed(self):
-            # Randomly determine this
-            return choice([True, False])
+            # Randomly determine this based on time.
+            if int(time()) % 2 == 0:
+                return True
+            else:
+                return False
 
         def do_install(self, ui_obj):
-            time.sleep(2)
+            sleep(2)
             return True
 
         def do_remove(self, ui_obj):
-            time.sleep(2)
+            sleep(2)
             return True
 
         def do_upgrade(self, ui_obj):
-            time.sleep(1)
+            sleep(1)
             return True
 
 
