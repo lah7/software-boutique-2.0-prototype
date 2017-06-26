@@ -51,7 +51,7 @@ Date:       May 2017
  |
  ㇗ arch                    list        Yes          Architectures to show for this app.
  ㇗ releases                list        Yes          Versions of Ubuntu MATE to show this application.
- ㇗ method                  string      Yes          How is this software installed?
+ ㇗ method                  string      Yes          How is this software installed? E.g.
  |                                                       - "apt"
  |                                                       - "snap"
  ㇗ installation            group       Yes
@@ -80,8 +80,6 @@ Date:       May 2017
  |     ㇗ install-packages     list        Yes         To be installed.
  |     ㇗ remove-packages      list        Yes         To be removed.
  |     |
- |     ㇗ upgrade-packages     string      No (→)     To be upgraded. If specified, this will be treated as an opt-in upgrade.
- |     |                                               This will ignore "install-packages" and "remove-packages".
  |     ㇗ extras               group       No          Extra packages that the user can install in addition.
  |     |  ㇗ "pkg" = "Name"                            - Item  = Packages, comma delimited (','), e.g. "gimp-plugins,gimp-plugins-extra"
  |     |                                               - Value = Name of packages. e.g. "Extra plugins for GIMP"

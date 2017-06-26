@@ -173,7 +173,7 @@ class SoftwareInstallation():
 
             app_obj = AppInfo() object. Can be used for extracting required data, e.g. snap/package name.
 
-        do_install, do_remove, do_upgrade (self, params)
+        do_install, do_remove (self, params)
             Returns True for a successful change, or False is something failed.
 
             app_obj = AppInfo() object. Can be used for extracting required data, e.g. snap/package name.
@@ -182,6 +182,7 @@ class SoftwareInstallation():
         Functions starting with _ may be used for miscellaneous purposes and can be defined within the class.
             E.g. Apt uses _update_cache() for both on-demand cache refreshing and when installing a new source.
     """
+
     class Backend(object):
         """
         Stores persistant objects for back-ends, such as the cache for Apt.
@@ -215,10 +216,6 @@ class SoftwareInstallation():
             sleep(2)
             return True
 
-        def do_upgrade(self, ui_obj):
-            sleep(1)
-            return True
-
 
     class PackageKit(object):
         """
@@ -236,9 +233,6 @@ class SoftwareInstallation():
             return True
 
         def do_remove(self, ui_obj):
-            return True
-
-        def do_upgrade(self, ui_obj):
             return True
 
         def _update_cache(self):
@@ -271,15 +265,6 @@ class SoftwareInstallation():
                     return True
             return False
 
-        def _is_upgradable(self):
-            """
-            Checks whether the software is going to be upgraded or not. E.g. LibreOffice PPA.
-
-            => Returns bool
-            """
-            # FIXME:
-            return False
-
         def _get_instructions_for_this_codename(self):
             """
             Returns the dictonary containing the metadata for the current codename.
@@ -299,7 +284,7 @@ class SoftwareInstallation():
             """
             Returns a list of packages based on the type of installation.
 
-            install_type    =   Expects "install", "remove", "upgrade".
+            install_type    =   Expects "install" and "remove".
 
             => Returns list
             """
@@ -311,11 +296,27 @@ class SoftwareInstallation():
             elif install_type == "remove":
                 return(filtered_index["remove-packages"])
 
-            elif install_type == "upgrade":
-                return(filtered_index["upgrade-packages"])
-
             else:
                 return([])
+
+
+    class PackageKitUpgrades(object):
+        """
+        Snaps implementation.
+        """
+        def __init__(self, installation_data, backend):
+            self.raw_data = installation_data
+            self.backend = backend
+            return
+
+        def is_installed(self):
+            return True
+
+        def do_install(self, ui_obj):
+            return True
+
+        def do_remove(self, ui_obj):
+            return True
 
 
     class Snappy(object):
@@ -336,8 +337,6 @@ class SoftwareInstallation():
         def do_remove(self, ui_obj):
             return True
 
-        def do_upgrade(self, ui_obj):
-            return True
 
     #~ class WebApps(object):
         #~ def __init__(self):

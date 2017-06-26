@@ -140,9 +140,11 @@ for category in categories:
 
         # For upgradable
         if "upgrade-packages" in old_appdata:
-            metadata_json["installation"]["all"]["upgrade-packages"] = []
-            for package in old_appdata["upgrade-packages"].split(","):
-                metadata_json["installation"]["all"]["upgrade-packages"].append(package)
+            metadata_json["installation"]["all"]["install-packages"] = []
+            metadata_json["installation"]["all"]["remove-packages"] = []
+            for package in old_appdata["install-packages"].split(","):
+                # Remove packages should be ignored for upgrades.
+                metadata_json["installation"]["all"]["install-packages"].append(package)
 
         else:
             try:

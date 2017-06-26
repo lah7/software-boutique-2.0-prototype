@@ -321,7 +321,7 @@ class SoftwareBoutique(object):
             # FIXME
             return
 
-        elif cmd.startswith("install?") or cmd.startswith("upgrade?") or cmd.startswith("remove?"):
+        elif cmd.startswith("install?") or cmd.startswith("remove?"):
             cmd = cmd.split("?")
             operation = cmd[0]
             categoryid = cmd[1]
@@ -1049,13 +1049,6 @@ class SoftwareBoutique(object):
                     data += "<div class='tag'>" + package + "</div>"
                 html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
 
-                if app_obj.installation._is_upgradable():
-                    label = _("To be upgraded")
-                    data = ""
-                    for package in app_obj.installation._get_package_list("upgrade"):
-                        data += "<div class='tag'>" + package + "</div>"
-                    html += "<tr><th>{0}</th><td>{1}</td></tr>".format(label, data)
-
         ### Launch Command (Advanced only)
         if self.advanced_mode and app_obj.launch_cmd:
             label = _("Launch Command")
@@ -1124,7 +1117,6 @@ class QueueOperationsThread(object):
     0   operation   str     Describes what to do with this object.
                               - "install"
                               - "remove"
-                              - "upgrade"
 
     1   object      obj     ApplicationData() object.
 
@@ -1332,7 +1324,6 @@ class QueueOperationsThread(object):
         operation   str     Operation name
                               - "install"
                               - "remove"
-                              - "upgrade"
         successful  bln     True/False
         """
         def send_this(title, subtitle):
@@ -1352,12 +1343,6 @@ class QueueOperationsThread(object):
                 notify_send(_("{0} removed"), _("This application has been uninstalled."))
             else:
                 notify_send(_("{0} failed to remove"), _("There was a problem removing this application."))
-
-        elif operation == "upgrade":
-            if successful:
-                notify_send(_("{0} upgraded"), _("From now on, {0} will stay up to date with the latest release."))
-            else:
-                notify_send(_("{0} failed to upgrade"), _("There was a problem installing the latest version of this application."))
 
 
 class Debugging(object):
@@ -1486,8 +1471,6 @@ if __name__ == "__main__":
         "details_tooltip": _("Learn more about this application"),
         "install_text": _("Install"),
         "install_tooltip": _("Install this application on your computer"),
-        "upgrade_text": _("Upgrade"),
-        "upgrade_tooltip": _("Adds a repository to install a newer version of this software"),
         "reinstall_text": "",
         "reinstall_tooltip": _("Reinstall this application"),
         "remove_text": "",
@@ -1497,11 +1480,9 @@ if __name__ == "__main__":
         "remove_queue": _("Remove from queue"),
         "remove_queue_tooltip": _("Cancels any changes for this application"),
         "installing": _("Installing..."),
-        "upgrading": _("Upgrading..."),
         "removing": _("Uninstalling..."),
         "queued-install": _("Will be installed."),
-        "queued-remove": _("Will be removed."),
-        "queued-upgrade": _("Will be upgraded.")
+        "queued-remove": _("Will be removed.")
     }
 
     # On this thread
