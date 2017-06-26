@@ -1092,14 +1092,6 @@ class SoftwareBoutique(object):
         html += _add_app(random_apps[11], 1, "right")
         self.update_page("#random-apps", "html", html)
 
-    def notify_send(title, subtitle, icon_path):
-        try:
-            Notify.init(title)
-            notification=Notify.Notification.new(title, subtitle, icon_path)
-            notification.show()
-        except Exception as e:
-            dbg.stdout("Could not send notification: " + str(e), 0, 1)
-
 
 class QueueOperationsThread(object):
     """
@@ -1322,11 +1314,16 @@ class QueueOperationsThread(object):
                               - "remove"
         successful  bln     True/False
         """
-        def send_this(title, subtitle):
+        def notify_send(title, subtitle):
             title = title.replace("{0}", app_obj.name)
-            subtitle = title.replace("{0}", app_obj.name)
-            icon_path = app_obj.icon_path
-            app.notify_send(title, subtitle, icon_path)
+            subtitle = subtitle.replace("{0}", app_obj.name)
+            icon_path = os.path.join(data_source, app_obj.icon_path)
+            try:
+                Notify.init(title)
+                notification = Notify.Notification.new(title, subtitle, icon_path)
+                notification.show()
+            except Exception as e:
+                dbg.stdout("Could not send notification: " + str(e), 0, 1)
 
         if operation == "install":
             if successful:
