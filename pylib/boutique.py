@@ -38,7 +38,7 @@ data_source = "/usr/share/ubuntu-mate-welcome/"
 
 # Session Details
 force_dummy = False
-dbg = object() # Until main runtime replaces this.
+dbg = object() # Until main application replaces this.
 system_locale = "en"
 system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 current_os_version = platform.dist()[1] # E.g. 16.04
@@ -55,12 +55,10 @@ def read_index(json_path):
     return(data)
 
 
-def get_application_details(backend, index_data, category, appid):
+def get_application_details(index_data, category, appid):
     """
     Returns an object holding the details about the application.
 
-    backend         = Object containing the SoftwareInstallation.Backend() class.
-                      This main application will initialise this class.
     index_data      = Data from index_data[category][appid]
     category        = ID of category from index.
     appid           = ID of application from index.
@@ -95,15 +93,14 @@ def get_application_details(backend, index_data, category, appid):
             app.screenshot_filenames.append(filename)
     app.screenshot_filenames.sort()
 
-    installation_data = data.get("installation")
     if app.method == "dummy" or force_dummy:
-        app.installation = SoftwareInstallation.Dummy(installation_data, backend)
+        app.installation = SoftwareInstallation.Dummy(app.data)
     elif app.method == "apt":
-        app.installation = SoftwareInstallation.PackageKit(installation_data, backend)
+        app.installation = SoftwareInstallation.PackageKit(app.data)
     elif app.method == "snap":
-        app.installation = SoftwareInstallation.Snappy(installation_data, backend)
+        app.installation = SoftwareInstallation.Snappy(app.data)
     else:
-        print(app.installation + " is not supported!")
+        print(app.method + " is not supported!")
         return None
 
     app.is_installed = app.installation.is_installed
@@ -166,7 +163,6 @@ class SoftwareInstallation():
 
             installation_data = Raw JSON of the "installation" group.
                                 Depending on the class, this data will be handled differently.
-            backend           = Object containing the Backend() class.
 
         is_installed(self, params)
             Returns True or False whether the application is considered installed.
@@ -177,27 +173,17 @@ class SoftwareInstallation():
             Returns True for a successful change, or False is something failed.
 
             app_obj = AppInfo() object. Can be used for extracting required data, e.g. snap/package name.
-            ui_obj  = XXXXXXXX object. Allows functions to be called to indicate progress.
 
         Functions starting with _ may be used for miscellaneous purposes and can be defined within the class.
             E.g. Apt uses _update_cache() for both on-demand cache refreshing and when installing a new source.
     """
 
-    class Backend(object):
-        """
-        Stores persistant objects for back-ends, such as the cache for Apt.
-        """
-        def __init__(self):
-            return
-
-
     class Dummy(object):
         """
         Dummy implementation for debugging software changes.
         """
-        def __init__(self, installation_data, backend):
-            self.raw_data = installation_data
-            self.backend = backend
+        def __init__(self, app_obj):
+            self.raw_data = app_obj.get("installation")
 
             # This dummy pretends to look busy.
 
@@ -208,11 +194,11 @@ class SoftwareInstallation():
             else:
                 return False
 
-        def do_install(self, ui_obj):
+        def do_install(self):
             sleep(2)
             return True
 
-        def do_remove(self, ui_obj):
+        def do_remove(self):
             sleep(2)
             return True
 
@@ -221,18 +207,16 @@ class SoftwareInstallation():
         """
         Apt implementation using PackageKit as its back-end.
         """
-        def __init__(self, installation_data, backend):
-            self.raw_data = installation_data
-            self.backend = backend
-            return
+        def __init__(self, app_obj):
+            self.raw_data = app_obj.get("installation")
 
         def is_installed(self):
             return False
 
-        def do_install(self, ui_obj):
+        def do_install(self):
             return True
 
-        def do_remove(self, ui_obj):
+        def do_remove(self):
             return True
 
         def _update_cache(self):
@@ -304,18 +288,17 @@ class SoftwareInstallation():
         """
         Snaps implementation.
         """
-        def __init__(self, installation_data, backend):
-            self.raw_data = installation_data
-            self.backend = backend
+        def __init__(self, app_obj):
+            self.raw_data = app_obj.get("installation")
             return
 
         def is_installed(self):
             return True
 
-        def do_install(self, ui_obj):
+        def do_install(self):
             return True
 
-        def do_remove(self, ui_obj):
+        def do_remove(self):
             return True
 
 
@@ -323,18 +306,16 @@ class SoftwareInstallation():
         """
         Snaps implementation.
         """
-        def __init__(self, installation_data, backend):
-            self.raw_data = installation_data
-            self.backend = backend
-            return
+        def __init__(self, app_obj):
+            self.raw_data = app_obj.get("installation")
 
         def is_installed(self):
             return True
 
-        def do_install(self, ui_obj):
+        def do_install(self):
             return True
 
-        def do_remove(self, ui_obj):
+        def do_remove(self):
             return True
 
 

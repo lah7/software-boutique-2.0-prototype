@@ -261,7 +261,6 @@ class SoftwareBoutique(object):
         self.webkit = None
         self.update_page = None
         self.queue = None                   # QueueOperationsThread()
-        self.backend = None                 # boutique.SoftwareInstallation.Backend()
         self.is_ubuntu_mate = False
         self.boutique_ppa_enabled = False
         self.internet_connected = False
@@ -435,9 +434,6 @@ class SoftwareBoutique(object):
 
         try:
             # Determine Environment
-            dbg.stdout("Starting backend module...", 4, 1)
-            self.backend = boutique.SoftwareInstallation.Backend()
-
             dbg.stdout("Starting application...", 4, 1)
             self.is_ubuntu_mate = boutique.SoftwareInstallation.PackageKit._is_running_ubuntu_mate()
             self.boutique_ppa_enabled = boutique.SoftwareInstallation.PackageKit._is_boutique_subscribed()
@@ -688,7 +684,7 @@ class SoftwareBoutique(object):
 
         ordered_appids.sort()
         for appid in ordered_appids:
-            app = boutique.get_application_details(self.backend, self.index, internal_name, appid)
+            app = boutique.get_application_details(self.index, internal_name, appid)
             browse_html += self._generate_html_app_card(app)
 
         # Append to actual category
@@ -801,7 +797,7 @@ class SoftwareBoutique(object):
         return
 
     def show_app_details(self, categoryid, appid):
-        app_obj = boutique.get_application_details(self.backend, self.index, categoryid, appid)
+        app_obj = boutique.get_application_details(self.index, categoryid, appid)
         self.webkit.run_javascript("animate('#app-details-page', 'enter-more-info', 'in')")
         self.webkit.run_javascript("changeNavTitleType('back')")
         self.update_page(".header-title", "html", app_obj.name)
@@ -1068,7 +1064,7 @@ class SoftwareBoutique(object):
         def _add_app(random_app, position, direction):
             categoryid = random_app[0]
             appid = random_app[1]
-            app_obj = boutique.get_application_details(self.backend, self.index, categoryid, appid)
+            app_obj = boutique.get_application_details(self.index, categoryid, appid)
             cmd = "cmd(\"{0}?{1}?{2}\")".format("details", app_obj.categoryid, app_obj.appid)
             return "<button id='random-{4}-{3}' onclick='{2}' title='{0}'><img style='opacity:0.{3}' src='{1}'/></button>".format(app_obj.name, app_obj.icon_path, cmd, position, direction)
 
@@ -1157,7 +1153,7 @@ class QueueOperationsThread(object):
         """
         Returns the ApplicationData() based on the "category-appname"
         """
-        return boutique.get_application_details(app.backend, app.index, categoryid, appid)
+        return boutique.get_application_details(app.index, categoryid, appid)
 
     def add_item(self, operation, app_object):
         """
