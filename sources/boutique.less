@@ -316,7 +316,7 @@ button.checkbox {
   width: 15px;
   height: 15px;
   z-index: 100;
-  background: -webkit-linear-gradient(@scroll-bar-gradient);
+  background: linear-gradient(@scroll-bar-gradient);
   border: 1px solid #CBC8C6;
 }
 
@@ -332,7 +332,7 @@ button.checkbox {
 ::-webkit-scrollbar-button {
   width: 13px;
   height: 18px;
-  background: -webkit-linear-gradient(@scroll-bar-gradient);
+  background: linear-gradient(@scroll-bar-gradient);
   border: 1px solid @scroll-bar-gray;
   z-index: 100;
 }
@@ -385,7 +385,7 @@ button.checkbox {
     font-size: 24px;
     font-weight: normal;
     color: @header-colour;
-    -webkit-animation-name: header-in;
+    animation-name: header-in;
 
     > .left {
         float: left;
@@ -446,19 +446,19 @@ button.checkbox {
 
 #queue-button {
     &.pulse-positive {
-        -webkit-animation: pulse-positive 2s 1;
+        animation: pulse-positive 2s 1;
     }
 
     &.pulse-negative {
-        -webkit-animation: pulse-negative 1s 3;
+        animation: pulse-negative 1s 3;
     }
 
     &.pulse-added {
-        -webkit-animation: pulse-added 2s 1;
+        animation: pulse-added 2s 1;
     }
 }
 
-@-webkit-keyframes pulse-positive {
+@keyframes pulse-positive {
     0% {
         background-color: @header-bg;
     }
@@ -472,7 +472,7 @@ button.checkbox {
     }
 }
 
-@-webkit-keyframes pulse-negative {
+@keyframes pulse-negative {
     0% {
         background-color: @header-bg;
     }
@@ -486,7 +486,7 @@ button.checkbox {
     }
 }
 
-@-webkit-keyframes pulse-added {
+@keyframes pulse-added {
     0% {
         border-color: @header-bg;
     }
@@ -552,7 +552,7 @@ button.checkbox {
     padding: 8px;
     z-index: 100;
     box-shadow: -8px 2px 10px 4px rgba(0,0,0,0.5);
-    -webkit-animation-name: footer-in;
+    animation-name: footer-in;
 
     > .left {
         padding: 4px;
@@ -618,22 +618,22 @@ button.checkbox {
 /************************
  * Busy Animation
 *************************/
-@-webkit-keyframes spin {
+@keyframes spin {
     0% {
-        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
     }
 
     100% {
-        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
     }
 }
 
 .busy-ani {
-    -webkit-animation-name: spin;
-    -webkit-animation-duration: 1s;
-    -webkit-animation-repeat: infinite;
-    -webkit-animation-timing-function: linear;
-    -webkit-animation-iteration-count: infinite;
+    animation-name: spin;
+    animation-duration: 1s;
+    animation-repeat: infinite;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
 
@@ -781,7 +781,7 @@ button.checkbox {
     height: auto;
     width: auto;
     padding: 16px;
-    background: -webkit-linear-gradient(white, white, rgba(255,255,255,0.5));;
+    background: linear-gradient(white, white, rgba(255,255,255,0.5));;
     z-index: 90;
     overflow-y: hidden;
 }
@@ -824,86 +824,96 @@ button.checkbox {
        * Changing categories
        * Header/Footer
 ******************************/
-@-webkit-keyframes left-in {
-    0% { -webkit-transform: translateX(100%); opacity: 0; }
-    100% { -webkit-transform: translateX(0%); opacity: 1; }
+@keyframes fade-in {
+    0% { transform: opacity: 0; }
+    100% { transform: opacity: 1; }
 }
-.left-in { -webkit-animation-name: left-in; }
+.fade-in {
+    animation: fade-in 2s linear;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
 
-@-webkit-keyframes left-out {
-    0% { -webkit-transform: translateX(0%); opacity: 1; }
-    100% { -webkit-transform: translateX(-100%); opacity: 0; }
+@keyframes left-in {
+    0% { transform: translateX(100%); opacity: 0; }
+    100% { transform: translateX(0%); opacity: 1; }
 }
-.left-out { -webkit-animation-name: left-out; }
+.left-in { animation-name: left-in; }
 
-@-webkit-keyframes right-in {
-    0% { -webkit-transform: translateX(-100%); opacity: 0; }
-    100% { -webkit-transform: translateX(0%); opacity: 1; }
+@keyframes left-out {
+    0% { transform: translateX(0%); opacity: 1; }
+    100% { transform: translateX(-100%); opacity: 0; }
 }
-.right-in { -webkit-animation-name: right-in; }
+.left-out { animation-name: left-out; }
 
-@-webkit-keyframes right-out {
-    0% { -webkit-transform: translateX(0%); opacity: 1; }
-    100% { -webkit-transform: translateX(100%); opacity: 0; }
+@keyframes right-in {
+    0% { transform: translateX(-100%); opacity: 0; }
+    100% { transform: translateX(0%); opacity: 1; }
 }
-.right-out { -webkit-animation-name: right-out; }
+.right-in { animation-name: right-in; }
 
-@-webkit-keyframes top-in {
-    0% { -webkit-transform: translateY(10px); opacity: 0; }
-    100% { -webkit-transform: translateY(0px); opacity: 1; }
+@keyframes right-out {
+    0% { transform: translateX(0%); opacity: 1; }
+    100% { transform: translateX(100%); opacity: 0; }
 }
-.top-in { -webkit-animation-name: top-in; }
+.right-out { animation-name: right-out; }
 
-@-webkit-keyframes top-out {
-    0% { -webkit-transform: translateY(0px); opacity: 1; }
-    100% { -webkit-transform: translateY(10px); opacity: 0; }
+@keyframes top-in {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0px); opacity: 1; }
 }
-.top-out { -webkit-animation-name: top-out; }
+.top-in { animation-name: top-in; }
+
+@keyframes top-out {
+    0% { transform: translateY(0px); opacity: 1; }
+    100% { transform: translateY(10px); opacity: 0; }
+}
+.top-out { animation-name: top-out; }
 
 /* Global Settings */
 .left-in, .left-out,
 .right-in, .right-out,
 .top-in, .top-out {
-    -webkit-animation-duration: 0.5s;
-    -webkit-animation-timing-function: ease-in-out;
-    -webkit-backface-visibility: hidden;
-    -webkit-animation-iteration-count: 1;
-    -webkit-animation-fill-mode: forwards;
+    animation-duration: 0.5s;
+    animation-timing-function: ease-in-out;
+    backface-visibility: hidden;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
 }
 
 /* Header/Footer */
-@-webkit-keyframes header-in {
-    0% { -webkit-transform: translateY(-50px); opacity: 0; }
-    100% { -webkit-transform: translateY(0px); opacity: 1; }
+@keyframes header-in {
+    0% { transform: translateY(-50px); opacity: 0; }
+    100% { transform: translateY(0px); opacity: 1; }
 }
-@-webkit-keyframes footer-in {
-    0% { -webkit-transform: translateY(50px); opacity: 0; }
-    100% { -webkit-transform: translateY(0px); opacity: 1; }
+@keyframes footer-in {
+    0% { transform: translateY(50px); opacity: 0; }
+    100% { transform: translateY(0px); opacity: 1; }
 }
 
 #header,
 #footer,
 .enter-more-info,
 .exit-more-info {
-    -webkit-animation-duration: 0.25s;
-    -webkit-animation-timing-function: ease-out-in;
-    -webkit-backface-visibility: hidden;
-    -webkit-animation-iteration-count: 1;
-    -webkit-animation-fill-mode: forwards;
+    animation-duration: 0.25s;
+    animation-timing-function: ease-out-in;
+    backface-visibility: hidden;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
 }
 
 /* Viewing more details about an application */
-@-webkit-keyframes enter-more-info {
-    0% { -webkit-transform: scale(0.9); opacity: 0; }
-    100% { -webkit-transform: scale(1); opacity: 1; }
+@keyframes enter-more-info {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
-.enter-more-info { -webkit-animation-name: enter-more-info; }
+.enter-more-info { animation-name: enter-more-info; }
 
-@-webkit-keyframes exit-more-info {
-    0% { -webkit-transform: scale(1); opacity: 1; }
-    100% { -webkit-transform: scale(0.9); opacity: 0; }
+@keyframes exit-more-info {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0; }
 }
-.exit-more-info { -webkit-animation-name: exit-more-info; }
+.exit-more-info { animation-name: exit-more-info; }
 
 
 /************************
@@ -1255,7 +1265,7 @@ img.like-fa {
     }
 }
 
-@-webkit-keyframes random-apps-left {
+@keyframes random-apps-left {
     0% {
         transform: translateX(-50px);
         opacity: 0;
@@ -1267,7 +1277,7 @@ img.like-fa {
     }
 }
 
-@-webkit-keyframes random-apps-right {
+@keyframes random-apps-right {
     0% {
         transform: translateX(50px);
         opacity: 0;
@@ -1279,7 +1289,7 @@ img.like-fa {
     }
 }
 
-@-webkit-keyframes hello-logo {
+@keyframes hello-logo {
     0% {
         transform: scale(0.5);
         opacity: 0;
@@ -1327,6 +1337,7 @@ img.like-fa {
     font-style: normal;
     height: 70px;
     text-align: center;
+    animation: fadeIn 0.5s linear;
 }
 
 .queue-card {
@@ -1411,11 +1422,11 @@ img.like-fa {
 }
 
 .queue-card.swiping {
-    -webkit-animation: swipe-right 0.5s forwards;
+    animation: swipe-right 0.5s forwards;
 }
 
 /* Header/Footer */
-@-webkit-keyframes swipe-right {
-    0% { -webkit-transform: translateX(0px); opacity: 1; }
-    100% { -webkit-transform: translateX(100px); opacity: 0; }
+@keyframes swipe-right {
+    0% { transform: translateX(0px); opacity: 1; }
+    100% { transform: translateX(100px); opacity: 0; }
 }
