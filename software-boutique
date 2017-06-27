@@ -1107,6 +1107,23 @@ class QueueOperationsThread(object):
         """
         while True:
             time.sleep(1)
+            if len(self.queue) > 0:
+                queue_item = self.queue[0]
+                operation = queue_item[0]
+                app_obj = queue_item[1]
+                dbg.stdout("Processing queue item: " + app_obj.name, 4, 2)
+
+                if operation == "install":
+                    result = app_obj.installation.do_install()
+                elif operation == "remove":
+                    result = app_obj.installation.do_remove()
+
+                dbg.stdout("Finished queue item: {0} (Result: {1})".format(app_obj.name, str(result)), 4, 2)
+                self.send_desktop_notification(app_obj, operation, result)
+                self.finished_queue.append([operation, app_obj, result])
+                self.queue.pop(0)
+                self.update_queue_state()
+                dbg.stdout("{1} items completed. {0} items remaining.".format(str(len(self.queue)), str(len(self.finished_queue))), 4, 2)
 
     def get_count(self):
         """
@@ -1165,13 +1182,9 @@ class QueueOperationsThread(object):
         app_uuid    str     Value of appid provided in ApplicationData()
         """
         for item in self.queue:
-            try:
-                if item[1].uuid == app_uuid:
-                    dbg.stdout("Already in queue: " + app_uuid, 4, 1)
-                    return True
-            except:
-                # This is not an ApplicationData() object.
-                pass
+            if item[1].uuid == app_uuid:
+                dbg.stdout("Already in queue: " + app_uuid, 4, 1)
+                return True
         return False
 
     def ui_update_buttons(self, app_object):
@@ -1184,13 +1197,14 @@ class QueueOperationsThread(object):
 
     def update_queue_state(self):
         """
-        Updates the queue list and current status text.
+        Updates the queue UI and re-generates the queue page.
         """
+        self.update_count()
         self.update_page("#queue-page", "html", " ")
         html = ""
 
         # Nothing in the queue
-        if len(self.queue) == 0:
+        if len(self.queue) == 0 and len(self.finished_queue) == 0:
             strings = [
                 _("There's no items queued."),
                 _("Nothing queued, nothing to do!"),
@@ -1244,41 +1258,42 @@ class QueueOperationsThread(object):
                         var = _("Clear")
                     )
 
-            for item in self.finished_queue:
-                operation = item[0]
-                app_obj = item[1]
-                successful = item[2]
+        for item in self.finished_queue:
+            operation = item[0]
+            app_obj = item[1]
+            successful = item[2]
 
-                if successful:
-                    result_css = "success"
-                    status = _("Successfully installed")
-                else:
-                    result_css = "failed"
-                    status = _("Successfully removed")
+            if successful:
+                result_css = "success"
+                status = _("Successfully installed")
+            else:
+                result_css = "failed"
+                status = _("Successfully removed")
 
-                html += "<div id='{uuid}' class='queue-card queue-complete {operation} {result_css}'>" \
-                            "<button onclick='{cmd_details}'>" \
-                                "<img class='icon' src='{icon}' />" \
-                                "<div class='title '>{name}</div>" \
-                            "</button>" \
-                            "<div class='status'>{status}</div>".format(
-                            uuid = "queue-" + app_obj.uuid,
-                            operation = operation,
-                            icon = app_obj.icon_path,
-                            name = app_obj.name,
-                            status = status,
-                            result_css = result_css,
-                            cmd_details = "details?{0}?{1}".format(app_obj.categoryid, app_obj.appid),
+            html += "<div id='{uuid}' class='queue-card queue-complete {operation} {result_css}'>" \
+                        "<button onclick='{cmd_details}'>" \
+                            "<img class='icon' src='{icon}' />" \
+                            "<div class='title '>{name}</div>" \
+                        "</button>" \
+                        "<div class='status'>{status}</div>".format(
+                        uuid = "queue-" + app_obj.uuid,
+                        operation = operation,
+                        icon = app_obj.icon_path,
+                        name = app_obj.name,
+                        status = status,
+                        result_css = result_css,
+                        cmd_details = "details?{0}?{1}".format(app_obj.categoryid, app_obj.appid),
+                    )
+
+            # Only show "Launch" button if installed.
+            if operation == "install" or operation == "remove":
+                html += "<button class='dialog-theme' onclick='cmd(\"{cmd_launch}\")'>{launch_text}</div>".format(
+                            launch_text = _("Launch"),
+                            cmd_launch = "launch?{0}?{1}".format(app_obj.categoryid, app_obj.appid)
                         )
 
-                # Only show "Launch" button if installed.
-                if operation == "install" or operation == "remove":
-                    html += "<button class='dialog-theme' onclick='cmd(\"{cmd_launch}\")'>{launch_text}</div>".format(
-                                launch_text = _("Launch"),
-                                cmd_launch = "launch?{0}?{1}".format(app_obj.categoryid, app_obj.appid)
-                            )
+            html += "</div>"
 
-                html += "</div>"
 
         # Finish queue list
         self.update_page("#queue-page", "append", html)

@@ -196,11 +196,17 @@ class SoftwareInstallation():
                 return False
 
         def do_install(self):
-            sleep(2)
+            sleep(1)
+            for x in [0, 25, 50, 75, 100]:
+                print("Installing: {0} ({1}%)".format(self.app.name, str(x)))
+                sleep(1)
             return True
 
         def do_remove(self):
-            sleep(2)
+            sleep(1)
+            for x in [0, 14, 33, 45, 63, 89, 100]:
+                print("Removing: {0} ({1}%)".format(self.app.name, str(x)))
+                sleep(0.5)
             return True
 
 
