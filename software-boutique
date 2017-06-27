@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 #
 # Copyright (C) 2015-2017 Luke Horwell <luke@ubuntu-mate.org>
-# Copyright (C) 2015-2016 Martin Wimpress <code@flexion.org>
+# Copyright (C) 2015-2017 Martin Wimpress <code@flexion.org>
 #
 # Software Boutique is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -387,6 +387,11 @@ class SoftwareBoutique(object):
             self.internet_connected = False
 
     def start_loading(self):
+        # Fade in navigation bar, matching colour where possible.
+        self._set_navigation_theme()
+        self.update_page("#header", "show")
+        self.update_page("#footer", "show")
+
         # Check Boutique is running on a supported version / architecture
         if boutique.system_arch not in supported_arch:
             self.show_message_page("other-distro.png", _("Unsupported Architecture"),
@@ -457,7 +462,7 @@ class SoftwareBoutique(object):
                                       )
 
             # Adapt header/footer to current theme.
-            self.set_base_ui_theme()
+            self._set_navigation_theme()
 
             # Introduce user on first run.
             if not pref.read("introduced", False):
@@ -737,64 +742,38 @@ class SoftwareBoutique(object):
         self.update_page(".navigation", "removeClass", "disabled")
         self.update_page("#change-category-button", "removeClass", "disabled")
 
-    def set_base_ui_theme(self):
+    def _set_navigation_theme(self):
         """
-        Adjusts the colours for other (MATE default) themes.
+        Adjusts UI colours based on the current theme.
         """
-        if self.is_ubuntu_mate:
-            try:
-                dconf = Gio.Settings.new('org.mate.interface')
-                theme = str(dconf.get_value('gtk-theme')).strip("'")
-            except:
-                theme = 'Ambiant-MATE'
-        else:
-            theme = 'Ambiant-MATE'
+        window = Gtk.Window()
+        style_context = window.get_style_context()
 
-        # Adapt the header/footer if a different theme is in use.
-        def light_theme():
-            self.update_page('#header', 'css', 'color', 'black')
-            self.update_page('#header a', 'css', 'color', 'black')
-            self.update_page('#footer', 'css', 'color', 'black')
-            self.update_page('#footer a', 'css', 'color', 'black')
-            #~ self.update_page('.btn-inverse', 'removeClass', 'btn-inverse')
+        def _rgba_to_hex(color):
+           """
+           Return hexadecimal string for :class:`Gdk.RGBA` `color`.
+           """
+           return "#{0:02x}{1:02x}{2:02x}".format(
+                                            int(color.red   * 255),
+                                            int(color.green * 255),
+                                            int(color.blue  * 255))
 
-        if theme == 'BlackMATE':
-            self.update_page('#header', 'css', 'background-color', '#3D3D3F')
-            self.update_page('#footer', 'css', 'background-color', '#3D3D3F')
-        elif theme == 'BlueMenta':
-            self.update_page('#header', 'css', 'background-color', '#D2D2D2')
-            self.update_page('#footer', 'css', 'background-color', '#D2D2D2')
-            light_theme()
-        elif theme == 'Blue-Submarine':
-            self.update_page('#header', 'css', 'background-color', '#2C404F')
-            self.update_page('#footer', 'css', 'background-color', '#2C404F')
-        elif theme == 'GreenLaguna':
-            self.update_page('#header', 'css', 'background-color', '#EAF0E8')
-            self.update_page('#footer', 'css', 'background-color', '#EAF0E8')
-            light_theme()
-        elif theme == 'ContrastHigh':
-            self.update_page('#header', 'css', 'background-color', 'white')
-            self.update_page('#footer', 'css', 'background-color', 'white')
-            light_theme()
-        elif theme == 'ContrastHighInverse':
-            self.update_page('#header', 'css', 'background-color', 'black')
-            self.update_page('#footer', 'css', 'background-color', 'black')
-        elif theme == 'Menta':
-            self.update_page('#header', 'css', 'background-color', '#D2D2D2')
-            self.update_page('#footer', 'css', 'background-color', '#D2D2D2')
-            light_theme()
-        elif theme == 'Radiant-MATE':
-            self.update_page('#header', 'css', 'background-color', '#DFD7CF')
-            self.update_page('#footer', 'css', 'background-color', '#DFD7CF')
-            light_theme()
-        elif theme == 'TraditionalGreen' or theme == 'TraditionalOk':
-            self.update_page('#header', 'css', 'background-color', '#E7E6E5')
-            self.update_page('#footer', 'css', 'background-color', '#E7E6E5')
-            light_theme()
-        elif theme == 'TraditionalOkTest':
-            self.update_page('#header', 'css', 'background-color', '#868883')
-            self.update_page('#footer', 'css', 'background-color', '#868883')
-        return
+        def _get_color(style_context, preferred_color, fallback_color):
+            color = _rgba_to_hex(style_context.lookup_color(preferred_color)[1])
+            if color == '#000000':
+                color = _rgba_to_hex(style_context.lookup_color(fallback_color)[1])
+            return color
+
+        bg_color = _get_color(style_context, 'dark_bg_color', 'theme_bg_color')
+        fg_color = _get_color(style_context, 'dark_fg_color', 'theme_fg_color')
+        selected_bg_color = _get_color(style_context, 'selected_bg_color', '#667E40')
+
+        self.update_page('#header', 'css', 'background-color', bg_color)
+        self.update_page('#footer', 'css', 'background-color', bg_color)
+        self.update_page('#header', 'css', 'color', fg_color)
+        self.update_page('#footer', 'css', 'color', fg_color)
+        self.update_page('.navigation', 'css', 'color', fg_color)
+        self.update_page('.dropdown', 'css', 'color', fg_color)
 
     def show_app_details(self, categoryid, appid):
         app_obj = boutique.get_application_details(self.index, categoryid, appid)
