@@ -25,16 +25,10 @@ import requests
 from time import time
 from time import sleep
 
-# Apt Imports
-#~ from gi.repository import PackageKitGlib as packagekit
-
-verbose = False
-
 # Paths
 cache_path = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
 installed_index = os.path.join(os.path.expanduser('~'), ".config", "software-boutique", "installed.json")
 data_source = "/usr/share/ubuntu-mate-welcome/"
-
 
 # Session Details
 force_dummy = False
@@ -43,6 +37,26 @@ system_locale = "en"
 system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 current_os_version = platform.dist()[1] # E.g. 16.04
 current_os_codename = platform.dist()[2] # E.g. xenial
+
+# Default Strings (applications should localise these)
+string_dict = {
+    "details_text": "Details",
+    "details_tooltip": "Learn more about this application",
+    "install_text": "Install",
+    "install_tooltip": "Install this application on your computer",
+    "reinstall_text": "",
+    "reinstall_tooltip": "Reinstall this application",
+    "remove_text": "",
+    "remove_tooltip": "Remove this application",
+    "launch_text": "Launch",
+    "launch_tooltip": "Runs the application",
+    "remove_queue": "Remove from queue",
+    "remove_queue_tooltip": "Cancels any changes for this application",
+    "installing": "Installing...",
+    "removing": "Uninstalling...",
+    "queued-install": "Will be installed.",
+    "queued-remove": "Will be removed."
+}
 
 
 # Application Data
@@ -357,7 +371,7 @@ def _generate_button_html(action, app_obj, colour_class, fa_icon, text, tooltip)
     )
 
 
-def print_more_details_button(app_obj, string_dict):
+def print_more_details_button(app_obj):
     """
     Returns the HTML for the "Details" button.
     """
@@ -366,19 +380,11 @@ def print_more_details_button(app_obj, string_dict):
             )
 
 
-def print_app_installation_buttons(app_obj, string_dict, queue):
+def print_app_installation_buttons(app_obj, queue):
     """
     Returns the HTML for the buttons that determines the installation/launch options.
 
     app_obj     =   ApplicationData() object
-    string_dict =   A dictonary of the strings, passed via the main
-                    application so they're translated in one place.
-                    e.g. {
-                        details_text = "Details",
-                        details_tooltip = "Learn more about this application",
-                        install_text = "Install",
-                        install_tooltip = "Install this application on your computer"
-                    }
     queue            = Check the queue and show "Remove from queue" if listed.
     """
     html = "<div class='operation-buttons buttons-{0}'>".format(app_obj.uuid)

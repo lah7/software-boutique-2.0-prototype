@@ -639,8 +639,8 @@ class SoftwareBoutique(object):
                         show_if_installed = "style='display:none'" if not installed else "",
                         hide_if_installed = "style='display:none'" if installed else "",
                         installed_class = "installed" if installed else "",
-                        details_button = boutique.print_more_details_button(app_obj, module_strings),
-                        install_buttons = boutique.print_app_installation_buttons(app_obj, module_strings, self.queue.queue)
+                        details_button = boutique.print_more_details_button(app_obj),
+                        install_buttons = boutique.print_app_installation_buttons(app_obj, self.queue.queue)
                     )
 
         return(html)
@@ -862,7 +862,7 @@ class SoftwareBoutique(object):
             html += "<div id='app-installed'><span class='fa fa-check-circle'></span> " + _get_install_date_string(install_time.read(app_obj.uuid, 0)) + "</div>"
 
         ### Action Buttons
-        html += boutique.print_app_installation_buttons(app_obj, module_strings, self.queue.queue)
+        html += boutique.print_app_installation_buttons(app_obj, self.queue.queue)
 
         ### End top section
         html += "</div><hr/>"
@@ -1193,7 +1193,7 @@ class QueueOperationsThread(object):
 
         app_object  obj     ApplicationData() object
         """
-        self.update_page(".buttons-" + app_object.uuid, "html", boutique.print_app_installation_buttons(app_object, module_strings, self.queue))
+        self.update_page(".buttons-" + app_object.uuid, "html", boutique.print_app_installation_buttons(app_object, self.queue))
 
     def update_queue_state(self):
         """
@@ -1453,7 +1453,7 @@ if __name__ == "__main__":
     install_time = preferences.Preferences(dbg, "install_time")
 
     # String dictonary when passing to boutique.py module
-    module_strings = {
+    boutique.string_dict = {
         "details_text": _("Details"),
         "details_tooltip": _("Learn more about this application"),
         "install_text": _("Install"),
