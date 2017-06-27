@@ -153,13 +153,15 @@
 
     <div id="footer" style="display:none">
         <div class="left" style="display:none">
-            <span id="queue-ready" class="fa fa-check-circle"></span>
-            <span id="queue-success" class="fa fa-check-circle" style="display:none"></span>
-            <span id="queue-failure" class="fa fa-warning" style="display:none"></span>
-            <img  id="queue-inprogress" class="busy-ani" src="img/loading.svg" style="display:none"/>
-            <span id="queue-status-text">Ready</span>
+            <span id="queue-ready" class="queue-ui-element fa fa-check-circle"></span>
+            <span id="queue-success" class="queue-ui-element fa fa-check-circle" style="display:none"></span>
+            <span id="queue-failure" class="queue-ui-element fa fa-warning" style="display:none"></span>
+            <img  id="queue-inprogress" class="queue-ui-element busy-ani" src="img/loading.svg" style="display: none"/>
+            <span id="queue-status-text">---</span>
             <br>
-            <div class="progress-bar" style="display:none"><div id="queue-progress" class="progress-bar-inner"></div></div>
+            <div id="queue-progress" class="progress-bar" style="display:none">
+                <div id="queue-progress-inner" class="progress-bar-inner"></div>
+            </div>
         </div>
         <div class="right" style="display:none">
           <button class="checkbox" id="non-free-toggle" onclick="toggleNonFree();"

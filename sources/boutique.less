@@ -52,7 +52,7 @@
 @progress-bar-bg: #F2F1F0;
 @progress-bar: #919191;
 @progress-bar-dark-bg: @footer-colour;
-@progress-bar-dark: #476717;
+@progress-bar-dark: white;
 
 /* "Card" Box Shadows */
 @card-border: #F0F0F0;
@@ -610,8 +610,9 @@ button.checkbox {
 
 .progress-bar-inner {
     background-color: @progress-bar-dark;
-    width: 200px;
+    width: 100%;
     height: 100%;
+    transition: 0.2s width ease-in-out;
 }
 
 

@@ -58,6 +58,22 @@ string_dict = {
     "queued-remove": "Will be removed."
 }
 
+class UICallback():
+    """
+    Triggered while a SoftwareInstallation() class is busy making a change.
+
+    This class is a stub, it only outputs to the terminal.
+    The main application should replace this so it works for those UI elements.
+
+    status_text =   Str   E.g. "Updating Cache...", "Unpacking files..."
+    percent     =   Int   A value between 0-100. -1 shows no progress bar.
+    """
+    def update_current_progress(self, status_text, percent=-1):
+        print('\033[96m' + "Status Changed: {0} ({1}%)".format(status_text, str(percent)) + '\033[0m')
+
+
+ui_callback = UICallback() # Until main application replaces this.
+
 
 # Application Data
 def read_index(json_path):
@@ -212,14 +228,14 @@ class SoftwareInstallation():
         def do_install(self):
             sleep(1)
             for x in [0, 25, 50, 75, 100]:
-                print("Installing: {0} ({1}%)".format(self.app.name, str(x)))
+                ui_callback.update_current_progress("Installing...", str(x))
                 sleep(1)
             return True
 
         def do_remove(self):
             sleep(1)
             for x in [0, 14, 33, 45, 63, 89, 100]:
-                print("Removing: {0} ({1}%)".format(self.app.name, str(x)))
+                ui_callback.update_current_progress("Removing...", str(x))
                 sleep(0.5)
             return True
 

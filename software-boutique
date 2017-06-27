@@ -282,7 +282,6 @@ class SoftwareBoutique(object):
         else:
             self.advanced_mode = False
 
-
     def process_command(self, cmd):
         if cmd == "init-boutique":
             spawn_thread(self.start_loading)
@@ -429,6 +428,7 @@ class SoftwareBoutique(object):
         if not os.path.exists(index_path):
             index_path = fallback_path
 
+        # Load index (raw data) into memory
         try:
             dbg.stdout("Reading software index...", 3, 2)
             self.index = boutique.read_index(index_path)
@@ -437,6 +437,7 @@ class SoftwareBoutique(object):
             dbg.stdout("Software Index corrupt or missing, Boutique cannot continue.", 1, 0)
             exit(1)
 
+        # Load application
         try:
             # Determine Environment
             dbg.stdout("Starting application...", 4, 1)
@@ -580,10 +581,11 @@ class SoftwareBoutique(object):
             )
 
             ############################################
-            # Queue Monitor
+            # Queue Monitor and Installation
             ############################################
             spawn_thread(self.queue.watch_queue)
             self.queue.update_queue_state()
+            self.update_page("#queue-status-text", "html", _("Ready"))
 
             ############################################
             # Load Finished
@@ -1111,16 +1113,48 @@ class QueueOperationsThread(object):
                 queue_item = self.queue[0]
                 operation = queue_item[0]
                 app_obj = queue_item[1]
+
+                self.current_app_uuid = app_obj.uuid
+                boutique.ui_callback.current_app_uuid = app_obj.uuid
+                self.current_operation = operation
+
                 dbg.stdout("Processing queue item: " + app_obj.name, 4, 2)
+                self.update_page(".queue-ui-element", "hide")
+                self.update_page("#queue-status-text", "hide")
+                self.update_page("#queue-inprogress", "fadeIn", "fast")
+                self.update_page("#queue-status-text", "fadeIn", "fast")
 
                 if operation == "install":
+                    self.update_page("#queue-status-text", "html", _("Installing {0}").replace('{0}', app_obj.name))
                     result = app_obj.installation.do_install()
+
                 elif operation == "remove":
+                    self.update_page("#queue-status-text", "html", _("Removing {0}").replace('{0}', app_obj.name))
                     result = app_obj.installation.do_remove()
 
                 dbg.stdout("Finished queue item: {0} (Result: {1})".format(app_obj.name, str(result)), 4, 2)
                 self.send_desktop_notification(app_obj, operation, result)
                 self.finished_queue.append([operation, app_obj, result])
+
+                self.update_page(".queue-ui-element", "hide")
+                self.update_page("#queue-progress", "hide")
+                self.update_page("#queue-status-text", "hide")
+                self.update_page("#queue-progress-inner", "css", "width", "0%")
+                if result == True:
+                    self.update_page("#queue-success", "fadeIn", "fast")
+                    self.update_page("#queue-status-text", "fadeIn", "fast")
+                    if operation == "install":
+                        self.update_page("#queue-status-text", "html", _("Successfully installed {0}").replace('{0}', app_obj.name))
+                    elif operation == "remove":
+                        self.update_page("#queue-status-text", "html", _("Successfully removed {0}").replace('{0}', app_obj.name))
+                else:
+                    self.update_page("#queue-failure", "fadeIn", "fast")
+                    self.update_page("#queue-status-text", "fadeIn", "fast")
+                    if operation == "install":
+                        self.update_page("#queue-status-text", "html", _("Failed to install {0}").replace('{0}', app_obj.name))
+                    elif operation == "remove":
+                        self.update_page("#queue-status-text", "html", _("Failed to remove {0}").replace('{0}', app_obj.name))
+
                 self.queue.pop(0)
                 self.update_queue_state()
                 dbg.stdout("{1} items completed. {0} items remaining.".format(str(len(self.queue)), str(len(self.finished_queue))), 4, 2)
@@ -1443,10 +1477,35 @@ def shutdown():
     sys.exit(0)
 
 
+class QueueUICallback(object):
+    """
+    A copy of the boutique.UICallback class tailored for Boutique.
+    """
+    def __init__(self, update_page):
+        self.update_page = update_page
+        self.current_app_uuid = "null"
+
+    def update_current_progress(self, status_text, percent=-1):
+        self.update_page(".queue-ui-element", "hide")
+        self.update_page("#queue-" + self.current_app_uuid + " .status", "html", status_text)
+        self.update_page("#queue-status-text", "html", "")
+        self.update_page("#queue-inprogress", "show")
+
+        if percent == -1:
+            self.update_page("#queue-progress", "hide")
+        else:
+            self.update_page("#queue-progress", "show")
+            self.update_page("#queue-progress-inner", "show")
+            self.update_page("#queue-progress-inner", "css", "width", str(percent) + "%")
+
+        print('\033[90m' + "Status Changed: {0} ({1}%)".format(status_text, str(percent)) + '\033[0m')
+
+
 if __name__ == "__main__":
     dbg = Debugging()
     boutique.dbg = dbg
     data_source = get_data_source()
+    boutique.data_source = data_source
     dbg.parse_parameters()
     trans = Translations()
     pref = preferences.Preferences(dbg, "preferences")
@@ -1479,4 +1538,5 @@ if __name__ == "__main__":
     main.build(webview)
     app.webkit = webview
     app.update_page = webview.update_page
+    boutique.ui_callback = QueueUICallback(app.update_page)
     main.run()
