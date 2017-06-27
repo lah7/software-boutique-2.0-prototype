@@ -94,11 +94,11 @@ def get_application_details(index_data, category, appid):
     app.screenshot_filenames.sort()
 
     if app.method == "dummy" or force_dummy:
-        app.installation = SoftwareInstallation.Dummy(app.data)
+        app.installation = SoftwareInstallation.Dummy(app)
     elif app.method == "apt":
-        app.installation = SoftwareInstallation.PackageKit(app.data)
+        app.installation = SoftwareInstallation.PackageKit(app)
     elif app.method == "snap":
-        app.installation = SoftwareInstallation.Snappy(app.data)
+        app.installation = SoftwareInstallation.Snappy(app)
     else:
         print(app.method + " is not supported!")
         return None
@@ -183,7 +183,8 @@ class SoftwareInstallation():
         Dummy implementation for debugging software changes.
         """
         def __init__(self, app_obj):
-            self.raw_data = app_obj.get("installation")
+            self.app = app_obj
+            self.raw_data = app_obj.data.get("installation")
 
             # This dummy pretends to look busy.
 
@@ -208,7 +209,8 @@ class SoftwareInstallation():
         Apt implementation using PackageKit as its back-end.
         """
         def __init__(self, app_obj):
-            self.raw_data = app_obj.get("installation")
+            self.app = app_obj
+            self.raw_data = app_obj.data.get("installation")
 
         def is_installed(self):
             return False
@@ -289,8 +291,8 @@ class SoftwareInstallation():
         Snaps implementation.
         """
         def __init__(self, app_obj):
-            self.raw_data = app_obj.get("installation")
-            return
+            self.app = app_obj
+            self.raw_data = app_obj.data.get("installation")
 
         def is_installed(self):
             return True
@@ -307,7 +309,8 @@ class SoftwareInstallation():
         Snaps implementation.
         """
         def __init__(self, app_obj):
-            self.raw_data = app_obj.get("installation")
+            self.app = app_obj
+            self.raw_data = app_obj.data.get("installation")
 
         def is_installed(self):
             return True
