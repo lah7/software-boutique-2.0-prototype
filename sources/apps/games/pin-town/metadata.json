@@ -4,7 +4,7 @@
     "summary": "A game for testing snaps.",
     "developer-name": "Somebody",
     "developer-url": "http://example.com",
-    "description": "",
+    "description": "000",
     "tags": "Games",
     "launch-cmd": "pin-town",
     "proprietary": false,
