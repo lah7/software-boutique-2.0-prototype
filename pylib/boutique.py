@@ -95,6 +95,7 @@ def get_application_details(index_data, category, appid):
     """
     app = ApplicationData()
     data = index_data[category][appid]
+    app.data = data
 
     app.appid = appid
     app.categoryid = category
