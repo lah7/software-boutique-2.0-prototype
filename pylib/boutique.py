@@ -25,6 +25,9 @@ import requests
 from time import time
 from time import sleep
 
+# EXPERIMENTAL
+from pylib import snapsupport as snapsupport
+
 # Paths
 cache_path = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
 installed_index = os.path.join(os.path.expanduser('~'), ".config", "software-boutique", "installed.json")
@@ -348,15 +351,24 @@ class SoftwareInstallation():
         def __init__(self, app_obj):
             self.app = app_obj
             self.raw_data = app_obj.data.get("installation")
+            self.snap_name = self.raw_data["all"]["name"]
 
         def is_installed(self):
             return True
 
         def do_install(self):
-            return True
+            try:
+                snapsupport.snap_install(self.snap_name)
+                return True
+            except Exception:
+                return False
 
         def do_remove(self):
-            return True
+            try:
+                snapsupport.snap_remove(self.snap_name)
+                return True
+            except Exception:
+                return False
 
 
     #~ class WebApps(object):
