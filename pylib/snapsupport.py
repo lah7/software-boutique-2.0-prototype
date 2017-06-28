@@ -19,9 +19,15 @@ if not zenity_present:
     exit(1)
 
 
-def progress_snap_cb (client, change, deprecated, user_data):
+def progress_snap_cb (client, change, _, user_data):
     # Interate over tasks to determine the aggregate tasks for completion.
-    print(change)
+    total = 0
+    done = 0
+    for task in change.get_tasks():
+        total += task.get_progress_total()
+        done += task.get_progress_done()
+    percent = round((done/total)*100)
+    print(percent)
 
 
 def load_auth_data():
@@ -123,7 +129,14 @@ def snap_login():
     save_auth_data(auth_data)
     return True
 
-#@snap_login
+def is_installed(snapname):
+    try:
+        snapinfo = client.list_one_sync(snapname)
+    except Exception as e:
+        return False
+    else:
+        return True
+
 def snap_install(snapname):
     print("Installing")
     connect()
@@ -133,7 +146,6 @@ def snap_install(snapname):
                         None) # cancellable
 
 
-#@snap_login
 def snap_remove(snapname):
     print("Removing")
     connect()
