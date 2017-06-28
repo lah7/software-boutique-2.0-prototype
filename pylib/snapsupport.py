@@ -11,6 +11,7 @@ from gi.repository import Snapd
 
 # Connects on-demand
 client = None
+ui_callback = None
 
 # Check we have Zenity installed.
 zenity_present = which("zenity")
@@ -27,6 +28,7 @@ def progress_snap_cb (client, change, _, user_data):
         total += task.get_progress_total()
         done += task.get_progress_done()
     percent = round((done/total)*100)
+    ui_callback.update_current_progress("In Progress", percent)
     print(percent)
 
 

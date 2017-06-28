@@ -352,12 +352,14 @@ class SoftwareInstallation():
             self.app = app_obj
             self.raw_data = app_obj.data.get("installation")
             self.snap_name = self.raw_data["all"]["name"]
+            snapsupport.ui_callback = ui_callback
 
         def is_installed(self):
             snapsupport.is_installed(self.snap_name)
 
         def do_install(self):
             try:
+                ui_callback.update_current_progress("Starting to install", -1)
                 snapsupport.snap_install(self.snap_name)
                 return True
             except Exception:
@@ -365,6 +367,7 @@ class SoftwareInstallation():
 
         def do_remove(self):
             try:
+                ui_callback.update_current_progress("Starting to remove", -1)
                 snapsupport.snap_remove(self.snap_name)
                 return True
             except Exception:
