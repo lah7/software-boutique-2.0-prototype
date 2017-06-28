@@ -1056,6 +1056,7 @@ class SoftwareBoutique(object):
         self.webkit.run_javascript("changeNavTitleType('browse')")
 
     def generate_start_page_apps(self):
+        return
         def _add_app(random_app, position, direction):
             categoryid = random_app[0]
             appid = random_app[1]
