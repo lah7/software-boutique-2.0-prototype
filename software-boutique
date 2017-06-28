@@ -1321,7 +1321,7 @@ class QueueOperationsThread(object):
                 status = _("Successfully removed")
 
             html += "<div id='{uuid}' class='queue-card queue-complete {operation} {result_css}'>" \
-                        "<button onclick='{cmd_details}'>" \
+                        "<button onclick='cmd(\"{cmd_details}\")'>" \
                             "<img class='icon' src='{icon}' />" \
                             "<div class='title '>{name}</div>" \
                         "</button>" \
