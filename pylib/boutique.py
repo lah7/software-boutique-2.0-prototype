@@ -354,7 +354,7 @@ class SoftwareInstallation():
             self.snap_name = self.raw_data["all"]["name"]
 
         def is_installed(self):
-            return True
+            snapsupport.is_installed(self.snap_name)
 
         def do_install(self):
             try:
