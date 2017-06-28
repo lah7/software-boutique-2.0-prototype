@@ -1,0 +1,37 @@
+{
+    "listed": true,
+    "name": "Pin Town",
+    "summary": "A game for testing snaps.",
+    "developer-name": "Somebody",
+    "developer-url": "http://example.com",
+    "description": "",
+    "tags": "Games",
+    "launch-cmd": "pin-town",
+    "proprietary": false,
+    "alternate-to": null,
+    "urls": {
+        "info": "http://example.com",
+        "android-app": null,
+        "ios-app": null
+    },
+    "arch": [
+        "i386",
+        "amd64",
+        "armhf",
+        "arm64"
+    ],
+    "releases": [
+        "xenial",
+        "yakkety",
+        "zesty",
+        "artful"
+    ],
+    "method": "snap",
+    "installation": {
+        "all": {
+            "name": "pin-town"
+        }
+    },
+    "post-install": [],
+    "post-remove": []
+}
