@@ -8,6 +8,10 @@ import sys
 gi.require_version ('Snapd', '1')
 from gi.repository import Snapd
 
+# Connects on-demand
+client = None
+
+
 def progress_snap_cb (client, change, deprecated, user_data):
     # Interate over tasks to determine the aggregate tasks for completion.
     print(change)
@@ -60,10 +64,11 @@ def snap_login():
     client.set_auth_data(auth_data)
     save_auth_data(auth_data)
     return True
-    
+
 #@snap_login
 def snap_install(snapname):
     print("Installing")
+    connect()
     client.install_sync(snapname,
                         None, # channel
                         progress_snap_cb, (None,),
@@ -73,18 +78,22 @@ def snap_install(snapname):
 #@snap_login
 def snap_remove(snapname):
     print("Removing")
+    connect()
     client.remove_sync(snapname,
                        progress_snap_cb, (None,),
                        None) # cancellable
 
-client = Snapd.Client()
-client.connect_sync()
+def connect():
+    global client
+    if client == None:
+        client = Snapd.Client()
+        client.connect_sync()
 
-auth_data = load_auth_data()
-if auth_data:
-    client.set_auth_data(auth_data)    
-else:
-    snap_login()
-    
+        auth_data = load_auth_data()
+        if auth_data:
+            client.set_auth_data(auth_data)
+        else:
+            snap_login()
+
 #snap_install('moon-buggy')
-snap_remove('moon-buggy')
+#~ snap_remove('moon-buggy')
