@@ -264,6 +264,7 @@ class SoftwareBoutique(object):
         self.is_ubuntu_mate = False
         self.boutique_ppa_enabled = False
         self.internet_connected = False
+        self.current_open_app_uuid = "null"
 
         # If the app isn't even compiled, stop.
         # If the app mysterously lost its data, also stop.
@@ -777,11 +778,18 @@ class SoftwareBoutique(object):
         self.update_page('.navigation', 'css', 'color', fg_color)
         self.update_page('.dropdown', 'css', 'color', fg_color)
 
-    def show_app_details(self, categoryid, appid):
+    def show_app_details(self, categoryid, appid, update_only=False):
+        """
+        Builds (or replaces) the app details page when an app is clicked.
+        """
         app_obj = boutique.get_application_details(self.index, categoryid, appid)
-        self.webkit.run_javascript("animate('#app-details-page', 'enter-more-info', 'in')")
-        self.webkit.run_javascript("changeNavTitleType('back')")
-        self.update_page(".header-title", "html", app_obj.name)
+        self.current_open_app_uuid = app_obj.uuid
+
+        if not update_only:
+            self.webkit.run_javascript("animate('#app-details-page', 'enter-more-info', 'in')")
+            self.webkit.run_javascript("changeNavTitleType('back')")
+            self.update_page(".header-title", "html", app_obj.name)
+
         installed = app_obj.is_installed()
 
         # Start top section
@@ -823,45 +831,51 @@ class SoftwareBoutique(object):
         if app_obj.alternate_to:
             html += "<p id='app-alternate'>" + app_obj.alternate_to + "</p>"
 
-        ### Install Date
-        def _get_install_date_string(installed_time):
+        ### Show a checkmark / date if installed.
+        def _update_install_info():
+            """
+            Prints a small piece of text showing when the app was installed.
+            """
             current_time = int(time.time())
+            installed_time = install_time.read(app_obj.uuid, 0)
+
             if pref.read("prefer-precise-time", False):
                 # TODO: Improve date format
-                return(datetime.fromtimestamp(installed_time).ctime())
+                time_string = (datetime.fromtimestamp(installed_time).ctime())
 
             else:
                 if installed_time == 0:
-                    return _("Installed.")
+                    time_string = _("Installed.")
 
                 elif installed_time > current_time:
-                    return _("A wicked time traveller claims this will be installed in the future.")
+                    time_string = _("A wicked time traveller claims this will be installed in the future.")
 
                 elif current_time - 300 < installed_time:       # Past 5 minutes
-                    return _("Installed just now.")
+                    time_string = _("Installed just now.")
 
                 elif current_time - 3600 < installed_time:      # Past hour
                     text = _("Installed [0] minutes ago.")
                     text = text.replace("[0]", str(int((current_time - installed_time) / 60)))
-                    return(text)
+                    time_string = text
 
                 elif current_time - 86400 < installed_time:     # Past week
                     text = _("Installed [0] hours ago.")
                     text = text.replace("[0]", str(int((current_time - installed_time) / 60 / 60)))
-                    return(text)
+                    time_string = text
 
                 elif current_time - 604800 < installed_time:    # Past month
                     text = _("Installed [0] days ago.")
                     text = text.replace("[0]", str(int((current_time - installed_time) / 60 / 60 / 24)))
-                    return(text)
+                    time_string = text
 
                 else:
                     # TODO: Improve date format
-                    return(datetime.fromtimestamp(installed_time).ctime())
+                    time_string = datetime.fromtimestamp(installed_time).ctime()
 
-        # Show installed check/date if applicable.
+            return "<div id='app-install-info'><span class='fa fa-check-circle'></span> " + time_string + "</div>"
+
         if installed:
-            html += "<div id='app-installed'><span class='fa fa-check-circle'></span> " + _get_install_date_string(install_time.read(app_obj.uuid, 0)) + "</div>"
+            html += _update_install_info()
 
         ### Action Buttons
         html += boutique.print_app_installation_buttons(app_obj, self.queue.queue)
@@ -1099,8 +1113,6 @@ class QueueOperationsThread(object):
         self.update_page = update_page_obj
         self.queue = []
         self.finished_queue = []
-        self.current_operation = "null"
-        self.current_app_uuid = "null"
         self.status_text = _("Ready")
 
     def watch_queue(self):
@@ -1114,9 +1126,8 @@ class QueueOperationsThread(object):
                 operation = queue_item[0]
                 app_obj = queue_item[1]
 
-                self.current_app_uuid = app_obj.uuid
                 boutique.ui_callback.current_app_uuid = app_obj.uuid
-                self.current_operation = operation
+                boutique.ui_callback.operation = operation
 
                 dbg.stdout("Processing queue item: " + app_obj.name, 4, 2)
                 self.update_page(".queue-ui-element", "hide")
@@ -1157,6 +1168,11 @@ class QueueOperationsThread(object):
 
                 self.queue.pop(0)
                 self.update_queue_state()
+                if app_obj.uuid == app.current_open_app_uuid:
+                    app.show_app_details(app_obj.categoryid, app_obj.appid, True)
+
+                self.update_page(".buttons-" + boutique.ui_callback.current_app_uuid, "html", boutique.print_app_installation_buttons(app_obj, self.queue))
+
                 dbg.stdout("{1} items completed. {0} items remaining.".format(str(len(self.queue)), str(len(self.finished_queue))), 4, 2)
 
     def get_count(self):
@@ -1484,6 +1500,7 @@ class QueueUICallback(object):
     def __init__(self, update_page):
         self.update_page = update_page
         self.current_app_uuid = "null"
+        self.operation = "null"
 
     def update_current_progress(self, status_text, percent=-1):
         self.update_page(".queue-ui-element", "hide")
@@ -1498,16 +1515,31 @@ class QueueUICallback(object):
             self.update_page("#queue-progress-inner", "show")
             self.update_page("#queue-progress-inner", "css", "width", str(percent) + "%")
 
-        print('\033[90m' + "Status Changed: {0} ({1}%)".format(status_text, str(percent)) + '\033[0m')
+        app_status_text = {
+            "install": [_("Installing..."), "fa-download"],
+            "remove": [_("Removing..."), "fa-trash"]
+        }
+
+        self.update_page(".buttons-" + self.current_app_uuid, "html",
+            "<div id='app-install-info'><span class='fa {0}'></span> {1}</div>".format(
+                app_status_text[self.operation][1],
+                app_status_text[self.operation][0]))
+
+        print('\033[95m' + "Status Changed: {0} ({1}%)".format(status_text, str(percent)) + '\033[0m')
 
 
 if __name__ == "__main__":
+    # Prepare for verbose output and translation support.
     dbg = Debugging()
     boutique.dbg = dbg
     data_source = get_data_source()
     boutique.data_source = data_source
     dbg.parse_parameters()
     trans = Translations()
+
+    # JSON in memory
+    # - Stores preferences.
+    # - Stores timestamps for applications installed via Boutique.
     pref = preferences.Preferences(dbg, "preferences")
     install_time = preferences.Preferences(dbg, "install_time")
 
