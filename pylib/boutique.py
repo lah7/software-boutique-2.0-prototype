@@ -355,7 +355,7 @@ class SoftwareInstallation():
             snapsupport.ui_callback = ui_callback
 
         def is_installed(self):
-            snapsupport.is_installed(self.snap_name)
+            return snapsupport.is_installed(self.snap_name)
 
         def do_install(self):
             try:
