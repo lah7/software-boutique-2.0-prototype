@@ -295,6 +295,9 @@ class SoftwareBoutique(object):
             pref.write("already-warned-distro", True)
             self.close_message_page()
 
+        elif cmd == "show-introduction-again":
+            self.show_introduction_page()
+
         elif cmd == "finished-introduction":
             self.close_introduction_page()
 
@@ -1165,6 +1168,10 @@ class SoftwareBoutique(object):
         html += add_hint(_("Reveal more technical details about applications and advanced filters."))
         html += add_checkbox(_("Prefer precise times"), "prefer-precise-time")
         html += add_hint(_("Always shows the exact time it was installed, as opposed to relative, e.g. '2 days ago'."))
+        html += end_category()
+
+        html += add_category(_("Miscellaneous"))
+        html += add_button(_("Show Introduction Screen"), "show-introduction-again", "fa-info-circle")
         html += end_category()
 
         self.update_page("#settings-page", "html", html)
