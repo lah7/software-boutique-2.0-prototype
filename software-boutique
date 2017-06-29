@@ -44,6 +44,7 @@ import time
 from datetime import datetime
 import traceback
 from threading import Thread
+import webbrowser
 
 try:
     import pylib.boutique as boutique
@@ -317,8 +318,8 @@ class SoftwareBoutique(object):
             return
 
         elif cmd.startswith("web?"):
-            # FIXME
-            return
+            url = cmd.split("?")[1]
+            webbrowser.open(url)
 
         elif cmd.startswith("install?") or cmd.startswith("remove?"):
             cmd = cmd.split("?")
