@@ -1640,9 +1640,11 @@ if __name__ == "__main__":
         "remove_queue": _("Remove from queue"),
         "remove_queue_tooltip": _("Cancels any changes for this application"),
         "installing": _("Installing..."),
-        "removing": _("Uninstalling..."),
+        "removing": _("Removing..."),
         "queued-install": _("Will be installed."),
-        "queued-remove": _("Will be removed.")
+        "queued-remove": _("Will be removed."),
+        "starting-install": _("Starting to install"),
+        "starting-remove": _("Starting to remove")
     }
 
     # On this thread

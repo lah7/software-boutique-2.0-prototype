@@ -25,6 +25,13 @@ import requests
 from time import time
 from time import sleep
 
+try:
+    from pylib import snapsupport as snapsupport
+except ImportError:
+    from software_boutique.boutique import snapsupport as snapsupport
+
+from pylib import snapsupport as snapsupport
+
 # Paths
 cache_path = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
 installed_index = os.path.join(os.path.expanduser('~'), ".config", "software-boutique", "installed.json")
@@ -53,9 +60,11 @@ string_dict = {
     "remove_queue": "Remove from queue",
     "remove_queue_tooltip": "Cancels any changes for this application",
     "installing": "Installing...",
-    "removing": "Uninstalling...",
+    "removing": "Removing...",
     "queued-install": "Will be installed.",
-    "queued-remove": "Will be removed."
+    "queued-remove": "Will be removed.",
+    "starting-install": "Starting to install...",
+    "starting-remove": "Starting to remove..."
 }
 
 class UICallback():
@@ -229,15 +238,15 @@ class SoftwareInstallation():
         def do_install(self):
             sleep(1)
             for x in [0, 25, 50, 75, 100]:
-                ui_callback.update_current_progress("Installing...", str(x))
                 sleep(1)
+                ui_callback.update_current_progress(string_dict["installing"], str(x))
             return True
 
         def do_remove(self):
             sleep(1)
             for x in [0, 14, 33, 45, 63, 89, 100]:
-                ui_callback.update_current_progress("Removing...", str(x))
                 sleep(0.5)
+                ui_callback.update_current_progress(string_dict["removing"], str(x))
             return True
 
 
@@ -348,20 +357,27 @@ class SoftwareInstallation():
         def __init__(self, app_obj):
             self.app = app_obj
             self.raw_data = app_obj.data.get("installation")
+            self.snap_name = self.raw_data["all"]["name"]
+            snapsupport.ui_callback = ui_callback
 
         def is_installed(self):
-            return True
+            return snapsupport.is_installed(self.snap_name)
 
         def do_install(self):
-            return True
+            try:
+                ui_callback.update_current_progress(string_dict["starting-install"], -1)
+                snapsupport.snap_install(self.snap_name)
+                return True
+            except Exception:
+                return False
 
         def do_remove(self):
-            return True
-
-
-    #~ class WebApps(object):
-        #~ def __init__(self):
-            #~ return
+            try:
+                ui_callback.update_current_progress(string_dict["starting-remove"], -1)
+                snapsupport.snap_remove(self.snap_name)
+                return True
+            except Exception:
+                return False
 
 
 def _generate_button_html(action, app_obj, colour_class, fa_icon, text, tooltip):
