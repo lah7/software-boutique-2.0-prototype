@@ -236,17 +236,15 @@ class SoftwareInstallation():
                 return False
 
         def do_install(self):
-            sleep(1)
-            for x in [0, 25, 50, 75, 100]:
-                sleep(1)
+            for x in range(0, 100, 4):
                 ui_callback.update_current_progress(string_dict["installing"], str(x))
+                sleep(0.08)
             return True
 
         def do_remove(self):
-            sleep(1)
-            for x in [0, 14, 33, 45, 63, 89, 100]:
-                sleep(0.5)
+            for x in range(0, 100, 12):
                 ui_callback.update_current_progress(string_dict["removing"], str(x))
+                sleep(0.22)
             return True
 
 
