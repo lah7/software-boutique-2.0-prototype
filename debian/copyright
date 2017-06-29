@@ -8,7 +8,7 @@ Files: debian/*
        README.md
 Copyright: 2017 Luke Horwell <luke@ubuntu-mate.org>
            2017 Martin Wimpress <code@flexion.org>
-License: GPL-2+
+License: GPL-3+
 
 Files: software-boutique
        software-boutique-dev
@@ -28,7 +28,7 @@ Files: software-boutique
        docs/*
 Copyright: 2015-2017 Luke Horwell <luke@ubuntu-mate.org>
            2015-2016 Martin Wimpress <code@flexion.org>
-License: GPL-2+
+License: GPL-3+
 
 Files: data/categories/*.svg
 Copyright: 2004-2012, Canonical Ltd.
@@ -47,20 +47,6 @@ License: OFL-1.1
 Files: data/js/jquery-3.1.1.min.js
 Copyright: 2005-2016 jQuery Foundation, Inc. and other contributors
 License: MIT
-
-License: GPL-2+
- This package is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
- .
- This package is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- GNU General Public License for more details.
- .
- On Debian sysyems, the complete test of the GNU General Public
- License version 2 can be found in "/usr/share/common-licenses/GPL-2".
 
 License: GPL-3+
  This program is free software; you can redistribute it and/or modify it under
