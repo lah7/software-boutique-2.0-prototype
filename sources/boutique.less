@@ -1430,3 +1430,50 @@ img.like-fa {
     0% { transform: translateX(0px); opacity: 1; }
     100% { transform: translateX(100px); opacity: 0; }
 }
+
+/************************
+ * Settings
+*************************/
+#settings-page {
+    .category {
+        border-top: 1px solid lightgray;
+        padding-top: 0.5em;
+    }
+
+    .left {
+        display: inline-block;
+        width: 30%;
+        vertical-align: top;
+    }
+
+    .right {
+        display: inline-block;
+        width: 70%;
+        vertical-align: top;
+    }
+
+    h4 {
+        font-size: 0.9em;
+        margin: 0;
+        height: auto;
+    }
+
+    label {
+        font-size: 0.9em;
+        display: block;
+        margin: 0;
+
+        &.hint {
+            color: gray;
+        }
+
+        & + label,
+        & + button, {
+            margin-top: 0.5em;
+        }
+    }
+
+    input {
+        font-size: 0.9em;
+    }
+}

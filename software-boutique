@@ -373,6 +373,13 @@ class SoftwareBoutique(object):
             # FIXME!
             return
 
+        elif cmd.startswith("toggle-pref?"):
+            prop = cmd.split("?")[1]
+            state = pref.read(prop, False)
+            state = not state
+            pref.write(prop, state)
+            self.build_settings_page()
+
         else:
             dbg.stdout("Unimplemented function!", 1, 2)
 
@@ -545,7 +552,7 @@ class SoftwareBoutique(object):
             ############################################
             # Build Settings Page
             ############################################
-            # fixme: settings
+            self.build_settings_page()
 
             ############################################
             # Start Page
@@ -1086,6 +1093,74 @@ class SoftwareBoutique(object):
         html += _add_app(random_apps[10], 2, "right")
         html += _add_app(random_apps[11], 1, "right")
         self.update_page("#random-apps", "html", html)
+
+    def build_settings_page(self):
+        """
+        Generates and builds the settings screen.
+        """
+        html = "<h2>{0}</h2><p><{1}</p>".format(
+            _("Preferences"),
+            _("Tune the Software Boutique to suit your preferred behaviors.")
+        )
+
+        def _get_onclick_toggle(prop):
+            return 'cmd("toggle-pref?{0}")'.format(prop)
+
+        def _get_initial_check_state(prop):
+            if pref.read(prop, False):
+                return "checked"
+            else:
+                return ""
+
+        def add_category(name):
+            return "<div class='categpry'><hr/>" \
+                    "<div class='left'>" \
+                    "<h4>" + name + "</h4>" \
+                    "</div>" \
+                    "<div class='right'>"
+
+        def add_checkbox(label, prop):
+            return "<label><input type='checkbox' onclick='{1}' {2}/> {0}</label>".format(
+            label, _get_onclick_toggle(prop), _get_initial_check_state(prop))
+
+        def add_button(label, command, fa_icon=None):
+            if fa_icon:
+                icon = "<span class='fa {0}'></span>".format(fa_icon)
+            else:
+                icon = ""
+            return "<button class='dialog-theme' onclick='cmd(\"{0}\")'>{1} {2}</button>".format(
+                command, icon, label)
+
+        def add_label(label):
+            return "<label>" + label + "</label>"
+
+        def add_hint(label):
+            return "<label class='hint'>" + label + "</label>"
+
+        def end_category():
+            return "</div></div>"
+
+        # Version Information
+        revision = 0
+        html += add_category(_("Version"))
+        html += add_hint("17.10-dev")
+        html += add_checkbox(_("Keep Software Boutique up-to-date."), "keep-updated")
+        html += end_category()
+
+        html += add_category(_("Index Revision"))
+        html += add_hint(str(revision))
+        html += add_button(_("Force Refresh"), "ditch-cache", "fa-refresh")
+        html += end_category()
+
+        html += add_category(_("Interface"))
+        html += add_checkbox(_("Hide proprietary applications"), "always-hide-non-free")
+        html += add_checkbox(_("Enable Advanced Views"), "advanced-mode")
+        html += add_hint(_("Reveal more technical details about applications and advanced filters."))
+        html += add_checkbox(_("Prefer precise times"), "prefer-precise-time")
+        html += add_hint(_("Always shows the exact time it was installed, as opposed to relative, e.g. '2 days ago'."))
+        html += end_category()
+
+        self.update_page("#settings-page", "html", html)
 
 
 class QueueOperationsThread(object):
