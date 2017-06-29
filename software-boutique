@@ -314,7 +314,13 @@ class SoftwareBoutique(object):
             self.hide_app_details()
 
         elif cmd.startswith("launch?"):
-            # FIXME
+            cmd = cmd.split("?")
+            categoryid = cmd[1]
+            appid = cmd[2]
+            app_obj = boutique.get_application_details(self.index, categoryid, appid)
+            launch_cmd = app_obj.launch_cmd
+            if launch_cmd:
+                subprocess.Popen(launch_cmd.split(" "))
             return
 
         elif cmd.startswith("web?"):
