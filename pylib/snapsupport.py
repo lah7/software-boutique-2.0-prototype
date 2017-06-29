@@ -29,7 +29,7 @@ def progress_snap_cb (client, change, _, user_data):
         done += task.get_progress_done()
     percent = round((done/total)*100)
     ui_callback.update_current_progress("In Progress", percent)
-    print(percent)
+    #print(percent)
 
 
 def load_auth_data():
@@ -39,7 +39,7 @@ def load_auth_data():
         macaroon = auth_data['macaroon']
         discharges = auth_data['discharges']
         auth_data = Snapd.AuthData.new(macaroon, discharges)
-        print(auth_data)
+        #print(auth_data)
     else:
         auth_data = None
 
@@ -132,8 +132,9 @@ def snap_login():
     return True
 
 def is_installed(snapname):
+    connect()
     try:
-        snapinfo = client.list_one_sync(snapname)
+        client.list_one_sync(snapname)
     except Exception as e:
         return False
     else:
@@ -166,6 +167,3 @@ def connect():
             client.set_auth_data(auth_data)
         else:
             snap_login()
-
-#snap_install('moon-buggy')
-#~ snap_remove('moon-buggy')
