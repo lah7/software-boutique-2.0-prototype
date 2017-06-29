@@ -1,18 +1,18 @@
 {
     "listed": true,
     "name": "Pin Town",
-    "summary": "A game for testing snaps.",
-    "developer-name": "Somebody",
-    "developer-url": "http://example.com",
-    "description": "000",
+    "summary": "Help the Pin Pals in this physics puzzle game, inspired by Pachinko",
+    "developer-name": "failsafegames",
+    "developer-url": "https://www.failsafegames.com/",
+    "description":  "Welcome to Pin Town ! Home of the Pin Pals (and Gals) ! Help them in their wacky adventures across town in this unique physics puzzle game, inspired by Pachinko. There's a lot to do in Pin Town : Find a house, visit the beach, go to the movies and a lot more ! Get one to three stars for completing each levels and try to beat your highest score! Simply aim the Pin Pal (or Gal) and send them bouncing madly through numerous custom-themed levels filled with power ups and special challenges!",
     "tags": "Games",
     "launch-cmd": "pin-town",
     "proprietary": false,
     "alternate-to": null,
     "urls": {
-        "info": "http://example.com",
-        "android-app": null,
-        "ios-app": null
+        "info": "https://www.pin-town.com/",
+        "android-app": "https://play.google.com/store/apps/details?id=com.failsafegames.pachinkrop",
+        "ios-app": "https://itunes.apple.com/us/app/pin-town/id1229473509?mt=8"
     },
     "arch": [
         "i386",
