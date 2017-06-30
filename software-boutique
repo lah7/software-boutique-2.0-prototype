@@ -29,6 +29,7 @@ gi.require_version("Notify", "0.7")
 gi.require_version("WebKit2", "4.0")
 from gi.repository import GLib, Gio, GObject, Gdk, Gtk, Notify, WebKit2
 
+import argparse
 import gettext
 import inspect
 import json
@@ -41,10 +42,10 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime
 import traceback
-from threading import Thread
 import webbrowser
+from datetime import datetime
+from threading import Thread
 
 try:
     import pylib.boutique as boutique
@@ -159,7 +160,6 @@ class WebView(WebKit2.WebView):
             inspector = self.get_inspector()
             inspector.show()
 
-
         dbg.stdout("Finished webkit2 initalisation.", 2, 1)
 
     def update_page(self, element, function, parm1=None, parm2=None):
@@ -264,7 +264,6 @@ class SoftwareBoutique(object):
         self.queue = None                   # QueueOperationsThread()
         self.is_ubuntu_mate = False
         self.boutique_ppa_enabled = False
-        self.internet_connected = False
         self.current_open_app_uuid = "null"
 
         # If the app isn't even compiled, stop.
@@ -398,10 +397,6 @@ class SoftwareBoutique(object):
             self.current_arch = dbg.override_arch
         if dbg.override_codename:
             boutique.current_os_codename = dbg.override_codename
-        if dbg.override_internet_on == True:
-            self.internet_connected = True
-        if dbg.override_internet_on == False:
-            self.internet_connected = False
 
     def start_loading(self):
         # Fade in navigation bar, matching colour where possible.
@@ -1479,62 +1474,58 @@ class Debugging(object):
         self.verbose_level = 0
         self.override_arch = None
         self.override_codename = None
-        self.override_internet_on = None
         self.override_locale = None
         self.simulate_only = None
 
     def parse_parameters(self):
-        for arg in sys.argv:
-            if arg in ["-h", "--help"]:
-                trans = Translations()
-                print("Usage: software-boutique [arguments]\n")
-                #      | Command             |------| Help Text                                             |
-                print("  -h, --help           " + _("Show this help text."))
-                print("  --arch=ARCH          " + _("Show listings for a specific architecture."))
-                print("                       " + _(" -- Examples: i386, amd64, powerpc, armhf"))
-                print("  --codename=CODENAME  " + _("Show listings for a specific release."))
-                print("                       " + _(" -- Examples: trusty, xenial, zesty"))
-                print("  --force-net          " + _("Force an internet connection to be present."))
-                print("  --locale=CODE        " + _("Locale to use. e.g. fr_FR."))
-                print("  --simulate           " + _("Simulate software changes without system modification."))
-                print("  -v, --verbose        " + _("Show details to stdout (for diagnosis)."))
-                print("  -vv, --debug         " + _("Show more details to stdout (for debugging)."))
-                exit(0)
+        parser = argparse.ArgumentParser(add_help=False)
+        parser._optionals.title = _("Optional arguments")
+        parser.add_argument("-h", "--help", help=_("Show this help message and exit"), action="help")
+        parser.add_argument("-v", "--verbose", help=_("Be verbose to stdout"), action="store_true")
+        parser.add_argument("--arch", help=_("Show listings for a specific architecture, e.g. i386"))
+        parser.add_argument("--codename", help=_("Show listings for a specific release, e.g. xenial"))
+        parser.add_argument("--locale", help=_("Force locale for interface"))
+        parser.add_argument("--clear-cache", help=_("Force index re-download"), action="store_true")
 
-            elif arg.startswith("--arch"):
-                self.override_arch = arg.split("--arch=")[1]
-                dbg.stdout("=> Showing listings for arch: " + self.override_arch, 4)
+        # For general debugging
+        parser.add_argument("-vv", "-d", "--debug", help=_("Be very verbose (for debugging)"), action="store_true")
 
-            elif arg.startswith("--codename"):
-                self.override_codename = arg.split("--codename=")[1]
-                dbg.stdout("=> Showing listings for release: " + self.override_codename, 4)
+        # For front-end debugging (developer tools)
+        parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
 
-            elif arg == "--force-net":
-                self.override_internet_on = True
-                dbg.stdout("=> Forcing internet connection.", 4)
+        # For front-end debugging (use dummy module)
+        parser.add_argument("--simulate", help=argparse.SUPPRESS, action="store_true")
 
-            elif arg == "--force-no-net":  # DEBUG ONLY
-                self.override_internet_on = False
-                dbg.stdout("=> Forcing no internet connection.", 4)
+        args = parser.parse_args()
 
-            elif arg.startswith("--locale"):
-                self.override_locale = arg.split("--locale=")[1]
-                boutique.system_locale = self.override_locale
-                dbg.stdout("=> Forcing locale: " + self.override_locale, 4)
+        if args.verbose:
+            self.verbose_level = 1
+            self.stdout(_("Verbose enabled"), 3, 1)
 
-            elif arg == "--simulate":
-                boutique.force_dummy = True
-                dbg.stdout("=> Simulating software changes.", 4)
+        if args.debug:
+            self.verbose_level = 2
+            self.stdout(_("Debug verbose enabled"), 3, 2)
 
-            elif arg in ["-v", "--verbose"]:
-                self.verbose_level = 1
+        if args.arch:
+            self.override_arch = args.arch
+            dbg.stdout("=> Showing listings for arch: " + args.arch, 4)
 
-            elif arg in ["-vv", "-d", "--debug"]:
-                self.verbose_level = 2
+        if args.codename:
+            self.override_codename = args.codename
+            dbg.stdout("=> Showing listings for release: " + self.override_codename, 4)
 
-            elif arg == "--inspect":
-                # For development only!
-                self.verbose_level = 3
+        if args.locale:
+            self.override_locale = args.locale
+            boutique.system_locale = args.locale
+            dbg.stdout("=> Forcing locale: " + self.override_locale, 4)
+
+        if args.simulate:
+            boutique.force_dummy = True
+            dbg.stdout("=> Simulating software changes.", 4)
+
+        if args.inspect:
+            self.verbose_level = 3
+
 
     def stdout(self, msg, color=0, verbosity=0):
         # msg           String containing message for stdout.
@@ -1620,11 +1611,11 @@ class QueueUICallback(object):
 if __name__ == "__main__":
     # Prepare for verbose output and translation support.
     dbg = Debugging()
-    boutique.dbg = dbg
     data_source = get_data_source()
     boutique.data_source = data_source
-    dbg.parse_parameters()
     trans = Translations()
+    boutique.dbg = dbg
+    dbg.parse_parameters()
 
     # JSON in memory
     # - Stores preferences.
