@@ -13,5 +13,5 @@ Presented as part of the [Welcome program](https://bitbucket.org/ubuntu-mate/ubu
 
 ## Migration in Progress!
 
-This tool was originally part of [Ubuntu MATE Welcome](https://bitbucket.org/ubuntu-mate/ubuntu-mate-welcome),
+This tool was originally part of [Ubuntu MATE Welcome](https://github.com/ubuntu-mate/ubuntu-mate-welcome),
 but it is currently being decoupled into its own stand-alone application.
