@@ -1,7 +1,6 @@
 # Ignore compiled stuff
 __pycache__
 *.mo
-data/apps/
 data/boutique.css
 
 
