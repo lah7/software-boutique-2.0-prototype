@@ -50,10 +50,12 @@ from threading import Thread
 try:
     import pylib.boutique as boutique
     import pylib.preferences as preferences
+    import pylib.common as common
     relative_path = True
 except ImportError:
     import software_boutique.boutique as boutique
     import software_boutique.preferences as preferences
+    import software_boutique.common as common
     relative_path = False
 
 supported_arch = ["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
@@ -68,13 +70,13 @@ def get_data_source():
     """
     current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     if( os.path.exists( os.path.join(current_folder, "data/" ) ) ):
-        dbg.stdout("Using relative path for data source. Non-production testing.", 4, 1)
+        dbg.stdout("Using relative path for data source. Non-production testing.", dbg.debug, 1)
         data_path = os.path.join(current_folder, "data/")
     elif( os.path.exists("/usr/share/ubuntu-mate-welcome/") ):
-        dbg.stdout("Using /usr/share/ubuntu-mate-welcome/ for data source.", 4, 1)
+        dbg.stdout("Using /usr/share/ubuntu-mate-welcome/ for data source.", dbg.debug, 1)
         data_path = "/usr/share/ubuntu-mate-welcome/"
     else:
-        dbg.stdout("Unable to source the ubuntu-mate-welcome data directory.", 1)
+        dbg.stdout("Unable to source the ubuntu-mate-welcome data directory.", dbg.error, 1)
         sys.exit(1)
     return data_path
 
@@ -82,7 +84,7 @@ def spawn_thread(target, daemon=True, args=[]):
     """
     Creates another thread to prevent holding up the main thread (and GUI)
     """
-    dbg.stdout("Spawning thread: {0} (daemon {1}, args={2})".format(target.__name__, daemon, args), 3, 2)
+    dbg.stdout("Spawning thread: {0} (daemon {1}, args={2})".format(target.__name__, daemon, args), dbg.debug, 2)
     newthread = Thread(target=target, args=(args))
     if daemon:
         newthread.daemon = True
@@ -116,14 +118,14 @@ class Translations(object):
             self.locale = dbg.override_locale
         else:
             self.locale = str(locale.getlocale()[0])
-        dbg.stdout("Locale set: " + self.locale, 4, 1)
+        dbg.stdout("Locale set: " + self.locale, dbg.success, 1)
 
         # Use relative translations for development.
         if os.path.exists(os.path.join(data_source, "../locale/")):
-            dbg.stdout("Using relative path for translations.", 4, 1)
+            dbg.stdout("Using relative path for translations.", dbg.debug, 1)
             self.locale_path = os.path.join(data_source, "../locale/")
         else:
-            dbg.stdout("Using system path for translations or falling back to 'en_US'.", 4, 1)
+            dbg.stdout("Using system path for translations or falling back to 'en_US'.", dbg.debug, 1)
             self.locale_path = "/usr/share/locale/"
 
         # Initialise i18n
@@ -160,7 +162,7 @@ class WebView(WebKit2.WebView):
             inspector = self.get_inspector()
             inspector.show()
 
-        dbg.stdout("Finished webkit2 initalisation.", 2, 1)
+        dbg.stdout("Finished webkit2 initalisation.", dbg.success, 1)
 
     def update_page(self, element, function, parm1=None, parm2=None):
         """
@@ -178,7 +180,7 @@ class WebView(WebKit2.WebView):
         Callback: On page change.
         """
         if not self.is_loading():
-            dbg.stdout("Finished page initalisation.", 2, 1)
+            dbg.stdout("Finished page initalisation.", dbg.success, 1)
 
     def _on_title_change(self, view, frame):
         """
@@ -186,7 +188,7 @@ class WebView(WebKit2.WebView):
         """
         title = self.get_title()
         if title != "null" and title != "" and title != None:
-            dbg.stdout("Command: '{0}'".format(title), 3, 2)
+            dbg.stdout("Command: '{0}'".format(title), dbg.debug, 2)
             app.process_command(title)
 
     def _on_context_menu(self, webview, menu, event, htr, user_data=None):
@@ -270,11 +272,11 @@ class SoftwareBoutique(object):
         # If the app mysterously lost its data, also stop.
         if not os.path.exists(os.path.join(data_source, "boutique.css")) or not os.path.exists(os.path.join(data_source, "apps")):
             if data_source.startswith("/usr"):
-                dbg.stdout(_("Software Boutique is missing critical data at this path:"), 1, 0)
-                dbg.stdout("  => " + data_source, 4, 0)
-                dbg.stdout(_("The application cannot start. Please try re-installing Software Boutique."), 1, 0)
+                dbg.stdout(_("Software Boutique is missing critical data at this path:"), dbg.error, 0)
+                dbg.stdout("  => " + data_source, dbg.error, 0)
+                dbg.stdout(_("The application cannot start. Please try re-installing Software Boutique."), dbg.error, 0)
             else:
-                dbg.stdout("Silly developer! You forgot to compile me, please run 'software-boutique-dev' instead.", 1, 0)
+                dbg.stdout("Silly developer! You forgot to compile me, please run 'software-boutique-dev' instead.", dbg.error, 0)
             exit(1)
 
         # User Preferences
@@ -337,7 +339,7 @@ class SoftwareBoutique(object):
             app_uuid = categoryid + "-" + appid
 
             if self.queue.is_already_queued(app_uuid):
-                dbg.stdout(app_uuid + " is already queued. It must be unqueued first.", 1, 0)
+                dbg.stdout(app_uuid + " is already queued. It must be unqueued first.", dbg.error, 0)
             else:
                 self.queue.add_item(operation, self.queue._get_appdata(categoryid, appid))
                 self.webkit.run_javascript("animateClass('#queue-button', 'pulse-added', 2000)")
@@ -390,7 +392,7 @@ class SoftwareBoutique(object):
             self.build_settings_page()
 
         else:
-            dbg.stdout("Unimplemented function!", 1, 2)
+            dbg.stdout("Unimplemented function!", dbg.error, 2)
 
     def override_for_debugging(self):
         if dbg.override_arch:
@@ -453,7 +455,7 @@ class SoftwareBoutique(object):
         # Load application
         try:
             # Determine Environment
-            dbg.stdout("Starting application...", 4, 1)
+            dbg.stdout("Starting application...", dbg.action, 1)
             self.is_ubuntu_mate = boutique.SoftwareInstallation.PackageKit._is_running_ubuntu_mate()
             self.boutique_ppa_enabled = boutique.SoftwareInstallation.PackageKit._is_boutique_subscribed()
 
@@ -491,7 +493,7 @@ class SoftwareBoutique(object):
             self.queue = QueueOperationsThread(self.update_page)
             installed_apps = []
 
-            dbg.stdout("Populating categories...", 3, 2)
+            dbg.stdout("Populating categories...", dbg.action, 2)
             self.all_categories = [
                 ["start-page", _("Start Page")],
                 ["accessories", _("Accessories")],
@@ -512,7 +514,7 @@ class SoftwareBoutique(object):
             for category in self.all_categories:
                 self._append_category(category[0], category[1])
 
-            dbg.stdout("Finished populating categories.", 2, 2)
+            dbg.stdout("Finished populating categories.", dbg.success, 2)
 
             # Set default starting category
             self.update_page("#current-category-icon", "attr", "src", data_source + "/categories/accessories.svg")
@@ -613,13 +615,12 @@ class SoftwareBoutique(object):
 
         except Exception:
             details = traceback.format_exc()
-            dbg.stdout("----------------------------------------", 1, 0)
-            dbg.stdout(_("Software Boutique failed to start!"), 1, 0)
-            dbg.stdout(_("Please file a bug report with this stacktrace to help resolve the problem."), 1, 0)
-            dbg.stdout("----------------------------------------", 1, 0)
-            #~ traceback.print_exc()
+            dbg.stdout("----------------------------------------", dbg.error, 0)
+            dbg.stdout(_("Software Boutique failed to start!"), dbg.error, 0)
+            dbg.stdout(_("Please file a bug report with this stacktrace to help resolve the problem."), dbg.error, 0)
+            dbg.stdout("----------------------------------------", dbg.error, 0)
             print(details)
-            dbg.stdout("----------------------------------------", 1, 0)
+            dbg.stdout("----------------------------------------", dbg.error, 0)
             self.show_message_page("serious-error.png", _("Something went wrong."),
                                     [
                                         _("Sorry! Software Boutique could not be started due to a serious problem."),
@@ -1213,8 +1214,8 @@ class QueueOperationsThread(object):
                 boutique.ui_callback.current_app_uuid = app_obj.uuid
                 boutique.ui_callback.operation = operation
 
-                dbg.stdout("Processing queue item: " + app_obj.name, 4, 2)
                 self.update_page(".queue-ui-element", "hide")
+                dbg.stdout("Processing queue item: " + app_obj.name, dbg.action, 2)
                 self.update_page("#queue-status-text", "hide")
                 self.update_page("#queue-inprogress", "fadeIn", "fast")
                 self.update_page("#queue-status-text", "fadeIn", "fast")
@@ -1227,7 +1228,7 @@ class QueueOperationsThread(object):
                     self.update_page("#queue-status-text", "html", _("Removing {0}").replace('{0}', app_obj.name))
                     result = app_obj.installation.do_remove()
 
-                dbg.stdout("Finished queue item: {0} (Result: {1})".format(app_obj.name, str(result)), 4, 2)
+                dbg.stdout("Finished queue item: {0} (Result: {1})".format(app_obj.name, str(result)), dbg.success, 2)
                 self.send_desktop_notification(app_obj, operation, result)
                 self.finished_queue.append([operation, app_obj, result])
 
@@ -1257,7 +1258,7 @@ class QueueOperationsThread(object):
 
                 self.update_page(".buttons-" + boutique.ui_callback.current_app_uuid, "html", boutique.print_app_installation_buttons(app_obj, self.queue))
 
-                dbg.stdout("{1} items completed. {0} items remaining.".format(str(len(self.queue)), str(len(self.finished_queue))), 4, 2)
+                dbg.stdout("{1} items completed. {0} items remaining.".format(str(len(self.queue)), str(len(self.finished_queue))), dbg.debug, 2)
 
     def get_count(self):
         """
@@ -1288,7 +1289,7 @@ class QueueOperationsThread(object):
         self.update_count()
         self.ui_update_buttons(app_object)
         self.update_queue_state()
-        dbg.stdout("Added item to queue: " + app_object.uuid, 4, 1)
+        dbg.stdout("Added item to queue: " + app_object.uuid, dbg.success, 1)
 
     def remove_item(self, app_uuid):
         """
@@ -1302,7 +1303,7 @@ class QueueOperationsThread(object):
                     self.queue.pop(index)
                     self.update_count()
                     self.ui_update_buttons(item[1])
-                    dbg.stdout("Removed item from queue: " + app_uuid, 4, 1)
+                    dbg.stdout("Removed item from queue: " + app_uuid, dbg.action, 1)
                     self.update_queue_state()
                     return
             except:
@@ -1317,7 +1318,7 @@ class QueueOperationsThread(object):
         """
         for item in self.queue:
             if item[1].uuid == app_uuid:
-                dbg.stdout("Already in queue: " + app_uuid, 4, 1)
+                dbg.stdout("Already in queue: " + app_uuid, dbg.error, 1)
                 return True
         return False
 
@@ -1451,7 +1452,7 @@ class QueueOperationsThread(object):
                 notification = Notify.Notification.new(title, subtitle, icon_path)
                 notification.show()
             except Exception as e:
-                dbg.stdout("Could not send notification: " + str(e), 0, 1)
+                dbg.stdout("Could not send notification: " + str(e), dbg.error, 1)
 
         if operation == "install":
             if successful:
@@ -1466,109 +1467,81 @@ class QueueOperationsThread(object):
                 notify_send(_("{0} failed to remove"), _("There was a problem removing this application."))
 
 
-class Debugging(object):
-    """
-    Parses parameters and outputs helpful debugging information to the terminal.
-    """
-    def __init__(self):
-        self.verbose_level = 0
-        self.override_arch = None
-        self.override_codename = None
-        self.override_locale = None
-        self.simulate_only = None
+def parse_parameters():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser._optionals.title = _("Optional arguments")
+    parser.add_argument("-h", "--help", help=_("Show this help message and exit"), action="help")
+    #~ parser.add_argument("--version", help=_("Print progran version and exit"), action="store_true")
+    parser.add_argument("-v", "--verbose", help=_("Be verbose to stdout"), action="store_true")
+    parser.add_argument("--arch", help=_("Show listings for a specific architecture, e.g. i386"))
+    parser.add_argument("--codename", help=_("Show listings for a specific release, e.g. xenial"))
+    parser.add_argument("--locale", help=_("Force locale for interface"))
+    parser.add_argument("--clear-cache", help=_("Force index re-download"), action="store_true")
 
-    def parse_parameters(self):
-        parser = argparse.ArgumentParser(add_help=False)
-        parser._optionals.title = _("Optional arguments")
-        parser.add_argument("-h", "--help", help=_("Show this help message and exit"), action="help")
-        parser.add_argument("-v", "--verbose", help=_("Be verbose to stdout"), action="store_true")
-        parser.add_argument("--arch", help=_("Show listings for a specific architecture, e.g. i386"))
-        parser.add_argument("--codename", help=_("Show listings for a specific release, e.g. xenial"))
-        parser.add_argument("--locale", help=_("Force locale for interface"))
-        parser.add_argument("--clear-cache", help=_("Force index re-download"), action="store_true")
+    # For general debugging
+    parser.add_argument("-vv", "-d", "--debug", help=_("Be very verbose (for debugging)"), action="store_true")
 
-        # For general debugging
-        parser.add_argument("-vv", "-d", "--debug", help=_("Be very verbose (for debugging)"), action="store_true")
+    # For front-end debugging (developer tools)
+    parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
 
-        # For front-end debugging (developer tools)
-        parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
+    # For front-end debugging (use dummy module)
+    parser.add_argument("--simulate", help=argparse.SUPPRESS, action="store_true")
 
-        # For front-end debugging (use dummy module)
-        parser.add_argument("--simulate", help=argparse.SUPPRESS, action="store_true")
+    # For index testing locally
+    parser.add_argument("--use-local-index", help=argparse.SUPPRESS, action="store_true")
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        if args.verbose:
-            self.verbose_level = 1
-            self.stdout(_("Verbose enabled"), 3, 1)
+    #~ if args.version:
+        #~ # Not hardcoded. Get this version from Apt.
+        #~ exit(0)
 
-        if args.debug:
-            self.verbose_level = 2
-            self.stdout(_("Debug verbose enabled"), 3, 2)
+    if args.verbose:
+        dbg.verbose_level = 1
+        dbg.stdout(_("Verbose enabled"), dbg.debug, 1)
 
-        if args.arch:
-            self.override_arch = args.arch
-            dbg.stdout("=> Showing listings for arch: " + args.arch, 4)
+    if args.debug:
+        dbg.verbose_level = 2
+        dbg.stdout(_("Debug verbose enabled"), dbg.debug, 2)
 
-        if args.codename:
-            self.override_codename = args.codename
-            dbg.stdout("=> Showing listings for release: " + self.override_codename, 4)
+    if args.arch:
+        dbg.override_arch = args.arch
+        dbg.stdout("=> Showing listings for arch: " + args.arch, dbg.debug)
 
-        if args.locale:
-            self.override_locale = args.locale
-            boutique.system_locale = args.locale
-            dbg.stdout("=> Forcing locale: " + self.override_locale, 4)
+    if args.codename:
+        dbg.override_codename = args.codename
+        dbg.stdout("=> Showing listings for release: " + self.override_codename, dbg.debug)
 
-        if args.simulate:
-            boutique.force_dummy = True
-            dbg.stdout("=> Simulating software changes.", 4)
+    if args.locale:
+        dbg.override_locale = args.locale
+        dbg.stdout("=> Forcing locale: " + self.override_locale, dbg.debug)
 
-        if args.inspect:
-            self.verbose_level = 3
+    if args.simulate:
+        boutique.force_dummy = True
+        dbg.stdout("=> Simulating software changes.", dbg.debug)
 
+    if args.inspect:
+        self.verbose_level = 3
 
-    def stdout(self, msg, color=0, verbosity=0):
-        # msg           String containing message for stdout.
-        #
-        # color         0 = Default (white text)
-        #               1 = Error (red)
-        #               2 = Warning (yellow)
-        #               3 = Success (green)
-        #               4 = Info (blue)
-        #
-        # verbosity     0 = Always shown
-        #               1 = -v flag
-        #               2 = -vv flag
-
-        # Only colourise output if running in a real terminal.
-        if sys.stdout.isatty():
-            if color == 1:            # Failure (Red)
-                col_start = '\033[91m'
-            elif color == 2:          # Success (Green)
-                col_start = '\033[92m'
-            elif color == 3:          # Action (Yellow)
-                col_start = '\033[93m'
-            elif color == 4:          # Debug (Blue)
-                col_start = '\033[96m'
-            else:                        # Normal/Misc (White)
-                col_start = '\033[0m'
-            col_end = '\033[0m'
-
-        # Ignore colours when redirected or piped.
+    if args.clear_cache:
+        if os.path.exists(pref.cache_folder):
+            dbg.stdout("Cache cleared.", dbg.debug)
+            rmtree(pref.cache_folder)
+            os.makedirs(pref.cache_folder)
         else:
-            col_start = ''
-            col_end   = ''
+            dbg.stdout("Cache is already empty.", dbg.debug)
 
-        # Output the message
-        if self.verbose_level >= verbosity:
-            print(col_start + msg + col_end)
+    if args.use_local_index:
+        global index_url
+        index_url = "http://localhost:8000/"
+        dbg.stdout("Using local index on port 8000", dbg.debug)
 
 
 def shutdown():
     """
     Quit the application gracefully.
     """
-    dbg.stdout("Closing Software Boutique...", 4, 1)
+    dbg.stdout("Closing Software Boutique...", dbg.action)
     Gtk.main_quit()
     sys.exit(0)
 
@@ -1610,12 +1583,11 @@ class QueueUICallback(object):
 
 if __name__ == "__main__":
     # Prepare for verbose output and translation support.
-    dbg = Debugging()
+    dbg = common.Debugging()
     data_source = get_data_source()
     boutique.data_source = data_source
     trans = Translations()
     boutique.dbg = dbg
-    dbg.parse_parameters()
 
     # JSON in memory
     # - Stores preferences.
@@ -1646,6 +1618,7 @@ if __name__ == "__main__":
     }
 
     # On this thread
+    parse_parameters()
     app = SoftwareBoutique()
     webview = WebView()
     main = ApplicationWindow()

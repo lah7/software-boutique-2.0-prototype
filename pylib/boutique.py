@@ -17,6 +17,10 @@
 # along with Software Boutique. If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""
+    Main module for processing application listings and software changes.
+"""
+
 import os
 import json
 import platform
@@ -27,8 +31,10 @@ from time import sleep
 
 try:
     from pylib import snapsupport as snapsupport
+    from pylib import common as common
 except ImportError:
     from software_boutique.boutique import snapsupport as snapsupport
+    from software_boutique.boutique import common as common
 
 from pylib import snapsupport as snapsupport
 
@@ -39,8 +45,8 @@ data_source = "/usr/share/ubuntu-mate-welcome/"
 
 # Session Details
 force_dummy = False
-dbg = object() # Until main application replaces this.
 system_locale = "en"
+dbg = common.Debugging() # Main application will replace this.
 system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 current_os_version = platform.dist()[1] # E.g. 16.04
 current_os_codename = platform.dist()[2] # E.g. xenial
