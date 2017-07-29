@@ -37,6 +37,7 @@ import locale
 import os
 import platform
 import random
+import requests
 import setproctitle
 import signal
 import subprocess
@@ -44,8 +45,11 @@ import sys
 import time
 import traceback
 import webbrowser
+import gzip
+import tarfile
 from datetime import datetime
 from threading import Thread
+from shutil import rmtree
 
 try:
     import pylib.boutique as boutique
@@ -62,7 +66,7 @@ supported_arch = ["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
 supported_codenames = ["xenial", "yakkety", "zesty", "artful"]
 default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
-
+index_url = "https://ubuntu-mate.software/index/"
 
 def get_data_source():
     """
@@ -292,6 +296,10 @@ class SoftwareBoutique(object):
         elif cmd == "force-boutique-restart":
             os.execv(__file__, sys.argv)
 
+        elif cmd == "force-cache-reset":
+            sys.argv.append("--clear-cache")
+            os.execv(__file__, sys.argv)
+
         elif cmd == "dismiss-unsupported-msg":
             pref.write("already-warned-distro", True)
             self.close_message_page()
@@ -405,6 +413,8 @@ class SoftwareBoutique(object):
         self._set_navigation_theme()
         self.update_page("#header", "show")
         self.update_page("#footer", "show")
+        self.update_page("#loading-page", "show")
+        self.update_page("#message-page", "fadeOut", "fast")
 
         # Check Boutique is running on a supported version / architecture
         if boutique.system_arch not in supported_arch:
@@ -435,27 +445,10 @@ class SoftwareBoutique(object):
                                     ]
                                   )
 
-        # Load the Software Index
-        boutique.screenshot_file_listing = os.listdir(os.path.join(data_source, "apps", "screenshots"))
-        index_path = os.path.join(data_source, "apps/index/", boutique.system_locale + ".json")
-        fallback_path = os.path.join(data_source, "apps/index/en.json")
-
-        if not os.path.exists(index_path):
-            index_path = fallback_path
-
-        # Load index (raw data) into memory
-        try:
-            dbg.stdout("Reading software index...", 3, 2)
-            self.index = boutique.read_index(index_path)
-            dbg.stdout("Successfully loaded software index.", 2, 2)
-        except Exception as e:
-            dbg.stdout("Software Index corrupt or missing, Boutique cannot continue.", 1, 0)
-            exit(1)
-
         # Load application
         try:
             # Determine Environment
-            dbg.stdout("Starting application...", dbg.action, 1)
+            dbg.stdout("Now starting application.", dbg.action, 1)
             self.is_ubuntu_mate = boutique.SoftwareInstallation.PackageKit._is_running_ubuntu_mate()
             self.boutique_ppa_enabled = boutique.SoftwareInstallation.PackageKit._is_boutique_subscribed()
 
@@ -486,6 +479,168 @@ class SoftwareBoutique(object):
 
             # Prepare user cache folder
             pref.init_cache()
+
+            ############################################
+            # Index Cache
+            ############################################
+            def _update_loading_status(string):
+                self.update_page("#loading-text", "html", string)
+                dbg.stdout(string, dbg.action, 1)
+
+            def _download_latest_index():
+                _update_loading_status(_("Downloading Index..."))
+
+                # Local Paths
+                path_index = pref.cache_folder + "/index.json"
+                path_index_tmp = pref.cache_folder + "/index.json.gz"
+                path_metadata = pref.cache_folder + "/metadata/"
+                path_metadata_tmp = pref.cache_folder + "/metadata.tar.xz"
+
+                # Remote URLs
+                index_locale_url = index_url + "/applications-{0}.json.gz".format(trans.locale)
+                index_fallback_url = index_url + "/applications-en.json.gz"
+                metadata_url = index_url + "/application-metadata.tar.xz"
+
+                # (1) Download index (JSON)
+                # -- Tries localised first, then fallbacks to English.
+                try:
+                    dbg.stdout("Trying localised index URL: " + index_locale_url, dbg.debug, 1)
+                    r = requests.get(index_locale_url)
+                    if r.status_code != 200:
+                        dbg.stdout("Trying fallback URL:        " + index_fallback_url, dbg.debug, 1)
+                        r = requests.get(index_fallback_url)
+                        if r.status_code != 200:
+                            _show_connection_error(r.status_code)
+                            return
+
+                    # (2) Save compressed data
+                    dbg.stdout("Successfully got {0} bytes in {1} seconds.".format(r.headers["Content-Length"], r.elapsed.total_seconds()), dbg.success, 1)
+                    with open(path_index_tmp, 'wb') as f:
+                        for chunk in r:
+                            f.write(chunk)
+
+                except Exception as e:
+                    dbg.stdout("Failed to download index. Details: " + str(e), dbg.error)
+                    _show_connection_error(str(e))
+                    return
+
+                # (3) Get application metadata
+                try:
+                    dbg.stdout("Getting metadata from URL: " + metadata_url, dbg.debug, 1)
+                    r = requests.get(metadata_url)
+                    if r.status_code != 200:
+                        _show_connection_error(r.status_code)
+                        return
+
+                    # (4) Save compressed data
+                    dbg.stdout("Successfully got {0} bytes in {1} seconds.".format(r.headers["Content-Length"], r.elapsed.total_seconds()), dbg.success, 1)
+                    with open(path_metadata_tmp, 'wb') as f:
+                        for chunk in r:
+                            f.write(chunk)
+
+                except Exception as e:
+                    dbg.stdout("Failed to download metadata. Details: " + str(e), dbg.error)
+                    _show_connection_error(str(e))
+                    return
+
+                # (5) Verify data integrity
+                #_update_loading_status(_("Verifying Index..."))
+                # FIXME: Not yet implemented!
+
+                # (6) Decompress index and metadata
+                _update_loading_status(_("Extracting Index..."))
+                try:
+                    # --> Index
+                    with gzip.open(path_index_tmp, 'rb') as f:
+                        with open(path_index, 'wb') as o:
+                            o.write(f.read())
+
+                    if os.path.exists(path_index_tmp):
+                        os.remove(path_index_tmp)
+                        dbg.stdout("Successfully extracted index.", dbg.success, 1)
+                    else:
+                        _failed_to_process_index()
+
+                    # --> Metadata
+                    with tarfile.open(path_metadata_tmp) as f:
+                        f.extractall(path_metadata)
+
+                    if os.path.exists(path_metadata_tmp):
+                        os.remove(path_metadata_tmp)
+                        dbg.stdout("Successfully extracted metadata.", dbg.success, 1)
+                    else:
+                        _failed_to_process_index()
+
+                except Exception as e:
+                    dbg.stdout("Failed to extract files! Exception: " + str(e), dbg.error)
+                    _failed_to_process_index()
+
+                # Update complete!
+                dbg.stdout("Successfully cached latest index.", dbg.success, 1)
+
+            def _show_connection_error(status_code):
+                dbg.stdout("Failed to establish a connection!", dbg.error)
+                if status_code:
+                    if type(status_code) is str:
+                        dbg.stdout("Exception: " + status_code, dbg.error)
+                    elif type(status_code) is int:
+                        dbg.stdout("Status Code: " + str(status_code), dbg.error)
+
+                self.show_message_page("connection-error.png", _("Could not connect to server"),
+                    [
+                        _("Software Boutique could not connect to the index server to retrieve the list of applications."),
+                        _("Please check your connection, that the index server is up, or try again later.")],
+                    [
+                        [_("Retry"), "init-boutique", "dialog-theme green"],
+                        [_("Close"), "exit", "dialog-theme"]
+                    ])
+                exit(0)
+
+            def _failed_to_process_index():
+                self.show_message_page("index-error.png", _("Failed to process index"),
+                    [
+                        _("Software Boutique encountered an internal issue extracting or reading the index."),
+                        _("It is possible the index is corrupted, please try again.")],
+                    [
+                        [_("Retry"), "force-cache-reset", "dialog-theme green"],
+                        [_("Close"), "exit", "dialog-theme"]
+                    ])
+                exit(0)
+
+            # Do we have the latest revision?
+            _update_loading_status(_("Initalizing Index..."))
+            local_revision = pref.get_index_revision()
+            dbg.stdout("Local Revision: " + str(local_revision), dbg.debug, 1)
+            dbg.stdout("Checking for latest version from: " + index_url, dbg.debug, 1)
+            r = requests.get(index_url + "/latest_revision")
+            if r.status_code == 200:
+                dbg.stdout("Successfully got {0} bytes in {1} seconds.".format(r.headers["Content-Length"], r.elapsed.total_seconds()), dbg.success, 1)
+                latest_revision = int(r.text)
+                dbg.stdout("Remote Revision: " + str(latest_revision), dbg.debug, 1)
+                if local_revision < latest_revision:
+                    # Local index outdated or non-existant.
+                    _download_latest_index()
+                    pref.set_index_revision(r.text)
+                else:
+                    dbg.stdout("Local index up-to-date", dbg.success, 1)
+            else:
+                _show_connection_error(None)
+                return
+
+            ############################################
+            # Load the Index
+            ############################################
+            _update_loading_status(_("Loading Index..."))
+            boutique.screenshot_file_listing = os.listdir(os.path.join(pref.cache_folder, "metadata", "screenshots"))
+            index_path = os.path.join(pref.cache_folder, "index.json")
+
+            # Load index (raw data) into memory
+            try:
+                self.index = boutique.read_index(index_path)
+                dbg.stdout("Successfully loaded software index.", dbg.success, 1)
+            except Exception as e:
+                dbg.stdout("Software Index corrupt or missing, Boutique cannot continue.", dbg.error, 0)
+                _failed_to_process_index()
 
             ############################################
             # Stock the Boutique Categories & Apps
@@ -1155,7 +1310,7 @@ class SoftwareBoutique(object):
 
         html += add_category(_("Index Revision"))
         html += add_hint(str(revision))
-        html += add_button(_("Force Refresh"), "ditch-cache", "fa-refresh")
+        html += add_button(_("Force Update"), "ditch-cache", "fa-refresh")
         html += end_category()
 
         html += add_category(_("Interface"))

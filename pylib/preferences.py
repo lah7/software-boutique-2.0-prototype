@@ -28,6 +28,7 @@ class Preferences(object):
         dbg = dbg_obj
         self.config_folder = os.path.join(os.path.expanduser('~'), ".config", "software-boutique")
         self.cache_folder = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
+        self.revision_file = os.path.join(self.cache_folder, "revision")
         self.config_file = os.path.join(self.config_folder, config_name + ".json")
         self.config_data = {}
         self.load_from_disk()
@@ -104,3 +105,16 @@ class Preferences(object):
     def init_cache(self):
         if not os.path.exists(self.cache_folder):
             os.makedirs(self.cache_folder)
+            os.makedirs(self.cache_folder + "metadata")
+
+    def get_index_revision(self):
+        if not os.path.exists(self.revision_file):
+            return 0
+        else:
+            with open(self.revision_file, "r") as f:
+                return int(f.readline())
+
+    def set_index_revision(self, new_rev):
+        f = open(self.revision_file, "w")
+        f.write(str(new_rev))
+        f.close()

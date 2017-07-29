@@ -26,16 +26,13 @@ if [ "$(which lessc)" == "" ]; then
     echo "'lessc' not installed. Please install 'node-less'."
     exit 1
 else
-    echo -e "\033[94mCompiling CSS..."
+    echo -e "\033[94mCompiling CSS...\033[0m"
     src=./sources/boutique.less
     dest=./data/boutique.css
     if [ -f "$dest" ]; then rm "$dest"; fi
     lessc $src $dest
     if [ ! -f "$dest" ]; then exit 1; fi
 fi
-
-# Assemble Application Index
-python3 ./scripts/compile-app-index.py
 
 # Any special operations for development
 if [ "$1" == "--build-only" ]; then
@@ -50,9 +47,50 @@ elif [ "$1" == "--run-extended-tests" ]; then
     ./tests/run-tests.sh --extended
     exit 0
 
-# Run the Boutique
 else
-    echo " "
-    ./software-boutique -d $params
-fi
+    # Run the Boutique
+    #  -> If local index is not hosting, build and host that.
+    #  -> Otherwise, assume it is running externally.
+    #     E.g. ubuntu-mate.software/scripts/test-locally.sh
 
+    if [ ! -f "/tmp/boutique-dev.lock" ]; then
+        # But first, use local index locally (if repository exists)
+        hintpath1=$(pwd)/../ubuntu-mate.software/
+        hintpath2=$(pwd)/../ubuntu-mate-software/
+        boutique_folder="$(pwd)"
+        index_params=""
+
+        if [ -d "$hintpath1" ]; then
+            index_repo="$hintpath1"
+
+        elif [ -d "$hintpath2" ]; then
+            index_repo="$hintpath2"
+        else
+            echo "\033[92mubuntu-mate.software repository does not exist, skipping local index.\033[0m"
+        fi
+
+        if [ ! "$index_repo" == "" ]; then
+            echo -e "\033[94mPreparing local index...\033[0m"
+            cd "$index_repo/scripts"
+            $index_repo/scripts/test-locally.sh --build-only
+
+            if [ $? == 0 ]; then
+                killall test-locally.sh &>/dev/null
+                mate-terminal -e 'python -m SimpleHTTPServer 8000' \
+                                --working-directory="$index_repo/dist" -t "Boutique Local Index" &
+                web_server_pid=$!
+                index_params="--use-local-index"
+            else
+                echo -e "\033[91mFailed to build index, using remote index instead.\033[0m"
+            fi
+        fi
+
+        echo " "
+        cd "$boutique_folder"
+        ./software-boutique -d $index_params $params
+        kill $web_server_pid
+    else
+        cd "$boutique_folder"
+        ./software-boutique -d $index_params $params
+    fi
+fi

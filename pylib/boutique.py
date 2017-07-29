@@ -45,7 +45,6 @@ data_source = "/usr/share/ubuntu-mate-welcome/"
 
 # Session Details
 force_dummy = False
-system_locale = "en"
 dbg = common.Debugging() # Main application will replace this.
 system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 current_os_version = platform.dist()[1] # E.g. 16.04
