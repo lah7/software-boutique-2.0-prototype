@@ -1309,8 +1309,8 @@ class SoftwareBoutique(object):
         html += end_category()
 
         html += add_category(_("Index Revision"))
-        html += add_hint(str(revision))
-        html += add_button(_("Force Update"), "ditch-cache", "fa-refresh")
+        html += add_hint(str(pref.get_index_revision()))
+        html += add_button(_("Force Update"), "force-cache-reset", "fa-refresh")
         html += end_category()
 
         html += add_category(_("Interface"))
