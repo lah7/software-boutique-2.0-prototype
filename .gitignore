@@ -3,8 +3,10 @@ __pycache__
 *.mo
 data/apps/
 data/boutique.css
+locale/
 
 
 # Ignore backups
 *.old
 *~
+
