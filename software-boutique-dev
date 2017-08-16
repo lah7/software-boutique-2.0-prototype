@@ -37,6 +37,7 @@ fi
 # Any special operations for development
 if [ "$1" == "--build-only" ]; then
     ./scripts/build-locale-folder.sh
+    find . -name "__pycache__" -type d -exec rm -rf {} +
     exit 0
 
 elif [ "$1" == "--run-tests" ]; then

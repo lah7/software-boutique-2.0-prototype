@@ -76,9 +76,9 @@ def get_data_source():
     if( os.path.exists( os.path.join(current_folder, "data/" ) ) ):
         dbg.stdout("Using relative path for data source. Non-production testing.", dbg.debug, 1)
         data_path = os.path.join(current_folder, "data/")
-    elif( os.path.exists("/usr/share/ubuntu-mate-welcome/") ):
-        dbg.stdout("Using /usr/share/ubuntu-mate-welcome/ for data source.", dbg.debug, 1)
-        data_path = "/usr/share/ubuntu-mate-welcome/"
+    elif( os.path.exists("/usr/share/software-boutique/") ):
+        dbg.stdout("Using /usr/share/software-boutique/ for data source.", dbg.debug, 1)
+        data_path = "/usr/share/software-boutique/"
     else:
         dbg.stdout("Unable to source the ubuntu-mate-welcome data directory.", dbg.error, 1)
         sys.exit(1)

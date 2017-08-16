@@ -13,7 +13,6 @@ License: GPL-3+
 Files: software-boutique
        software-boutique-dev
        software-boutique.desktop
-       software-boutique-helper
        data/boutique.css
        data/boutique.js
        data/boutique.html

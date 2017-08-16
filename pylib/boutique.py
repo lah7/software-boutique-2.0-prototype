@@ -33,10 +33,8 @@ try:
     from pylib import snapsupport as snapsupport
     from pylib import common as common
 except ImportError:
-    from software_boutique.boutique import snapsupport as snapsupport
-    from software_boutique.boutique import common as common
-
-from pylib import snapsupport as snapsupport
+    import software_boutique.snapsupport as snapsupport
+    import software_boutique.common as common
 
 # Paths
 cache_path = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
