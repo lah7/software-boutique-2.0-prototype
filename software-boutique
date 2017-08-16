@@ -274,7 +274,7 @@ class SoftwareBoutique(object):
 
         # If the app isn't even compiled, stop.
         # If the app mysterously lost its data, also stop.
-        if not os.path.exists(os.path.join(data_source, "boutique.css")) or not os.path.exists(os.path.join(data_source, "apps")):
+        if not os.path.exists(os.path.join(data_source, "boutique.css")):
             if data_source.startswith("/usr"):
                 dbg.stdout(_("Software Boutique is missing critical data at this path:"), dbg.error, 0)
                 dbg.stdout("  => " + data_source, dbg.error, 0)
@@ -974,13 +974,13 @@ class SoftwareBoutique(object):
             html += "<div id='screenshot-empty'><var>{0}</var></div>".format(_("No screenshot available"))
 
         else:
-            path = os.path.join(data_source, "apps", "screenshots", app_obj.screenshot_filenames[0])
+            path = os.path.join(boutique.cache_path, "metadata", "screenshots", app_obj.screenshot_filenames[0])
             html += "<button id='screenshot-preview' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
 
         if len(app_obj.screenshot_filenames) >= 2:
             html += "<hr/>"
             for filename in app_obj.screenshot_filenames:
-                path = os.path.join(data_source, "apps", "screenshots", filename)
+                path = os.path.join(boutique.cache_path, "metadata", "screenshots", filename)
                 html += "<button class='screenshot-chooser' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
         html += "</div>"
 

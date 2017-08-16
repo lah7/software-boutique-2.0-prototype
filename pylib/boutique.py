@@ -130,7 +130,7 @@ def get_application_details(index_data, category, appid):
     app.post_install = data.get("post-install")
     app.post_remove = data.get("post-remove")
 
-    app.icon_path = os.path.join("apps", "icons", appid + ".png")
+    app.icon_path = os.path.join(cache_path, "metadata", "icons", appid + ".png")
 
     app.screenshot_filenames = []
     for filename in screenshot_file_listing:
