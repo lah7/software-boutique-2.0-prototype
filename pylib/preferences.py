@@ -43,7 +43,7 @@ class Preferences(object):
                 with open(self.config_file) as stream:
                     self.config_data = json.load(stream)
             except Exception as e:
-                dbg.stdout("Failed to read preferences file. Re-creating.", 1, 1)
+                dbg.stdout("Failed to read preferences file. Re-creating.", dbg.error, 1)
                 self.init_config()
         else:
             self.init_config()
@@ -74,7 +74,7 @@ class Preferences(object):
             self.config_data[setting] = value
             self.save_to_disk()
         except:
-            dbg.stdout("Failed to write '{0}' = '{1}'.".format(setting, value), 1, 1)
+            dbg.stdout("Failed to write '{0}' = '{1}'.".format(setting, value), dbg.error, 1)
 
     def read(self, setting, default_value=None):
         """
@@ -85,7 +85,7 @@ class Preferences(object):
             return value
         except:
             # Should it be non-existent, use the default value instead.
-            dbg.stdout("No value exists for '{0}'. Writing '{1}'.".format(setting, default_value), 1, 2)
+            dbg.stdout("No value exists for '{0}'. Writing '{1}'.".format(setting, default_value), dbg.action, 2)
             self.write(setting, default_value)
             return default_value
 
@@ -96,10 +96,10 @@ class Preferences(object):
             pass
         self.config_data = {}
         if self.save_to_disk():
-            dbg.stdout(("Successfully created new preferences file: " + self.config_file), 1, 3)
+            dbg.stdout(("Successfully created new preferences file: " + self.config_file), dbg.success, 3)
             return True
         else:
-            dbg.stdout("Failed to create new preferences file:" + self.config_file, 1, 1)
+            dbg.stdout("Failed to create new preferences file:" + self.config_file, dbg.error, 1)
             return False
 
     def init_cache(self):
