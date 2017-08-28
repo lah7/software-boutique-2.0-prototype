@@ -86,7 +86,7 @@ def get_data_source():
 
 def spawn_thread(target, daemon=True, args=[]):
     """
-    Creates another thread to prevent holding up the main thread (and GUI)
+    Creates another thread to run a function in the background.
     """
     dbg.stdout("Spawning thread: {0} (daemon {1}, args={2})".format(target.__name__, daemon, args), dbg.debug, 2)
     newthread = Thread(target=target, args=(args))
@@ -168,16 +168,30 @@ class WebView(WebKit2.WebView):
 
         dbg.stdout("Finished webkit2 initalisation.", dbg.success, 1)
 
+    def run_js(self, function):
+        """
+        Runs a JavaScript function on the page, regardless of which thread it is called from.
+        GTK+ operations must be performed on the same thread to prevent crashes.
+        """
+        GLib.idle_add(self._run_js, function)
+
+    def _run_js(self, function):
+        """
+        Runs a JavaScript function on the page when invoked from run_js()
+        """
+        self.run_javascript(function)
+        return GLib.SOURCE_REMOVE
+
     def update_page(self, element, function, parm1=None, parm2=None):
         """
         Runs a JavaScript jQuery function on the page, ensuring correctly parsed quotes.
         """
         if parm1 and parm2:
-            self.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
+            self.run_js('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
         if parm1:
-            self.run_javascript('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
+            self.run_js('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
         else:
-            self.run_javascript('$("' + element + '").' + function + '()')
+            self.run_js('$("' + element + '").' + function + '()')
 
     def on_finish_load(self, view, frame):
         """
@@ -267,6 +281,7 @@ class SoftwareBoutique(object):
         ## Placeholders (these are set in start_loading() so UI appears quicker)
         self.webkit = None
         self.update_page = None
+        self.run_js = None
         self.queue = None                   # QueueOperationsThread()
         self.is_ubuntu_mate = False
         self.boutique_ppa_enabled = False
@@ -350,7 +365,7 @@ class SoftwareBoutique(object):
                 dbg.stdout(app_uuid + " is already queued. It must be unqueued first.", dbg.error, 0)
             else:
                 self.queue.add_item(operation, self.queue._get_appdata(categoryid, appid))
-                self.webkit.run_javascript("animateClass('#queue-button', 'pulse-added', 2000)")
+                self.run_js("animateClass('#queue-button', 'pulse-added', 2000)")
 
         elif cmd.startswith("drop-queue?"):
             cmd = cmd.split("?")
@@ -360,7 +375,7 @@ class SoftwareBoutique(object):
             app_uuid = categoryid + "-" + appid
 
             self.queue.remove_item(app_uuid)
-            self.webkit.run_javascript("animateClass('#queue-button', 'pulse-added', 2000)")
+            self.run_js("animateClass('#queue-button', 'pulse-added', 2000)")
 
         elif cmd == "clear-queue-pending":
             self.update_page(".queue-card", "addClass", "swiping");
@@ -760,9 +775,9 @@ class SoftwareBoutique(object):
             ############################################
             # Load Finished
             ############################################
-            self.webkit.run_javascript("smoothFade('#loading-page', '#browse-page')")
-            self.webkit.run_javascript("changeCategory('start-page', '" + _("Start Page") + "')")
-            self.webkit.run_javascript("changeNavTitleType('browse')")
+            self.run_js("smoothFade('#loading-page', '#browse-page')")
+            self.run_js("changeCategory('start-page', '" + _("Start Page") + "')")
+            self.run_js("changeNavTitleType('browse')")
             self.update_page("#header .left", "fadeIn")
             self.update_page("#header .right", "fadeIn")
             self.update_page("#footer .left", "fadeIn")
@@ -954,8 +969,8 @@ class SoftwareBoutique(object):
         self.current_open_app_uuid = app_obj.uuid
 
         if not update_only:
-            self.webkit.run_javascript("animate('#app-details-page', 'enter-more-info', 'in')")
-            self.webkit.run_javascript("changeNavTitleType('back')")
+            self.run_js("animate('#app-details-page', 'enter-more-info', 'in')")
+            self.run_js("changeNavTitleType('back')")
             self.update_page(".header-title", "html", app_obj.name)
 
         installed = app_obj.is_installed()
@@ -1220,8 +1235,8 @@ class SoftwareBoutique(object):
         self.update_page("#app-details-page", "html", html)
 
     def hide_app_details(self):
-        self.webkit.run_javascript("animate('#app-details-page', 'exit-more-info', 'out')")
-        self.webkit.run_javascript("changeNavTitleType('browse')")
+        self.run_js("animate('#app-details-page', 'exit-more-info', 'out')")
+        self.run_js("changeNavTitleType('browse')")
 
     def generate_start_page_apps(self):
         def _add_app(random_app, position, direction):
@@ -1779,6 +1794,7 @@ if __name__ == "__main__":
     main = ApplicationWindow()
     main.build(webview)
     app.webkit = webview
+    app.run_js = webview.run_js
     app.update_page = webview.update_page
     boutique.ui_callback = QueueUICallback(app.update_page)
     main.run()
