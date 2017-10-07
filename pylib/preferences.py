@@ -60,7 +60,7 @@ class Preferences(object):
         # Write new data to specified file.
         if os.access(self.config_file, os.W_OK):
             f = open(self.config_file, "w+")
-            f.write(json.dumps(self.config_data))
+            f.write(json.dumps(self.config_data, sort_keys=True, indent=4))
             f.close()
             return True
         else:
