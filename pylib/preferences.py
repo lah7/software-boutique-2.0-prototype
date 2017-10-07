@@ -20,30 +20,33 @@
 import os
 import json
 
-dbg = object()
-
 class Preferences(object):
-    def __init__(self, dbg_obj, config_name):
-        global dbg
-        dbg = dbg_obj
-        self.config_folder = os.path.join(os.path.expanduser('~'), ".config", "software-boutique")
-        self.cache_folder = os.path.join(os.path.expanduser('~'), ".cache", "software-boutique")
-        self.revision_file = os.path.join(self.cache_folder, "revision")
-        self.config_file = os.path.join(self.config_folder, config_name + ".json")
-        self.config_data = {}
+    def __init__(self, dbg_obj, config_name, project_name):
+        """
+        Prepares an object for the application to save/load persistance data.
+
+        self.dbg_obj = Debug() object from main application.
+        """
+        self.folder_config = os.path.join(os.path.expanduser('~'), ".config", project_name)
+        self.folder_cache = os.path.join(os.path.expanduser('~'), ".cache", project_name)
+        self.file_path = os.path.join(self.folder_config, config_name + ".json")
+        self.data = {}
         self.load_from_disk()
+
+        if project_name == "software-boutique":
+            self.revision_file = os.path.join(self.folder_cache, "revision")
 
     def load_from_disk(self):
         """
         Loads configuration from disk.
         Initialises the folder structure and file if necessary.
         """
-        if os.path.exists(self.config_file):
+        if os.path.exists(self.file_path):
             try:
-                with open(self.config_file) as stream:
-                    self.config_data = json.load(stream)
+                with open(self.file_path) as stream:
+                    self.data = json.load(stream)
             except Exception as e:
-                dbg.stdout("Failed to read preferences file. Re-creating.", dbg.error, 1)
+                self.dbg.stdout("Read preferences failed! File will be re-created.", self.dbg.error, 1)
                 self.init_config()
         else:
             self.init_config()
@@ -54,58 +57,67 @@ class Preferences(object):
         Returns True or False depending on success/failure.
         """
         # Create file if it doesn't exist.
-        if not os.path.exists(self.config_file):
-            open(self.config_file, 'w').close()
+        if not os.path.exists(self.file_path):
+            open(self.file_path, "w").close()
 
         # Write new data to specified file.
-        if os.access(self.config_file, os.W_OK):
-            f = open(self.config_file, "w+")
-            f.write(json.dumps(self.config_data, sort_keys=True, indent=4))
+        if os.access(self.file_path, os.W_OK):
+            f = open(self.file_path, "w+")
+            f.write(json.dumps(self.data, sort_keys=True, indent=4))
             f.close()
             return True
         else:
             return False
 
-    def write(self, setting, value):
+    def write(self, key, value):
         """
         Write new data to memory.
         """
         try:
-            self.config_data[setting] = value
+            self.data[key] = value
             self.save_to_disk()
         except:
-            dbg.stdout("Failed to write '{0}' = '{1}'.".format(setting, value), dbg.error, 1)
+            self.dbg.stdout("Preferences write failed: '{0}' => '{1}'".format(key, value), self.dbg.error, 1)
 
-    def read(self, setting, default_value=None):
+    def read(self, key, default_value=None):
         """
         Read data from memory.
         """
         try:
-            value = self.config_data[setting]
+            value = self.data[key]
             return value
         except:
             # Should it be non-existent, use the default value instead.
-            dbg.stdout("No value exists for '{0}'. Writing '{1}'.".format(setting, default_value), dbg.action, 2)
-            self.write(setting, default_value)
+            self.dbg.stdout("No preference found for '{0}', so writing '{1}' as default.".format(key, default_value), self.dbg.action, 2)
+            self.write(key, default_value)
             return default_value
+
+    def toggle(self, key):
+        """
+        Toggles a boolean stored key.
+        """
+        state = self.read(key, False)
+        state = not state
+        self.write(key, state)
 
     def init_config(self):
         try:
-            os.makedirs(self.config_folder)
+            os.makedirs(self.folder_config)
         except FileExistsError:
             pass
-        self.config_data = {}
+        self.data = {}
         if self.save_to_disk():
-            dbg.stdout(("Successfully created new preferences file: " + self.config_file), dbg.success, 3)
+            self.dbg.stdout("Preferences file ready: " + self.file_path, self.dbg.success, 3)
             return True
         else:
-            dbg.stdout("Failed to create new preferences file:" + self.config_file, dbg.error, 1)
+            self.dbg.stdout("Failed to create preferences file:" + self.file_path, self.dbg.error, 1)
             return False
 
+    # Used by Boutique only
     def init_cache(self):
-        if not os.path.exists(self.cache_folder):
-            os.makedirs(self.cache_folder)
-            os.makedirs(self.cache_folder + "metadata")
+        if not os.path.exists(self.folder_cache):
+            os.makedirs(self.folder_cache)
+            os.makedirs(self.folder_cache + "metadata")
 
     def get_index_revision(self):
         if not os.path.exists(self.revision_file):

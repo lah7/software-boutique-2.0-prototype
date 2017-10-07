@@ -408,10 +408,8 @@ class SoftwareBoutique(object):
             return
 
         elif cmd.startswith("toggle-pref?"):
-            prop = cmd.split("?")[1]
-            state = pref.read(prop, False)
-            state = not state
-            pref.write(prop, state)
+            key = cmd.split("?")[1]
+            pref.toggle(key)
             self.build_settings_page()
 
         else:
@@ -506,10 +504,10 @@ class SoftwareBoutique(object):
                 _update_loading_status(_("Downloading Index..."))
 
                 # Local Paths
-                path_index = pref.cache_folder + "/index.json"
-                path_index_tmp = pref.cache_folder + "/index.json.gz"
-                path_metadata = pref.cache_folder + "/metadata/"
-                path_metadata_tmp = pref.cache_folder + "/metadata.tar.xz"
+                path_index = pref.folder_cache + "/index.json"
+                path_index_tmp = pref.folder_cache + "/index.json.gz"
+                path_metadata = pref.folder_cache + "/metadata/"
+                path_metadata_tmp = pref.folder_cache + "/metadata.tar.xz"
 
                 # Remote URLs
                 index_locale_url = index_url + "/applications-{0}.json.gz".format(trans.locale)
@@ -646,8 +644,8 @@ class SoftwareBoutique(object):
             # Load the Index
             ############################################
             _update_loading_status(_("Loading Index..."))
-            boutique.screenshot_file_listing = os.listdir(os.path.join(pref.cache_folder, "metadata", "screenshots"))
-            index_path = os.path.join(pref.cache_folder, "index.json")
+            boutique.screenshot_file_listing = os.listdir(os.path.join(pref.folder_cache, "metadata", "screenshots"))
+            index_path = os.path.join(pref.folder_cache, "index.json")
 
             # Load index (raw data) into memory
             try:
@@ -1694,10 +1692,10 @@ def parse_parameters():
         self.verbose_level = 3
 
     if args.clear_cache:
-        if os.path.exists(pref.cache_folder):
+        if os.path.exists(pref.folder_cache):
             dbg.stdout("Cache cleared.", dbg.debug)
-            rmtree(pref.cache_folder)
-            os.makedirs(pref.cache_folder)
+            rmtree(pref.folder_cache)
+            os.makedirs(pref.folder_cache)
         else:
             dbg.stdout("Cache is already empty.", dbg.debug)
 
@@ -1762,8 +1760,8 @@ if __name__ == "__main__":
     # JSON in memory
     # - Stores preferences.
     # - Stores timestamps for applications installed via Boutique.
-    pref = Preferences.Preferences(dbg, "preferences")
-    install_time = Preferences.Preferences(dbg, "install_time")
+    pref = Preferences.Preferences(dbg, "preferences", "software-boutique")
+    install_time = Preferences.Preferences(dbg, "install_time", "software-boutique")
 
     # String dictonary when passing to boutique.py module
     boutique.string_dict = {
