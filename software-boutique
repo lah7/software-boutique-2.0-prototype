@@ -53,13 +53,13 @@ from shutil import rmtree
 
 try:
     import pylib.boutique as boutique
-    import pylib.preferences as preferences
-    import pylib.common as common
+    import pylib.preferences as Preferences
+    import pylib.common as Common
     relative_path = True
 except ImportError:
     import software_boutique.boutique as boutique
-    import software_boutique.preferences as preferences
-    import software_boutique.common as common
+    import software_boutique.preferences as Preferences
+    import software_boutique.common as Common
     relative_path = False
 
 supported_arch = ["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
@@ -1753,7 +1753,7 @@ class QueueUICallback(object):
 
 if __name__ == "__main__":
     # Prepare for verbose output and translation support.
-    dbg = common.Debugging()
+    dbg = Common.Debugging()
     data_source = get_data_source()
     boutique.data_source = data_source
     trans = Translations()
@@ -1762,8 +1762,8 @@ if __name__ == "__main__":
     # JSON in memory
     # - Stores preferences.
     # - Stores timestamps for applications installed via Boutique.
-    pref = preferences.Preferences(dbg, "preferences")
-    install_time = preferences.Preferences(dbg, "install_time")
+    pref = Preferences.Preferences(dbg, "preferences")
+    install_time = Preferences.Preferences(dbg, "install_time")
 
     # String dictonary when passing to boutique.py module
     boutique.string_dict = {
