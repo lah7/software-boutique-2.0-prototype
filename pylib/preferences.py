@@ -27,6 +27,7 @@ class Preferences(object):
 
         self.dbg_obj = Debug() object from main application.
         """
+        self.dbg = dbg_obj
         self.folder_config = os.path.join(os.path.expanduser('~'), ".config", project_name)
         self.folder_cache = os.path.join(os.path.expanduser('~'), ".cache", project_name)
         self.file_path = os.path.join(self.folder_config, config_name + ".json")
