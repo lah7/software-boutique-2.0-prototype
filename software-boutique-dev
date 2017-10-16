@@ -78,7 +78,7 @@ else
 
             if [ $? == 0 ]; then
                 killall test-locally.sh &>/dev/null
-                mate-terminal -e 'python -m SimpleHTTPServer 8000' \
+                mate-terminal -e "python3 -m http.server 8000" \
                                 --working-directory="$index_repo/dist" -t "Boutique Local Index" &
                 web_server_pid=$!
                 index_params="--use-local-index"
