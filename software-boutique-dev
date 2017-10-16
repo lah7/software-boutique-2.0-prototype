@@ -8,6 +8,7 @@
 #
 # Standard Boutique parameters can be passed.
 #
+cd $(dirname "$0")
 params=$*
 
 # Print help with "--help".
