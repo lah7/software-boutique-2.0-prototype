@@ -1,6 +1,6 @@
 # Software Boutique for Ubuntu MATE
 
-An easy-to-use curvated software collection for Ubuntu MATE users.
+An easy-to-use curated software collection for Ubuntu MATE users.
 Complimentary of the [Welcome program](https://github.com/ubuntu-mate/ubuntu-mate-welcome).
 
 
@@ -9,7 +9,7 @@ Complimentary of the [Welcome program](https://github.com/ubuntu-mate/ubuntu-mat
 * Install or remove software in the collection or searching the Ubuntu archives.
 * One-click fixes for common software issues.
 * Apt and Snap support.
-* Securely downloads [an index of curvated applications](https://github.com/ubuntu-mate/ubuntu-mate.software).
+* Securely downloads [an index of curated applications](https://github.com/ubuntu-mate/ubuntu-mate.software).
 
 
 ## Building
