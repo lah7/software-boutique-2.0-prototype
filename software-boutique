@@ -374,10 +374,6 @@ class SoftwareBoutique(object):
             # Allow swipe animation to finish before refreshing list.
             spawn_thread(delay_function, False, [self.queue.update_queue_state, 0.5])
 
-        elif cmd.startswith("screenshot?"):
-            # FIXME!
-            return
-
         elif cmd.startswith("toggle-pref?"):
             key = cmd.split("?")[1]
             pref.toggle(key)
@@ -960,13 +956,13 @@ class SoftwareBoutique(object):
 
         else:
             path = os.path.join(boutique.cache_path, "metadata", "screenshots", app_obj.screenshot_filenames[0])
-            html += "<button id='screenshot-preview' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
+            html += "<button href='{0}' data-fancybox='gallery' id='screenshot-preview'><img src='{0}'/></button>".format(path)
 
         if len(app_obj.screenshot_filenames) >= 2:
             html += "<hr/>"
             for filename in app_obj.screenshot_filenames:
                 path = os.path.join(boutique.cache_path, "metadata", "screenshots", filename)
-                html += "<button class='screenshot-chooser' onclick='cmd(\"screenshot?{0}\")'><img src='{0}'/></button>".format(path)
+                html += "<button href='{0}' data-fancybox='gallery' class='screenshot-chooser'><img src='{0}'/></button>".format(path)
         html += "</div>"
 
         ### App Details
@@ -977,8 +973,7 @@ class SoftwareBoutique(object):
                     dev_name = app_obj.developer_name,
                     dev_url = app_obj.developer_url,
                     website_url = app_obj.urls.get("info"),
-                    description = app_obj.description,
-                )
+                    description = app_obj.description)
 
         ### Alternate to
         if app_obj.alternate_to:
