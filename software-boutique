@@ -73,15 +73,15 @@ def get_data_source():
     Retrieves the data source for assets used by the application.
     """
     current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    if( os.path.exists( os.path.join(current_folder, "data/" ) ) ):
+    if os.path.exists(os.path.join(current_folder, "data/")):
         dbg.stdout("Using relative path for data source. Non-production testing.", dbg.debug, 1)
         data_path = os.path.join(current_folder, "data/")
-    elif( os.path.exists("/usr/share/software-boutique/") ):
+    elif os.path.exists("/usr/share/software-boutique/"):
         dbg.stdout("Using /usr/share/software-boutique/ for data source.", dbg.debug, 1)
         data_path = "/usr/share/software-boutique/"
     else:
-        dbg.stdout("Unable to source the ubuntu-mate-welcome data directory.", dbg.error, 1)
-        sys.exit(1)
+        dbg.stdout("Unable to source the data directory.", dbg.error, 1)
+        exit(1)
     return data_path
 
 def spawn_thread(target, daemon=True, args=[]):
@@ -558,7 +558,8 @@ class SoftwareBoutique(object):
 
                 # (5) Verify data integrity
                 #_update_loading_status(_("Verifying Index..."))
-                # FIXME: Not yet implemented!
+                # TODO: Check signature
+                # TODO: Check checksums
 
                 # (6) Decompress index and metadata
                 _update_loading_status(_("Extracting Index..."))
@@ -1689,7 +1690,7 @@ def parse_parameters():
         dbg.stdout("=> Simulating software changes.", dbg.debug)
 
     if args.inspect:
-        self.verbose_level = 3
+        dbg.verbose_level = 3
 
     if args.clear_cache:
         if os.path.exists(pref.folder_cache):

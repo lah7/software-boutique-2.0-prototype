@@ -18,7 +18,7 @@
 #
 
 """
-    Common functions shared between Software Boutique and the Welcome application.
+Common functions shared between Software Boutique and the Welcome application.
 """
 
 import sys
