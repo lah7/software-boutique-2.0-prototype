@@ -21,6 +21,8 @@
 Common functions shared between Software Boutique and the Welcome application.
 """
 
+import os
+import gettext
 import sys
 
 class Debugging(object):
@@ -55,3 +57,29 @@ class Debugging(object):
                 print(colour_code + msg + '\033[0m')
             else:
                 print(msg)
+
+
+def setup_translations(bin_path, i18n_app, locale_override=None):
+    """
+    Initalises translations for the application.
+
+    bin_path = __file__ of the application that is being executed.
+    i18n_app = Name of the application's locales.
+
+    Returns the gettext object commonly assigned to a _ variable.
+    """
+    whereami = os.path.abspath(os.path.join(os.path.dirname(bin_path)))
+
+    if os.path.exists(os.path.join(whereami, "locale/")):
+        # Using relative path
+        locale_path = os.path.join(whereami, "locale/")
+    else:
+        # Using system path or en_US if none found
+        locale_path = "/usr/share/locale/"
+
+    if locale_override:
+        t = gettext.translation(i18n_app, localedir=locale_path, fallback=True, languages=[locale_override])
+    else:
+        t = gettext.translation(i18n_app, localedir=locale_path, fallback=True)
+
+    return t.gettext

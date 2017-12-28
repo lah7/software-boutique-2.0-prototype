@@ -109,35 +109,6 @@ def make_html_safe(string):
     return string.replace("'", "&#145;")
 
 
-class Translations(object):
-    """
-    Set up i18n translations
-    """
-    def __init__(self):
-        self.locale = None
-        self.locale_path = None
-
-        # Determine which locale to use
-        if dbg.override_locale:
-            self.locale = dbg.override_locale
-        else:
-            self.locale = str(locale.getlocale()[0])
-        dbg.stdout("Locale set: " + self.locale, dbg.success, 1)
-
-        # Use relative translations for development.
-        if os.path.exists(os.path.join(data_source, "../locale/")):
-            dbg.stdout("Using relative path for translations.", dbg.debug, 1)
-            self.locale_path = os.path.join(data_source, "../locale/")
-        else:
-            dbg.stdout("Using system path for translations or falling back to 'en_US'.", dbg.debug, 1)
-            self.locale_path = "/usr/share/locale/"
-
-        # Initialise i18n
-        global _
-        t = gettext.translation("software-boutique", localedir=self.locale_path, fallback=True)
-        _ = t.gettext
-
-
 class WebView(WebKit2.WebView):
     """
     Setting up the program's web browser and processing WebKit operations
@@ -1637,6 +1608,7 @@ class QueueOperationsThread(object):
 
 
 def parse_parameters():
+    global _
     parser = argparse.ArgumentParser(add_help=False)
     parser._optionals.title = _("Optional arguments")
     parser.add_argument("-h", "--help", help=_("Show this help message and exit"), action="help")
@@ -1679,11 +1651,12 @@ def parse_parameters():
 
     if args.codename:
         dbg.override_codename = args.codename
-        dbg.stdout("=> Showing listings for release: " + self.override_codename, dbg.debug)
+        dbg.stdout("=> Showing listings for release: " + dbg.override_codename, dbg.debug)
 
     if args.locale:
         dbg.override_locale = args.locale
-        dbg.stdout("=> Forcing locale: " + self.override_locale, dbg.debug)
+        _ = Common.setup_translations(__file__, "software-boutique", dbg.override_locale)
+        dbg.stdout("=> Forcing locale: " + dbg.override_locale, dbg.debug)
 
     if args.simulate:
         boutique.force_dummy = True
@@ -1755,7 +1728,7 @@ if __name__ == "__main__":
     dbg = Common.Debugging()
     data_source = get_data_source()
     boutique.data_source = data_source
-    trans = Translations()
+    _ = Common.setup_translations(__file__, "software-boutique")
     boutique.dbg = dbg
 
     # JSON in memory
