@@ -199,6 +199,7 @@ function changeTab(target) {
     smoothFade('.content', '#' + target + '-page', 'fast');
     $('#backdrop-icon-browse').fadeOut(250);
     $('#backdrop-icon-tabs').fadeOut(250);
+    categoryClose();
 
     var title = $('#' + target + '-button').attr('data-title');
 
