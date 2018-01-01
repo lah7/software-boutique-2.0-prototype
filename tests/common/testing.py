@@ -2,7 +2,7 @@
 #
 #  Common functions for test scripts.
 #
-#  Copyright (C) 2016-2017 Luke Horwell <luke@ubuntu-mate.org>
+#  Copyright (C) 2016-2018 Luke Horwell <luke@ubuntu-mate.org>
 #
 
 import os
