@@ -6,7 +6,7 @@ Source: https://github.com/ubuntu-mate/software-boutique
 Files: debian/*
        .tx/config
        README.md
-Copyright: 2017-2018 Luke Horwell <luke@ubuntu-mate.org>
+Copyright: 2017-2018 Luke Horwell <code@horwell.me>
            2017-2018 Martin Wimpress <code@flexion.org>
 License: GPL-3+
 
@@ -25,14 +25,14 @@ Files: software-boutique
        scripts/*
        hicolor/*
        docs/*
-Copyright: 2015-2018 Luke Horwell <luke@ubuntu-mate.org>
+Copyright: 2015-2018 Luke Horwell <code@horwell.me>
            2015-2018 Martin Wimpress <code@flexion.org>
 License: GPL-3+
 
 Files: data/categories/*.svg
 Copyright: 2004-2012, Canonical Ltd.
            2014-2015, Martin Wimpress <code@flexion.org>
-           2015-2016, Luke Horwell <luke@ubuntu-mate.org>
+           2015-2016, Luke Horwell <code@horwell.me>
 License: CC-BY-SA-3.0
 
 Files: data/lib/font-awesome.min.css
