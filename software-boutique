@@ -57,18 +57,16 @@ try:
     import pylib.boutique as boutique
     import pylib.preferences as Preferences
     import pylib.common as Common
-    relative_path = True
 except ImportError:
     import software_boutique.boutique as boutique
     import software_boutique.preferences as Preferences
     import software_boutique.common as Common
-    relative_path = False
 
 supported_arch = ["i386", "amd64", "armhf", "arm64", "ppc64el"]
 supported_codenames = ["xenial", "zesty", "artful", "bionic"]
 default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
-index_url = "https://ubuntu-mate.software/index/"
+index_url = "https://ubuntu-mate.software/"
 
 def get_data_source():
     """
@@ -479,7 +477,7 @@ class SoftwareBoutique(object):
                 path_metadata_tmp = pref.folder_cache + "/metadata.tar.xz"
 
                 # Remote URLs
-                index_locale_url = index_url + "/applications-{0}.json.gz".format(trans.locale)
+                index_locale_url = index_url + "/applications-{0}.json.gz"
                 index_fallback_url = index_url + "/applications-en.json.gz"
                 metadata_url = index_url + "/application-metadata.tar.xz"
 
