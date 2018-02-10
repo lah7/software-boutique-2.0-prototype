@@ -67,6 +67,7 @@ supported_codenames = ["xenial", "zesty", "artful", "bionic"]
 default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
 index_url = "https://ubuntu-mate.software/"
+show_holding_page = False
 
 def get_data_source():
     """
@@ -395,6 +396,20 @@ class SoftwareBoutique(object):
         self.update_page("#footer", "show")
         self.update_page("#loading-page", "show")
         self.update_page("#message-page", "fadeOut", "fast")
+
+        # Temporary holding page for snaps
+        if show_holding_page:
+            self.show_message_page("serious-error.png", _("In Development"),
+                [
+                    _("This new version of Software Boutique is currently in development."),
+                    _("The existing version is part of Ubuntu MATE Welcome, which can be started as follows:"),
+                    '<code>ubuntu-mate-welcome --boutique</code>'
+                ],
+                [
+                    [_("Close"), "exit", "dialog-theme"]
+                ]
+            )
+            return
 
         # Check Boutique is running on a supported version / architecture
         if boutique.system_arch not in supported_arch:
@@ -1627,6 +1642,9 @@ def parse_parameters():
     # For index testing locally
     parser.add_argument("--use-local-index", help=argparse.SUPPRESS, action="store_true")
 
+    # Temporary holding page for snaps
+    parser.add_argument("--holding-page", help=argparse.SUPPRESS, action="store_true")
+
     args = parser.parse_args()
 
     #~ if args.version:
@@ -1673,6 +1691,10 @@ def parse_parameters():
         global index_url
         index_url = "http://localhost:8000/"
         dbg.stdout("Using local index on port 8000", dbg.debug)
+
+    if args.holding_page:
+        global show_holding_page
+        show_holding_page = True
 
 
 def shutdown():
