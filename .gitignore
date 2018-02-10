@@ -1,12 +1,14 @@
-# Ignore compiled stuff
 __pycache__
+*.bz2
+*.old
 *.mo
+*.snap
+*~
 data/apps/
 data/boutique.css
+debian/files
 locale/
-
-
-# Ignore backups
-*.old
-*~
-
+parts/
+prime/
+snap/.snapcraft
+stage/
