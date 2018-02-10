@@ -64,8 +64,8 @@ except ImportError:
     import software_boutique.common as Common
     relative_path = False
 
-supported_arch = ["i386", "amd64", "armhf", "arm64", "powerpc", "ppc64el"]
-supported_codenames = ["xenial", "yakkety", "zesty", "artful"]
+supported_arch = ["i386", "amd64", "armhf", "arm64", "ppc64el"]
+supported_codenames = ["xenial", "zesty", "artful", "bionic"]
 default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
 index_url = "https://ubuntu-mate.software/index/"
