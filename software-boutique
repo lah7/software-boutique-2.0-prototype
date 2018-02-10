@@ -74,7 +74,10 @@ def get_data_source():
     Retrieves the data source for assets used by the application.
     """
     current_folder = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), 'data/')
-    snap_folder = os.path.join(os.environ['SNAP'],'usr','share','software-boutique')
+    try:
+        snap_folder = os.path.join(os.environ['SNAP'],'usr','share','software-boutique')
+    except KeyError:
+        snap_folder = ""
     system_folder = os.path.join('/','usr','share','software-boutique')
 
     for folder in [current_folder, snap_folder, system_folder]:
