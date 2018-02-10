@@ -74,17 +74,17 @@ def get_data_source():
     """
     Retrieves the data source for assets used by the application.
     """
-    current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    if os.path.exists(os.path.join(current_folder, "data/")):
-        dbg.stdout("Using relative path for data source. Non-production testing.", dbg.debug, 1)
-        data_path = os.path.join(current_folder, "data/")
-    elif os.path.exists("/usr/share/software-boutique/"):
-        dbg.stdout("Using /usr/share/software-boutique/ for data source.", dbg.debug, 1)
-        data_path = "/usr/share/software-boutique/"
-    else:
-        dbg.stdout("Unable to source the data directory.", dbg.error, 1)
-        exit(1)
-    return data_path
+    current_folder = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), 'data/')
+    snap_folder = os.path.join(os.environ['SNAP'],'usr','share','software-boutique')
+    system_folder = os.path.join('/','usr','share','software-boutique')
+
+    for folder in [current_folder, snap_folder, system_folder]:
+        if os.path.exists(folder):
+            dbg.stdout("Using " + folder + " for data source.", dbg.debug, 1)
+            return folder
+
+    dbg.stdout("Unable to source the data directory.", dbg.error, 1)
+    sys.exit(1)
 
 def spawn_thread(target, daemon=True, args=[]):
     """
