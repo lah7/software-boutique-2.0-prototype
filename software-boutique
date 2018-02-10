@@ -51,6 +51,8 @@ from datetime import datetime
 from threading import Thread
 from shutil import rmtree
 
+__VERSION__ = '18.04.0'
+
 try:
     import pylib.boutique as boutique
     import pylib.preferences as Preferences
