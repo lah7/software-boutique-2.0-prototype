@@ -1213,6 +1213,7 @@ class SoftwareBoutique(object):
 
         html = ""
         random_apps = []
+        data_source = get_data_source()
 
         for category in ["accessories", "server", "games", "system", "multimedia", "internet",
                          "development", "graphics", "office", "education", "more-software", "accessibility"]:
@@ -1284,7 +1285,7 @@ class SoftwareBoutique(object):
         # Version Information
         revision = 0
         html += add_category(_("Version"))
-        html += add_hint("17.10-dev")
+        html += add_hint(__VERSION__)
         html += add_checkbox(_("Keep Software Boutique up-to-date."), "keep-updated")
         html += end_category()
 
