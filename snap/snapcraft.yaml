@@ -4,7 +4,7 @@ version-script: |
   VER=$(grep __VERSION__ software-boutique | head -n 1 | cut -d'=' -f2 | sed 's/ //g' | sed "s/'//g")
   REV=$(git rev-parse --short HEAD)
   echo $VER-$REV
-summary: A Software Boutique intended for use with Ubuntu MATE
+summary: Discover and install software from a collection that compliments Ubuntu MATE.
 description: |
  An easy-to-use curated software collection for Ubuntu MATE users.
  Compliments Ubuntu MATE Welcome.
@@ -59,26 +59,27 @@ parts:
     build: |
       ./software-boutique-dev --build-only
     install: |
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/software-boutique/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/software-boutique
       rsync -a data/ $SNAPCRAFT_PART_INSTALL/usr/share/software-boutique/
 
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor
       rsync -a hicolor/ $SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share
       rsync -a locale/ $SNAPCRAFT_PART_INSTALL/usr/share/locale/
 
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages/software_boutique/
-      rsync -a pylib/ $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages/software_boutique/
-
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/applications/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/applications
       cp *.desktop $SNAPCRAFT_PART_INSTALL/usr/share/applications/
 
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin
-      cp software-boutique $SNAPCRAFT_PART_INSTALL/usr/bin/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/lib/software-boutique
+      cp software-boutique $SNAPCRAFT_PART_INSTALL/usr/lib/software-boutique/
+      rsync -a pylib/ $SNAPCRAFT_PART_INSTALL/usr/lib/software-boutique/pylib/
+
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages/software_boutique
+      rsync -a pylib/ $SNAPCRAFT_PART_INSTALL/usr/lib/python3/dist-packages/software_boutique/
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/man/man1
-      cp man/software-boutique.1 $SNAPCRAFT_PART_INSTALL/usr/share/man/man1
+      cp man/software-boutique.1 $SNAPCRAFT_PART_INSTALL/usr/share/man/man1/
 
     # The cruft_ filesets define files/directories that can be safely
     # removed from Software Boutique to reduce the size of the snap.
@@ -207,5 +208,5 @@ parts:
 
 apps:
   software-boutique:
-    command: usr/bin/software-boutique
+    command: usr/lib/software-boutique/software-boutique
     desktop: usr/share/applications/software-boutique.desktop
