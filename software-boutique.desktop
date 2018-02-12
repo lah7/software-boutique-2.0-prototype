@@ -4,6 +4,6 @@ Type=Application
 Categories=PackageManager;System;Settings;
 Name=Software Boutique
 Comment=Discover and install software from a collection that compliments Ubuntu MATE.
-Exec=software-boutique
+Exec=software-boutique --holding-page
 Icon=software-boutique
 StartupNotify=false

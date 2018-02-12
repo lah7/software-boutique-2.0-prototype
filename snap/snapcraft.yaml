@@ -208,5 +208,5 @@ parts:
 
 apps:
   software-boutique:
-    command: usr/lib/software-boutique/software-boutique
+    command: usr/lib/software-boutique/software-boutique --holding-page
     desktop: usr/share/applications/software-boutique.desktop
