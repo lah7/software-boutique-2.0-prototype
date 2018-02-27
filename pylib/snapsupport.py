@@ -6,8 +6,11 @@ import os
 import sys
 import subprocess
 from shutil import which
-gi.require_version ('Snapd', '1')
-from gi.repository import Snapd
+try:
+    gi.require_version ('Snapd', '1')
+    from gi.repository import Snapd
+except:
+    pass
 
 # Connects on-demand
 client = None
