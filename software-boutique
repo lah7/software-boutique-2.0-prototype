@@ -38,7 +38,6 @@ import os
 import platform
 import random
 import requests
-import setproctitle
 import signal
 import subprocess
 import sys
@@ -50,6 +49,13 @@ import tarfile
 from datetime import datetime
 from threading import Thread
 from shutil import rmtree
+
+## FIXME! Temporary workaround to ensure the snap works when proctitle is not available on the host.
+try:
+    import setproctitle
+    proctitle_available = True
+except ImportError:
+    proctitle_available = False
 
 __VERSION__ = '18.04.0'
 
@@ -203,8 +209,8 @@ class ApplicationWindow(object):
         html_file = "boutique.html"
 
         # Nice process name
-        setproctitle.setproctitle("software-boutique")
-
+        if proctitle_available:
+            setproctitle.setproctitle("software-boutique")
 
         w = Gtk.Window()
         w.set_position(Gtk.WindowPosition.CENTER)
