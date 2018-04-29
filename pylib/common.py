@@ -83,3 +83,21 @@ def setup_translations(bin_path, i18n_app, locale_override=None):
         t = gettext.translation(i18n_app, localedir=locale_path, fallback=True)
 
     return t.gettext
+
+def parse_os_release():
+    with open("/etc/os-release") as f:
+        d = {}
+        for line in f:
+            k, v = line.rstrip().split("=")
+            d[k] = v
+    return d
+
+
+def get_distro_name():
+    d = parse_os_release()
+    return d["ID"].replace("\"", "")
+
+
+def get_distro_version():
+    d = parse_os_release()
+    return d["VERSION"].replace("\"", "")
