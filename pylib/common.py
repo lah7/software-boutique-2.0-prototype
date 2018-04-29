@@ -95,9 +95,9 @@ def parse_os_release():
 
 def get_distro_name():
     d = parse_os_release()
-    return d["ID"]
+    return d["ID"].replace("\"", "")
 
 
 def get_distro_version():
     d = parse_os_release()
-    return d["VERSION"]
+    return d["VERSION"].replace("\"", "")
