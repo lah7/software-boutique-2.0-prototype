@@ -23,7 +23,6 @@
 
 import os
 import json
-import platform
 import subprocess
 import requests
 from time import time
@@ -45,8 +44,8 @@ data_source = "/usr/share/ubuntu-mate-welcome/"
 force_dummy = False
 dbg = common.Debugging() # Main application will replace this.
 system_arch = str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
-current_os_version = platform.dist()[1] # E.g. 16.04
-current_os_codename = platform.dist()[2] # E.g. xenial
+current_os_version = common.get_distro_version()  # E.g. 18.04
+current_os_codename = common.get_distro_name()  # E.g. bionic
 
 # Default Strings (applications should localise these)
 string_dict = {
