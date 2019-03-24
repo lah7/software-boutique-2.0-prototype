@@ -61,15 +61,16 @@ __VERSION__ = '18.04.0'
 
 try:
     import pylib.boutique as boutique
-    import pylib.preferences as Preferences
     import pylib.common as Common
+    import pylib.preferences as Preferences
+    from pylib.views.web_view import WebView
 except ImportError:
     import software_boutique.boutique as boutique
     import software_boutique.preferences as Preferences
     import software_boutique.common as Common
 
 supported_arch = ["i386", "amd64", "armhf", "arm64", "ppc64el"]
-supported_codenames = ["xenial", "zesty", "artful", "bionic"]
+supported_codenames = ["xenial", "zesty", "artful", "bionic", "cosmic"]
 default_codename = "xenial"
 support_url = "https://ubuntu-mate.community"
 index_url = "https://ubuntu-mate.software/"
@@ -119,80 +120,6 @@ def make_html_safe(string):
     return string.replace("'", "&#145;")
 
 
-class WebView(WebKit2.WebView):
-    """
-    Setting up the program's web browser and processing WebKit operations
-    """
-    def __init__(self):
-        self.webkit = WebKit2
-        self.webkit.WebView.__init__(self)
-
-        # Python <--> WebView communication
-        self.connect("notify::title", self._on_title_change)
-        self.connect("context-menu", self._on_context_menu)
-        self.connect("load-changed", self.on_finish_load)
-
-        # Enable keyboard navigation
-        self.get_settings().set_enable_spatial_navigation(True)
-        self.get_settings().set_enable_caret_browsing(True)
-
-        # Show console messages in stdout if we're debugging.
-        if dbg.verbose_level >= 2:
-            self.get_settings().set_enable_write_console_messages_to_stdout(True)
-
-
-        # Enable web inspector for debugging
-        if dbg.verbose_level == 3:
-            self.get_settings().set_property("enable-developer-extras", True)
-            inspector = self.get_inspector()
-            inspector.show()
-
-        dbg.stdout("Finished webkit2 initalisation.", dbg.success, 1)
-
-    def run_js(self, function):
-        """
-        Runs a JavaScript function on the page, regardless of which thread it is called from.
-        GTK+ operations must be performed on the same thread to prevent crashes.
-        """
-        GLib.idle_add(self._run_js, function)
-
-    def _run_js(self, function):
-        """
-        Runs a JavaScript function on the page when invoked from run_js()
-        """
-        self.run_javascript(function)
-        return GLib.SOURCE_REMOVE
-
-    def update_page(self, element, function, parm1=None, parm2=None):
-        """
-        Runs a JavaScript jQuery function on the page, ensuring correctly parsed quotes.
-        """
-        if parm1 and parm2:
-            self.run_js('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
-        if parm1:
-            self.run_js('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
-        else:
-            self.run_js('$("' + element + '").' + function + '()')
-
-    def on_finish_load(self, view, frame):
-        """
-        Callback: On page change.
-        """
-        if not self.is_loading():
-            dbg.stdout("Finished page initalisation.", dbg.success, 1)
-
-    def _on_title_change(self, view, frame):
-        """
-        Callback: When page title is changed, used for communicating with Python.
-        """
-        title = self.get_title()
-        if title != "null" and title != "" and title != None:
-            dbg.stdout("Command: '{0}'".format(title), dbg.debug, 2)
-            app.process_command(title)
-
-    def _on_context_menu(self, webview, menu, event, htr, user_data=None):
-        # Disable context menu.
-        return True
 
 
 class ApplicationWindow(object):
@@ -1789,7 +1716,7 @@ if __name__ == "__main__":
     # On this thread
     parse_parameters()
     app = SoftwareBoutique()
-    webview = WebView()
+    webview = WebView(software_boutique_app=app)
     main = ApplicationWindow()
     main.build(webview)
     app.webkit = webview

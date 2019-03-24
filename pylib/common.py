@@ -25,6 +25,9 @@ import os
 import gettext
 import sys
 
+from pylib.decorators.singleton import singleton
+
+@singleton
 class Debugging(object):
     """
     Outputs pretty debugging details to the terminal.
