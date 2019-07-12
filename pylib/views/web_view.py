@@ -1,20 +1,23 @@
-from pylib.common import Debugging
+"""
+Handles the setting up and processing of data sent from WebView (WebKitGTK)
+"""
 
+import gi
+gi.require_version("WebKit2", "4.0")
 from gi.repository import GLib, WebKit2
 
 class WebView(WebKit2.WebView):
     """
     Setting up the program's web browser and processing WebKit operations
     """
-    def __init__(self, software_boutique_app):
+    def __init__(self, dbg):
         """__init__
 
         :param software_boutique_app: SoftwareBoutique instance
         """
-        self.dbg = Debugging()
+        self.dbg = dbg
         self.webkit = WebKit2
         self.webkit.WebView.__init__(self)
-        self.software_boutique_app = software_boutique_app
 
         # Python <--> WebView communication
         self.connect("notify::title", self._on_title_change)
@@ -28,7 +31,6 @@ class WebView(WebKit2.WebView):
         # Show console messages in stdout if we're debugging.
         if self.dbg.verbose_level >= 2:
             self.get_settings().set_enable_write_console_messages_to_stdout(True)
-
 
         # Enable web inspector for debugging
         if self.dbg.verbose_level == 3:
@@ -52,17 +54,6 @@ class WebView(WebKit2.WebView):
         self.run_javascript(function)
         return GLib.SOURCE_REMOVE
 
-    def update_page(self, element, function, parm1=None, parm2=None):
-        """
-        Runs a JavaScript jQuery function on the page, ensuring correctly parsed quotes.
-        """
-        if parm1 and parm2:
-            self.run_js('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "', '" + parm2.replace("'", '\\\'') + "')")
-        if parm1:
-            self.run_js('$("' + element + '").' + function + "('" + parm1.replace("'", '\\\'') + "')")
-        else:
-            self.run_js('$("' + element + '").' + function + '()')
-
     def on_finish_load(self, view, frame):
         """
         Callback: On page change.
@@ -82,3 +73,10 @@ class WebView(WebKit2.WebView):
     def _on_context_menu(self, webview, menu, event, htr, user_data=None):
         # Disable context menu.
         return True
+
+    def make_html_safe(string):
+        """
+        Returns a string that is HTML safe that won't cause interference.
+        For example, when used in JavaScript attributes.
+        """
+        return string.replace("'", "&#145;")
