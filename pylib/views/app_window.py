@@ -16,24 +16,20 @@ try:
 except ImportError:
     proctitle_available = False
 
-def _(string):
-    print("fixme: gettext _ string: " + string)
-    return string
 
 class ApplicationWindow(object):
     """
     Main thread for building and interacting with the application.
     """
-    def __init__(self):
+    def __init__(self, controller):
         self.webview = None
+        self.controller = controller
 
-    def build(self, webview_obj, data_source):
-        title = _("Software Boutique")
+    def build(self, webview_obj, data_source, title):
         width = 900
         height = 600
-        html_file = "boutique.html"
 
-        # Nice process name
+        # Prettier process name
         if proctitle_available:
             setproctitle.setproctitle("software-boutique")
 
@@ -41,7 +37,7 @@ class ApplicationWindow(object):
         w.set_position(Gtk.WindowPosition.CENTER)
         w.set_wmclass("software-boutique", "software-boutique")
         w.set_title(title)
-        w.set_icon_from_file(os.path.join(data_source, "img", "boutique-icon.svg"))
+        w.set_icon_from_file(os.path.join(data_source, "view", "ui", "boutique.svg"))
 
         # http://askubuntu.com/questions/153549/how-to-detect-a-computers-physical-screen-size-in-gtk
         s = Gdk.Screen.get_default()
@@ -53,7 +49,7 @@ class ApplicationWindow(object):
         self.webkit = webview_obj
 
         # Load the starting page
-        html_path = "file://" + os.path.abspath(os.path.join(data_source, html_file))
+        html_path = "file://" + os.path.abspath(os.path.join(data_source, "view", "boutique.html"))
         self.webkit.load_uri(html_path)
 
         # Build scrolled window widget and add our appview container
@@ -75,4 +71,31 @@ class ApplicationWindow(object):
         Gtk.main()
 
     def _close(self, window, event):
-        shutdown()
+        self.controller.shutdown()
+
+
+def get_gtk3_theme_colours():
+    """
+    Returns an array of colours of the user's current theme.
+
+    Expected array:
+    Value           | GTK Equivalent
+    ----------------|---------------------------
+    page_bg           Page background
+    page_fg           Page text
+    header_bg         Title bar background (or bottom pixel)
+    header_fg         Title bar text
+    highlight         Menu highlight (e.g. selection colour or button dialog border)
+    dark              Boolean to indicate the theme is dark.
+    """
+
+    # FIXME: Example only: KDE Breeze-dark theme
+    return {
+        "page_bg": "#232629",
+        "page_fg": "#eff0f1",
+        "header_bg": "#31363b",
+        "header_fg": "#eff0f1",
+        "highlight": "#3daee9",
+        "dark": True
+    }
+

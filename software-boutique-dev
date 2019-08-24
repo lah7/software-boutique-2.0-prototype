@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Starts Software Boutique (and relevant tasks) for development/testing.
+#
+# Defaults to using -d (verbose) parameter, but also passes any others when
+# executing this script.
+#
+params=$*
+
+cd "$(dirname "$0")"
+
+# Compile SASS files
+./scripts/build-styles.sh
+if [ $? != 0 ]; then
+    exit 1
+fi
+
+# Start!
+./software-boutique -d $params

@@ -21,6 +21,11 @@ except ImportError:
 class Debugging(object):
     """
     Outputs pretty debugging details to the terminal.
+
+    Verbose Levels:
+    0       Only critical errors
+    1       Info and debugging info
+    2       Info and debugging info + opens web inspector
     """
     def __init__(self):
         self.verbose_level = 0
@@ -119,7 +124,7 @@ def get_distro_version():
 def get_distro_arch():
     return "amd64"
     # FIXME: Needs to be distro agnostic.
-    return str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
+    # return str(subprocess.Popen(["dpkg", "--print-architecture"], stdout=subprocess.PIPE).communicate()[0]).strip('\\nb\'')
 
 
 def spawn_thread(target, daemon=True, args=[]):

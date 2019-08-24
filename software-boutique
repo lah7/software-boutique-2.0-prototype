@@ -69,15 +69,14 @@ class SoftwareBoutiqueController(object):
     def __init__(self):
         data_source = Common.get_data_source()
 
-        # If the app isn't even compiled, stop.
-        # If the app mysterously lost its data, also stop.
-        if not os.path.exists(os.path.join(data_source, "boutique.css")):
+        # Check the app's styles are compiled and can be read.
+        if not os.path.exists(os.path.join(data_source, "view", "boutique.css")):
             if data_source.startswith("/usr"):
-                dbg.stdout(_("Software Boutique is missing critical data at this path:"), dbg.error, 0)
+                dbg.stdout(_("Software Boutique is missing critical resources at this path:"), dbg.error, 0)
                 dbg.stdout("  => " + data_source, dbg.error, 0)
                 dbg.stdout(_("The application cannot start. Please try re-installing Software Boutique."), dbg.error, 0)
             else:
-                dbg.stdout("Silly developer! You forgot to compile me, please run 'software-boutique-dev' instead.", dbg.error, 0)
+                dbg.stdout("Missing styles! Please run 'scripts/build-styles.sh' then try again.", dbg.error, 0)
             exit(1)
 
         # User Preferences
@@ -85,6 +84,121 @@ class SoftwareBoutiqueController(object):
             self.advanced_mode = True
         else:
             self.advanced_mode = False
+
+    def start(self):
+        """
+        Runs when the page within the WebView is ready.
+        """
+        dbg.stdout("Preparing Software Boutique...", dbg.action, 1)
+
+        # Apply current theme colours to view
+        gtk_colours = ViewAppWindow.get_gtk3_theme_colours()
+        css_keys = []
+        for css_variable in gtk_colours.keys():
+            css_keys.append("--{0}: {1}".format(css_variable, gtk_colours[css_variable]))
+        webview.run_js("$('body').append('<style>:root {" + ";".join(css_keys) + "}</style>')")
+
+        if gtk_colours["dark"] == True:
+            webview.run_js("$('body').addClass('dark')")
+
+        # Pass locales to the view
+        locales = Locales.get_locales()
+        webview.run_js("var LOCALE = " + json.dumps(locales, ensure_ascii=False))
+
+        # Ready!
+        webview.run_js("build_view()")
+
+    def shutdown(self):
+        """
+        The application is requested to exit. Gracefully stops operations.
+        """
+        dbg.stdout("Closing Software Boutique...", dbg.action, 1)
+        exit(0)
+
+    def recv_data(self, raw):
+        """
+        Receive data (e.g. user input) from the view.
+        This will be converted to a Python dictonary for the controller/model to parse.
+
+        :param raw: String containing the data stream
+        """
+        dbg.stdout("→ Controller: " + str(raw), dbg.debug, 1)
+
+        try:
+            data = json.loads(raw)
+        except Exception:
+            dbg.stdout("Internal Error: Controller cannot parse data!", dbg.error)
+            return False
+
+        try:
+            request = data["request"]
+        except Exception:
+            dbg.stdout("Internal Error: Controller received invalid data!", dbg.error)
+            dbg.stdout(data, dbg.error)
+            return False
+
+        if request == "ping":
+            self.send_data({"request": "ping"})
+
+    def send_data(self, raw):
+        """
+        Send data (e.g. interface update) to the view.
+        This will be converted to JSON (string) for the view to parse.
+
+        :param raw: Python dictonary containing the data stream
+        """
+        dbg.stdout("→ View: " + str(raw), dbg.debug)
+
+        try:
+            data = json.dumps(raw, ensure_ascii=False)
+            webview.send_data(data)
+            return True
+        except Exception:
+            dbg.stdout("Internal Error: Cannot parse data for view!", dbg.error)
+            return False
+
+
+class Locales():
+    """
+    A dictionary containing all of the locales that are used in the view.
+
+    The view will store locales as a JSON object under the 'LOCALE' variable
+    when the application starts.
+
+    For simplicity, all of the locales are within this file and stored as
+    'software-boutique' and use Python's gettext when they are built or re-generated.
+    """
+    def get_locales():
+        return {
+            "title": _("Software Boutique"),
+
+            # Header Buttons (+ Tooltips)
+            "browse": _("Browse"),
+            "queue": _("Queue (0)"), # 0
+            "installed": _("Installed"),
+            "news": _("News"),
+            "search": _("Search"),
+            "settings": _("Settings"),
+
+            "tooltip_browse": _("View curated software or list applications by category"),
+            "tooltip_queue": _("View pending software operations"),
+            "tooltip_installed": _("View software currently installed on this system"),
+            "tooltip_news": _("See the latest changes to the curated software picks"),
+            "tooltip_search": _("Look for software available for your system"),
+            "tooltip_settings": _("Change options related to Software Boutique"),
+            "tooltip_back": _("Go back to the previous page"),
+
+            # Footer
+            "app_ready": _("Ready."),
+            "app_installing": _("Installing XXX (1 of 2)..."), # XXX, 1, 2
+            "app_progress": _("1 MB of 2 MB"), # 1, 2
+            "app_update_cache": _("Updating Cache..."),
+            "app_success": _("Successfully installed XXX."),  # XXX
+            "app_success_plural": _("Successfully installed 2 applications."), # 2
+            "app_error": _("There was a problem installing XXX."), # XXX
+            "app_error_plural": _("There was a problem installing 2 applications."), # 2
+            "view_queue": _("View Queue")
+        }
 
 
 class CommandLine():
@@ -98,6 +212,8 @@ class CommandLine():
         parser.add_argument("--arch", help=_("Show index listings for a specific architecture, e.g. armhf"))
         parser.add_argument("--codename", help=_("Show index listings for a specific release, e.g. bionic"))
         parser.add_argument("--locale", help=_("Force locale for interface"))
+        parser.add_argument("--no-apt", help=_("Disable apt (PackageKit) backend"))
+        parser.add_argument("--no-snap", help=_("Disable snapd backend"))
 
         # For development use only - developer tools and frontend testing
         parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
@@ -113,7 +229,7 @@ class CommandLine():
             dbg.stdout("Verbose enabled", dbg.debug, 1)
 
         if args.inspect:
-            dbg.verbose_level = 3
+            dbg.verbose_level = 2
 
         if args.arch:
             Config.os_arch = args.arch
@@ -127,6 +243,12 @@ class CommandLine():
             _ = Common.setup_translations(__file__, "software-boutique", arg.locale)
             dbg.stdout("=> Forcing locale: " + arg.locale, dbg.debug)
 
+        if args.no_apt:
+            dbg.stdout("=> PackageKit disabled via argument", dbg.debug, 1)
+
+        if args.no_snap:
+            dbg.stdout("=> Snapd disabled via argument", dbg.debug, 1)
+
 
 if __name__ == "__main__":
     dbg = Common.Debugging()
@@ -138,9 +260,9 @@ if __name__ == "__main__":
     controller = SoftwareBoutiqueController()
 
     # Init window
-    webview = ViewWebView.WebView(dbg)
-    main = ViewAppWindow.ApplicationWindow()
-    main.build(webview, Common.get_data_source())
+    webview = ViewWebView.WebView(dbg, controller)
+    main = ViewAppWindow.ApplicationWindow(controller)
+    main.build(webview, Common.get_data_source(), Locales.get_locales()["title"])
 
     main.run()
 

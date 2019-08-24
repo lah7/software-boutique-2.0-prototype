@@ -10,17 +10,18 @@ class WebView(WebKit2.WebView):
     """
     Setting up the program's web browser and processing WebKit operations
     """
-    def __init__(self, dbg):
+    def __init__(self, dbg, controller):
         """__init__
 
-        :param software_boutique_app: SoftwareBoutique instance
+        :param dbg: Dbg instance
+        :param controller: SoftwareBoutique instance
         """
-        self.dbg = dbg
         self.webkit = WebKit2
         self.webkit.WebView.__init__(self)
+        self.controller = controller
 
         # Python <--> WebView communication
-        self.connect("notify::title", self._on_title_change)
+        self.connect("notify::title", self._recv_data)
         self.connect("context-menu", self._on_context_menu)
         self.connect("load-changed", self.on_finish_load)
 
@@ -29,16 +30,14 @@ class WebView(WebKit2.WebView):
         self.get_settings().set_enable_caret_browsing(True)
 
         # Show console messages in stdout if we're debugging.
-        if self.dbg.verbose_level >= 2:
+        if dbg.verbose_level >= 1:
             self.get_settings().set_enable_write_console_messages_to_stdout(True)
 
         # Enable web inspector for debugging
-        if self.dbg.verbose_level == 3:
+        if dbg.verbose_level == 2:
             self.get_settings().set_property("enable-developer-extras", True)
             inspector = self.get_inspector()
             inspector.show()
-
-        self.dbg.stdout("Finished webkit2 initalisation.", self.dbg.success, 1)
 
     def run_js(self, function):
         """
@@ -59,21 +58,33 @@ class WebView(WebKit2.WebView):
         Callback: On page change.
         """
         if not self.is_loading():
-            self.dbg.stdout("Finished page initalisation.", self.dbg.success, 1)
+            self.controller.start()
 
-    def _on_title_change(self, view, frame):
+    def _recv_data(self, view, frame):
         """
-        Callback: When page title is changed, used for communicating with Python.
+        Callback: Used to recieve data from view (JS) to controller (Python)
         """
         title = self.get_title()
-        if title != "null" and title != "" and title != None:
-            self.dbg.stdout("Command: '{0}'".format(title), self.dbg.debug, 2)
-            self.software_boutique_app.process_command(title)
+        if title not in ["null", "", None]:
+            self.controller.recv_data(title)
+            # Reset title afterwards so the same data can be sent again.
+            self.run_js("document.title = ''")
+
+    def send_data(self, data):
+        """
+        Used to communicate from controller (Python) to view (JS).
+
+        :parm data: String containing data stream.
+        """
+        self.run_js("recv_data({0})".format(str(data)))
 
     def _on_context_menu(self, webview, menu, event, htr, user_data=None):
-        # Disable context menu.
+        """
+        Context menu is disabled as the application masks it's a WebKit browser.
+        """
         return True
 
+    @staticmethod
     def make_html_safe(string):
         """
         Returns a string that is HTML safe that won't cause interference.

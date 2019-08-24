@@ -1,14 +1,22 @@
+# Caches
 __pycache__
-*.bz2
-*.old
-*.mo
+.sass-cache
+
+# Packaging
 *.snap
-*~
-data/apps/
-data/boutique.css
 debian/files
-locale/
 parts/
 prime/
 snap/.snapcraft
 stage/
+
+# Compiled files
+*.mo
+data/view/boutique.css
+locale/
+
+# Misc
+*~
+.directory
+*.old
+*.bz2

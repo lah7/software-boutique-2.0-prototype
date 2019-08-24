@@ -1,0 +1,117 @@
+/**********************************
+ * Common header/footer elements
+***********************************/
+header,
+footer {
+    background: var(--header_bg);
+    color: var(--header_fg);
+    cursor: default;
+    display: flex;
+    flex-direction: row;
+    font-size: 16px;
+    padding: 6px 8px;
+
+    /* Buttons on the header use a custom 'flat' style - used as tab bar */
+    button {
+        display: flex;
+        -webkit-appearance: none;
+        background: var(--header_bg);
+        color: var(--header_fg);
+        border: 1px solid transparent;
+        padding: 5px 10px;
+        transition:  border-color, background;
+        transition-duration: $transition-duration;
+        transition-timing-function: $transition-timing;
+
+        svg {
+            height: 16px;
+            max-width: 16px;
+        }
+
+        span {
+            margin: auto 0;
+            margin-left: 4px;
+        }
+
+        &:hover,
+        &:focus {
+            border-color: var(--highlight);
+        }
+
+        &.active,
+        &:active {
+            background: var(--highlight);
+        }
+
+        &.disabled {
+            opacity: 0.25;
+            pointer-events: none;
+        }
+    }
+
+    .left {
+        margin-right: auto;
+        display: flex;
+    }
+
+    .right {
+        margin-left: auto;
+        display: flex;
+    }
+
+    svg path {
+        fill: var(--header_fg);
+    }
+}
+
+
+/**********************************
+ * Header only
+***********************************/
+header {
+    .left {
+        #back-button {
+            display: flex;
+            -webkit-appearance: none;
+            padding: 5px;
+
+            svg {
+                margin: auto;
+                height: 22px;
+                width: 22px;
+            }
+        }
+
+        .title {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 250px;
+            white-space: nowrap;
+            margin: auto 10px;
+            font-size: 1.1em;
+        }
+    }
+
+    .right {
+        /* Boutique icon on browse icon too small */
+        button[onclick="tab_browse()"] {
+            svg {
+                height: 22px;
+                max-width: 22px;
+            }
+        }
+    }
+}
+
+
+/**********************************
+ * Footer only
+***********************************/
+footer {
+    font-size: 14px;
+
+    .status {
+        cursor: pointer;
+        padding: 6px 0;
+    }
+}
