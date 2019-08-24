@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg2"
+   viewBox="0 0 160 160"
+   height="160"
+   width="160"
+   version="1.1"
+   sodipodi:docname="logo.svg"
+   inkscape:version="0.92.4 5da689c313, 2019-01-14">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="640"
+     inkscape:window-height="480"
+     id="namedview20"
+     showgrid="false"
+     inkscape:zoom="2"
+     inkscape:cx="62.572216"
+     inkscape:cy="78.417944"
+     inkscape:current-layer="Shadow"
+     inkscape:pagecheckerboard="true"
+     showborder="true"
+     inkscape:showpageshadow="false"
+     borderlayer="true" />
+  <title
+     id="title4420">Software Boutique 2.0</title>
+  <defs
+     id="defs4">
+    <linearGradient
+       id="linearGradient4316">
+      <stop
+         id="stop4318"
+         style="stop-color:#87a556"
+         offset="0" />
+      <stop
+         id="stop4320"
+         style="stop-color:#a3bb7c"
+         offset="1" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient4322"
+       y2="1027.4"
+       xlink:href="#linearGradient4316"
+       gradientUnits="userSpaceOnUse"
+       y1="916.79"
+       x2="155.77"
+       x1="2.5318" />
+    <linearGradient
+       id="linearGradient4328"
+       y2="1027.4"
+       xlink:href="#linearGradient4316"
+       gradientUnits="userSpaceOnUse"
+       y1="916.79"
+       gradientTransform="matrix(4.8716,0,0,4.8716,23.901,-4095.9)"
+       x2="155.77"
+       x1="2.5318" />
+    <filter
+       id="filter4416"
+       style="color-interpolation-filters:sRGB"
+       height="1.2919"
+       width="1.2038"
+       y="-.14595"
+       x="-.10189">
+      <feGaussianBlur
+         id="feGaussianBlur4418"
+         stdDeviation="6.1451665" />
+    </filter>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4316"
+       id="linearGradient827"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(4.8716,0,0,4.8716,23.901,-4095.9)"
+       x1="2.5318"
+       y1="916.79"
+       x2="155.77"
+       y2="1027.4" />
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Software Boutique 2.0</dc:title>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Luke Horwell</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <cc:license
+           rdf:resource="GPL" />
+        <dc:date></dc:date>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>GPLv3</dc:title>
+          </cc:Agent>
+        </dc:rights>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     transform="matrix(0.20516,0,0,0.20516,87.796221,-45.751968)">
+    <g
+       id="Shadow"
+       style="stroke:url(#linearGradient4322);stroke-width:15"
+       transform="matrix(0.94153,0,0,0.94153,-424.71245,9.3930971)">
+      <path
+         style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#87a556;fill-opacity:1;fill-rule:nonzero;stroke:#758a53;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.97511309;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         d="M 79.21875 25.146484 C 73.540525 25.144553 68.199292 27.513794 64.392578 31.726562 C 60.585573 35.939482 58.766416 41.491829 59.341797 47.140625 A 7.308039 7.308039 0 1 0 73.882812 45.660156 C 73.742712 44.284726 74.309456 42.551087 75.236328 41.525391 C 76.163298 40.499541 77.830188 39.759312 79.212891 39.759766 C 80.337984 39.760152 81.639703 40.192906 82.599609 40.910156 C 83.568436 41.634103 84.407287 42.797183 84.810547 44.015625 C 85.042576 44.71673 85.089606 45.308205 85.054688 45.644531 A 7.308039 7.308039 0 0 0 85.054688 45.646484 C 84.983663 46.330638 84.262743 47.874874 82.689453 49.742188 C 81.062241 51.673301 78.471705 54.054902 76.240234 57.810547 C 74.265903 61.133635 73.156829 64.847944 72.923828 68.644531 L 14.078125 102.29883 C 11.066624 103.81044 8.5820486 106.13493 6.890625 109.06445 C 5.1043115 112.1585 4.3298392 115.68224 4.6542969 119.24023 C 5.0220293 123.27479 6.7628461 126.98739 9.6269531 129.85156 C 12.491391 132.7159 16.206297 134.45629 20.240234 134.82422 A 7.308039 7.308039 0 0 0 20.904297 134.85352 L 142.68945 134.85352 A 7.308039 7.308039 0 0 0 146.74414 133.625 C 151.82343 130.23701 154.98259 124.76882 155.37695 118.67578 C 155.6543 114.39038 154.52524 110.17781 152.14258 106.60547 A 7.308039 7.308039 0 0 0 149.7168 104.33203 L 87.640625 68.492188 C 87.842036 67.345947 88.236879 66.231226 88.804688 65.275391 C 89.6886 63.787962 91.562909 61.890574 93.865234 59.158203 C 96.221678 56.361373 99.031116 52.536277 99.589844 47.154297 C 99.881991 44.3405 99.448623 41.729559 98.685547 39.423828 C 97.344919 35.373134 94.825085 31.801604 91.347656 29.203125 C 87.861307 26.598102 83.644042 25.148024 79.21875 25.146484 z M 80.416016 81.197266 L 140.53125 115.9043 C 140.72527 116.50616 140.82894 117.1445 140.79102 117.73047 C 140.73787 118.55151 140.34278 119.46721 139.80273 120.24023 L 21.462891 120.24023 C 20.943319 120.16383 20.318565 119.87519 19.960938 119.51758 C 19.580099 119.1366 19.257779 118.44758 19.208984 117.91211 C 19.164622 117.42563 19.302607 116.79614 19.546875 116.37305 C 19.791038 115.95016 20.267413 115.51541 20.710938 115.31055 A 7.308039 7.308039 0 0 0 21.275391 115.01953 L 80.416016 81.197266 z "
+         transform="matrix(5.1769402,0,0,5.1769402,-3.4282462,226.87878)"
+         id="Hook" />
+    </g>
+  </g>
+</svg>
