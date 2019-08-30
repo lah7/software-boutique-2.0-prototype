@@ -172,7 +172,7 @@ class Locales():
         return {
             "title": _("Software Boutique"),
 
-            # Header Buttons (+ Tooltips)
+            # Header Buttons
             "browse": _("Browse"),
             "queue": _("Queue (0)"), # 0
             "installed": _("Installed"),
@@ -180,6 +180,15 @@ class Locales():
             "search": _("Search"),
             "settings": _("Settings"),
 
+            # Titles for pages
+            "title_browse": _("Browse for Applications"),
+            "title_queue": _("Queued Changes"),
+            "title_installed": _("Installed Software"),
+            "title_news": _("What's New?"),
+            "title_search": _("Search"),
+            "title_settings": _("Boutique Settings"),
+
+            # Header Tooltips
             "tooltip_browse": _("View curated software or list applications by category"),
             "tooltip_queue": _("View pending software operations"),
             "tooltip_installed": _("View software currently installed on this system"),
@@ -189,15 +198,35 @@ class Locales():
             "tooltip_back": _("Go back to the previous page"),
 
             # Footer
-            "app_ready": _("Ready."),
-            "app_installing": _("Installing XXX (1 of 2)..."), # XXX, 1, 2
-            "app_progress": _("1 MB of 2 MB"), # 1, 2
-            "app_update_cache": _("Updating Cache..."),
-            "app_success": _("Successfully installed XXX."),  # XXX
-            "app_success_plural": _("Successfully installed 2 applications."), # 2
-            "app_error": _("There was a problem installing XXX."), # XXX
-            "app_error_plural": _("There was a problem installing 2 applications."), # 2
-            "view_queue": _("View Queue")
+            "queue_ready": _("Ready."),
+            "queue_ready_state": _("Installation progress will appear here."),
+            "queue_downloading": _("Downloading XXX (1 of 2)..."), # XXX, 1, 2
+            "queue_installing": _("Installing XXX (1 of 2)..."), # XXX, 1, 2
+            "queue_progress": _("1 MB of 2 MB"), # 1, 2
+            "queue_success": _("Finished."),
+            "queue_success_state": _("1 installed, 2 updated, 3 removed."), # 1, 2, 3
+            "queue_error": _("There were problems completing your request."), # XXX
+            "queue_error_state": _("1 succeeded, 2 failed."), # 1, 2
+
+            # Queue page
+            "queue_list_title_processing": _("In Progress"),
+            "queue_list_title_processed": _("Completed"),
+            "queue_list_title_pending": _("Queued"),
+            "queue_list_success_install": "", # Unused, 'Launch' button only.
+            "queue_list_success_remove": _("Successfully removed"),
+            "queue_list_failed_install": _("Failed to install"),
+            "queue_list_failed_remove": _("Failed to remove"),
+            "queue_list_clear": _("Clear List"),
+            "queue_list_pending_install": _("Waiting for installation"),
+            "queue_list_pending_remove": _("Waiting for removal"),
+            "queue_list_empty": _("Nothing queued. When you install or remove software, its progress will appear here."),
+
+            # General Actions
+            "launch": _("Launch"),
+            "view_details": _("View Details"),
+
+            # End
+            "": ""
         }
 
 

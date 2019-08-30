@@ -73,7 +73,7 @@ header {
         #back-button {
             display: flex;
             -webkit-appearance: none;
-            padding: 5px;
+            padding: 5px 10px;
 
             svg {
                 margin: auto;
@@ -87,14 +87,14 @@ header {
             overflow: hidden;
             max-width: 250px;
             white-space: nowrap;
-            margin: auto 10px;
+            margin: auto 5px;
             font-size: 1.1em;
         }
     }
 
     .right {
         /* Boutique icon on browse icon too small */
-        button[onclick="tab_browse()"] {
+        #nav-button-browse {
             svg {
                 height: 22px;
                 max-width: 22px;
@@ -109,9 +109,74 @@ header {
 ***********************************/
 footer {
     font-size: 14px;
+}
 
-    .status {
-        cursor: pointer;
-        padding: 6px 0;
+#footer-status {
+    display: flex;
+    cursor: pointer;
+    padding-top: 4px;
+    opacity: 0;
+    transition: none;
+
+    &.appear {
+        opacity: 1;
+        transition: opacity $transition-duration linear;
+    }
+
+    .status-text {
+        padding: 0 6px;
+    }
+}
+
+#status-icon {
+    height: 24px;
+    width: 24px;
+
+    svg {
+        height: 24px;
+        width: 24px;
+    }
+
+    &.ok,
+    &.error {
+        + #status-text #progress-text {
+            padding-top: 3px;
+        }
+    }
+
+    &.busy {
+        animation: status-busy 1s linear infinite;
+        transform-origin: center;
+    }
+}
+
+#status-text {
+    display: flex;
+    flex-direction: column;
+    padding: 0 6px;
+    min-height: 55px;
+}
+
+#progress-bar {
+    height: 6px;
+    width: 200px;
+    margin-top: auto;
+    overflow: hidden;
+}
+
+#progress-subtext {
+    margin-top: auto;
+    margin-bottom: auto;
+    opacity: 0.5;
+    font-size: 0.9em;
+}
+
+@keyframes status-busy {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(359deg);
     }
 }
