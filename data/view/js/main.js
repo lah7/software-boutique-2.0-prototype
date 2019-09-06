@@ -23,6 +23,7 @@ function recv_data(data) {
  * Common
 *****************************/
 var TRANS_SPEED = 300;
+var ENABLE_INTRO = true;    // For curated collection
 
 function get_string(string) {
     return LOCALE[string];
@@ -30,6 +31,11 @@ function get_string(string) {
 
 function get_svg(name) {
     return svg[name];
+}
+
+// Returns localised relative or absolute date
+function get_date(day, month, year) {
+    return day + "/" + month + "/" + year;
 }
 
 /*****************************
@@ -117,6 +123,7 @@ function change_page(name, data) {
         case "installed":
             break;
         case "settings":
+            _set_page_settings();
             break;
         default:
             console.error("Invalid page name!");

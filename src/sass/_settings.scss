@@ -1,0 +1,45 @@
+.settings-page {
+    margin: 15px 0;
+}
+
+row {
+    display: flex;
+    padding: 10px 15px;
+    width: calc(100% - 30px);
+}
+
+row left {
+    padding: 0 5px;
+    min-width: 250px;
+    opacity: 0.75;
+}
+
+row right {
+    padding: 0 5px;
+    width: 100%;
+
+    table {
+        margin: 0;
+        width: 100%;
+
+        th {
+            min-width: 200px;
+        }
+    }
+
+    group {
+        display: block;
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    help {
+        display: block;
+        font-size: 0.9em;
+        margin: 5px 0;
+        opacity: 0.5;
+    }
+}

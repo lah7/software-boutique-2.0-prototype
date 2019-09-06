@@ -225,6 +225,27 @@ class Locales():
             "launch": _("Launch"),
             "view_details": _("View Details"),
 
+            # Settings
+            "about": _("About"),
+            "ver_software": _("Software Boutique 2.0"), # 2.0
+            "ver_index": _("Index Revision 123"), # 123
+            "last_updated": _("Last Updated: []"), # []
+            "backend": _("Supported Backends"),
+            "backend_apt": _("PackageKit (Apt)"),
+            "backend_snap": _("Snapd (Snapcraft)"),
+            "backend_appstream": _("AppStream (Metadata)"),
+            "backend_working": _("Enabled"),
+            "backend_not_working": _("Unavailable"),
+            "interface": _("Interface"),
+            "hide_proprietary": _("Hide proprietary applications"),
+            "hide_proprietary_help": _("Omit non-free software from being shown in Browse or Search."),
+            "show_advanced": _("Show technical details for applications"),
+            "show_advanced_help": _("When viewing an application, additional details like sources and packages will be shown."),
+            "precise_time": _("Prefer precise times"),
+            "precise_time_help": _("Relative time ('2 days ago') is used by default. Checking this will always show an exact date/time."),
+            "misc": _("Miscellaneous"),
+            "show_intro": _("Show Introduction Screen"),
+
             # End
             "": ""
         }
