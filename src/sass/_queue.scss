@@ -1,4 +1,5 @@
 .queue-page {
+    display: flex;
     max-width: 1000px;
     padding: 10px 20px;
     margin: 0 auto;
@@ -91,5 +92,30 @@
         .app-name {
             text-decoration: line-through;
         }
+    }
+}
+
+.queue-page empty {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    text-align: center;
+
+    svg {
+        height: 100px;
+        width: 100px;
+        opacity: 0.25;
+        margin: auto;
+        margin-bottom: 10px;
+
+        path {
+            fill: var(--page_fg);
+        }
+    }
+
+    span {
+        display: block;
+        opacity: 0.5;
+        padding-top: 10px;
     }
 }

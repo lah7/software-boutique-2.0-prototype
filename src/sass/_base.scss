@@ -55,6 +55,7 @@ header {
 content {
     height: calc(100vh - #{$header-height + $header-padding-vertical + $footer-height + $footer-padding-vertical});
     overflow-y: scroll;
+    display: flex;
 }
 
 footer {

@@ -189,10 +189,10 @@ function _set_page_queue() {
         // Inform user about the queue page.
         $("content").html(`
             <div class="queue-page">
-                <div class="queue-empty">
+                <empty>
                     ${get_svg("fa-clone")}
                     <span>${get_string("queue_list_empty")}</span>
-                </div>
+                </empty>
             </div>
         `);
 

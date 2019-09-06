@@ -219,7 +219,7 @@ class Locales():
             "queue_list_clear": _("Clear List"),
             "queue_list_pending_install": _("Waiting for installation"),
             "queue_list_pending_remove": _("Waiting for removal"),
-            "queue_list_empty": _("Nothing queued. When you install or remove software, its progress will appear here."),
+            "queue_list_empty": _("Progress for your software installations will appear here."),
 
             # General Actions
             "launch": _("Launch"),
