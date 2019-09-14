@@ -201,9 +201,9 @@ function _set_page_queue() {
         var buffer = [`<div class="queue-page">`];
 
         buffer.push(`
-            <div class="queue-toolbar">
+            <toolbar>
                 <button onclick="queue_clear()">${get_string("queue_list_clear")}</button>
-            </div>`);
+            </toolbar>`);
 
             if (html_buffer_processing.length > 0) {
                 buffer.push(`<h2>${get_string("queue_list_title_processing")}</h2>`);

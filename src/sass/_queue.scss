@@ -1,6 +1,7 @@
 .queue-page {
-    display: flex;
+    display: block;
     max-width: 1000px;
+    width: 100%;
     padding: 10px 20px;
     margin: 0 auto;
 
@@ -13,7 +14,7 @@
     }
 }
 
-.queue-toolbar {
+.queue-page toolbar {
     text-align: right;
 
     button:first-child {
