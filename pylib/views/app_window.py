@@ -33,18 +33,18 @@ class ApplicationWindow(object):
         if proctitle_available:
             setproctitle.setproctitle("software-boutique")
 
-        w = Gtk.Window()
-        w.set_position(Gtk.WindowPosition.CENTER)
-        w.set_wmclass("software-boutique", "software-boutique")
-        w.set_title(title)
-        w.set_icon_from_file(os.path.join(data_source, "view", "ui", "boutique.svg"))
+        window = Gtk.Window()
+        window.set_position(Gtk.WindowPosition.CENTER)
+        window.set_wmclass("software-boutique", "software-boutique")
+        window.set_title(title)
+        window.set_icon_from_file(os.path.join(data_source, "view", "ui", "boutique.svg"))
 
         # http://askubuntu.com/questions/153549/how-to-detect-a-computers-physical-screen-size-in-gtk
         s = Gdk.Screen.get_default()
         if s.get_height() <= 600:
-            w.set_size_request(768, 528)
+            window.set_size_request(768, 528)
         else:
-            w.set_size_request(width, height)
+            window.set_size_request(width, height)
 
         self.webkit = webview_obj
 
@@ -52,19 +52,33 @@ class ApplicationWindow(object):
         html_path = "file://" + os.path.abspath(os.path.join(data_source, "view", "boutique.html"))
         self.webkit.load_uri(html_path)
 
-        # Build scrolled window widget and add our appview container
+        # Create scrolled window (containing WebKit) to be part of a horz. pane
         sw = Gtk.ScrolledWindow()
         sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         sw.add(self.webkit)
+        pane = Gtk.Paned(orientation = Gtk.Orientation.HORIZONTAL)
+        pane.modify_bg(Gtk.StateType(0), Gdk.Color(128, 128, 128))
 
-        # Build an autoexpanding box and add our scrolled window
-        b = Gtk.VBox(homogeneous=False, spacing=0)
-        b.pack_start(sw, expand=True, fill=True, padding=0)
+        # GTK Window -> Paned -> ScrolledWindow -> WebKit + Inspector (debugging)
+        pane.add(sw)
+        window.add(pane)
 
-        # Add the box to the parent window
-        w.add(b)
-        w.connect("delete-event", self._close)
-        w.show_all()
+        # If debugging, open the inspector side-by-side
+        if self.webkit.inspector:
+            def dummy(webview):
+                return True
+
+            inspector = self.webkit.get_inspector()
+            inspector.connect("open-window", dummy)
+            inspector.show()
+            inspector_webview = inspector.get_web_view()
+            pane.add(inspector_webview)
+            pane.set_position(1000)
+            window.set_size_request(1920, 600)
+            window.set_position(Gtk.WindowPosition.CENTER)
+
+        window.connect("delete-event", self._close)
+        window.show_all()
 
     def run(self):
         signal.signal(signal.SIGINT, signal.SIG_DFL)

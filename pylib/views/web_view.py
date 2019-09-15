@@ -19,6 +19,7 @@ class WebView(WebKit2.WebView):
         self.webkit = WebKit2
         self.webkit.WebView.__init__(self)
         self.controller = controller
+        self.inspector = False
 
         # Python <--> WebView communication
         self.connect("notify::title", self._recv_data)
@@ -36,8 +37,7 @@ class WebView(WebKit2.WebView):
         # Enable web inspector for debugging
         if dbg.verbose_level == 2:
             self.get_settings().set_property("enable-developer-extras", True)
-            inspector = self.get_inspector()
-            inspector.show()
+            self.inspector = True
 
     def run_js(self, function):
         """
