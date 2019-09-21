@@ -11,15 +11,18 @@ var SETTINGS = {
         "year": 2019
     },
     "backends": {
-        "apt": false,
-        "snap": false,
+        // FIXME: Should be 'false', controller to push dict.
+        "curated": true,
+        "apt": true,
+        "snap": true,
         "appstream": false
     },
 
     // Settings - simple key/value structure
     "hide_proprietary": false,
     "show_advanced": false,
-    "precise_time": false
+    "precise_time": false,
+    "compact_list": false
 };
 
 /*************************************************
@@ -85,6 +88,10 @@ function _set_page_settings() {
                     <table>
                         <tbody>
                             <tr>
+                                <th>${get_string("backend_curated")}</th>
+                                <td>${SETTINGS.backends.curated ? get_string("backend_working") : get_string("backend_not_working")}</td>
+                            </tr>
+                            <tr>
                                 <th>${get_string("backend_apt")}</th>
                                 <td>${SETTINGS.backends.apt ? get_string("backend_working") : get_string("backend_not_working")}</td>
                             </tr>
@@ -128,9 +135,18 @@ function _set_page_settings() {
                         </label>
                         <help>${get_string("precise_time_help")}</help>
                     </group>
+
+                    <group>
+                        <label>
+                            <input type="checkbox" onclick="settings_set_key('compact_list', this.checked)"/>
+                            ${get_string("compact_list")}
+                        </label>
+                        <help>${get_string("compact_list_help")}</help>
+                    </group>
+
                 </right>
             </row>
-            <row ${ENABLE_INTRO == false ? "hidden" : ""}>
+            <row ${SETTINGS.backends.curated == false ? "hidden" : ""}>
                 <left>
                     ${get_string("misc")}
                 </left>

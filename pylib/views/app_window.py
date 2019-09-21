@@ -113,3 +113,25 @@ def get_gtk3_theme_colours():
         "dark": True
     }
 
+
+def get_gtk_icon_path(icon_name, size, fallback_path):
+    """
+    Returns a path to a GTK icon.
+
+    Params:
+        name            GTK name, e.g. applications-accessories
+        size            Requested size, e.g. 24
+        fallback_path   Return this path if icon could not be found in current theme.
+    """
+    theme = Gtk.IconTheme.get_default()
+    info = theme.lookup_icon(icon_name, size, 0)
+    filename = None
+
+    if info:
+        filename = info.get_filename()
+
+    if filename:
+        return filename
+    else:
+        return fallback_path
+

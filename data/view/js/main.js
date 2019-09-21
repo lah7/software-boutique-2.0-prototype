@@ -23,7 +23,6 @@ function recv_data(data) {
  * Common
 *****************************/
 var TRANS_SPEED = 300;
-var ENABLE_INTRO = true;    // For curated collection
 
 function get_string(string) {
     return LOCALE[string];
@@ -36,6 +35,11 @@ function get_svg(name) {
 // Returns localised relative or absolute date
 function get_date(day, month, year) {
     return day + "/" + month + "/" + year;
+}
+
+function get_random_element_id() {
+    var time = new Date().getTime();
+    return "id-" + time;
 }
 
 /*****************************
@@ -70,7 +74,7 @@ function build_view() {
         </header>
         <content></content>
         <footer>
-            <div id="footer-status" onclick="_set_page_queue()" title="${get_string("tooltip_queue")}">
+            <div id="footer-status" onclick="change_page('queue')" title="${get_string("tooltip_queue")}">
                 <div id="status-icon"></div>
                 <div id="status-text">
                     <div id="progress-text"></div>
@@ -112,6 +116,7 @@ function change_page(name, data) {
 
     switch(name) {
         case "browse":
+            _set_tab_browse(data);
             break;
         case "news":
             break;
@@ -133,17 +138,20 @@ function change_page(name, data) {
     _nav_add_history(name, data);
     CURRENT_PAGE = name;
     CURRENT_PAGE_DATA = data;
+}
 
+function _nav_add_history(name, data) {
+    NAV_HISTORY.push({"name": name, "data": data});
+    _nav_refresh_back_btn();
+}
+
+function _nav_refresh_back_btn() {
     // Enable the back button if this is the first tab.
     if (NAV_HISTORY.length > 1) {
         $("#back-button").removeClass("disabled");
     } else {
         $("#back-button").addClass("disabled");
     }
-}
-
-function _nav_add_history(name, data) {
-    NAV_HISTORY.push({"name": name, "data": data});
 }
 
 function nav_go_back() {

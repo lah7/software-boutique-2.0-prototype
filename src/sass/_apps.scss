@@ -1,0 +1,263 @@
+.browse-page {
+    width: 100%;
+    padding: 0 30px;
+}
+
+/**************************************
+ * Categories
+***************************************/
+categories {
+    background: var(--page_bg);
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 auto;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    position: -webkit-sticky;
+    top: 0px;
+    z-index: 1;
+
+    a {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid transparent;
+        transition: border-color $transition-duration $transition-timing;
+        display: flex;
+        flex-direction: row;
+        flex: 1 0 12%;
+        padding: 4px 10px;
+        text-align: left;
+        margin: 4px auto;
+        white-space: nowrap;
+
+        img {
+            height: 32px;
+            width: 32px;
+        }
+
+        label {
+            margin: auto 5px;
+        }
+
+        &:hover,
+        &:focus {
+            border-color: var(--highlight);
+        }
+
+        &.active {
+            background-color: var(--highlight);
+        }
+    }
+}
+
+@media (min-width: 1250px) {
+    categories a {
+        flex: 1 0 14%;
+    }
+}
+
+@media (min-width: 1775px) {
+    categories a {
+        flex: 1;
+    }
+}
+
+/**************************************
+ * Application Listing
+***************************************/
+app-list {
+    display: block;
+    padding: 10px 0;
+
+    h2 {
+        font-weight: 400;
+        margin: 0;
+        margin-top: 10px;
+    }
+
+    p {
+        margin: 15px 0;
+    }
+
+    group {
+        display: block;
+        margin-top: 30px;
+
+        + group {
+            padding-top: 15px;
+            border-top: $page-border;
+        }
+    }
+
+    apps {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 15px 0;
+
+        &.compact {
+            margin-left: -5px;
+            margin-right: -5px;
+        }
+    }
+
+    app {
+        img {
+            width: 100%;
+            max-height: 24px;
+            max-width: 24px;
+            margin: auto 0;
+        }
+
+        name {
+            margin: auto 5px;
+        }
+    }
+
+    app.compact {
+        cursor: pointer;
+        display: flex;
+        flex-direction: row;
+        width: calc(50% - 35px);
+        margin: 10px;
+        padding: 5px;
+        background: $app-bg;
+        border: $app-border;
+        transition: border-color $transition-duration $transition-timing;
+
+        button {
+            svg {
+                padding: 0;
+
+                path {
+                    fill: --var(--page_fg);
+                }
+            }
+
+            &:first-of-type {
+                margin-left: auto;
+            }
+        }
+
+        &:hover,
+        &:focus {
+            border-color: var(--highlight);
+        }
+
+        &:active {
+            background-color: var(--highlight);
+        }
+    }
+
+    app.default {
+        box-shadow: 0px 0px 2px 2px #808080;
+        position: relative;
+        margin: 10px;
+        padding: 15px;
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+
+        left {
+            padding: 10px;
+            width: 50px;
+        }
+
+        right {
+            width: 100%;
+        }
+
+        img {
+            max-height: 64px;
+            max-width: 64px;
+        }
+
+        name {
+            display: block;
+            font-size: 1.2em;
+            margin: auto 10px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        summary {
+            margin: 10px;
+            margin-bottom: 20px;
+        }
+
+        metadata {
+            color: var(--highlight);
+        }
+
+        button-group {
+            margin-top: 10px;
+            text-align: right;
+            display: flex;
+            flex-direction: row;
+
+            button:first-child {
+                margin-left: auto;
+            }
+        }
+    }
+
+    /* Install checkmark in corner */
+    install-check {
+        display: none;
+    }
+
+    app.installed {
+        box-shadow: 0px 0px 2px 2px var(--highlight);
+        position: relative;
+
+        install-check {
+            display: block;
+            position: absolute;
+            left: -12px;
+            top: -12px;
+
+            svg {
+                background: var(--page_bg);
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+
+                path {
+                    fill: var(--highlight);
+                }
+            }
+        }
+    }
+}
+
+@media (min-width: 1000px) {
+    app-list {
+        app.compact {
+            width: calc(33.3% - 35px);
+        }
+    }
+}
+
+@media (min-width: 1250px) {
+    app-list {
+        app.compact {
+            width: calc(25% - 35px);
+        }
+
+        app.default {
+            width: 50%;
+            flex: 1 0 35%;
+        }
+    }
+}
+
+@media (min-width: 1500px) {
+    app-list {
+        app.compact {
+            width: calc(20% - 35px);
+        }
+
+        app.default {
+            width: 33%;
+            flex: 1 0 15%;
+        }
+    }
+}

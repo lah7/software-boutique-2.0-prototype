@@ -90,6 +90,7 @@ class SoftwareBoutiqueController(object):
         Runs when the page within the WebView is ready.
         """
         dbg.stdout("Preparing Software Boutique...", dbg.action, 1)
+        data_source = Common.get_data_source()
 
         # Apply current theme colours to view
         gtk_colours = ViewAppWindow.get_gtk3_theme_colours()
@@ -104,6 +105,26 @@ class SoftwareBoutiqueController(object):
         # Pass locales to the view
         locales = Locales.get_locales()
         webview.run_js("var LOCALE = " + json.dumps(locales, ensure_ascii=False))
+
+        # Pass categories and their icons to the view.
+        category_js_payload = []
+        def _add_category(uid, gtk_name):
+            icon_path = ViewAppWindow.get_gtk_icon_path(gtk_name, 32, data_source + "/view/ui/categories/" + uid + ".svg")
+            category_js_payload.append('{"id": "' + uid + '", "icon_path": "' + icon_path + '"}')
+
+        _add_category("accessories", "applications-accessories")
+        _add_category("development", "applications-development")
+        _add_category("education", "applications-science")
+        _add_category("games", "applications-games")
+        _add_category("graphics", "applications-graphics")
+        _add_category("internet", "applications-internet")
+        _add_category("multimedia", "applications-multimedia")
+        _add_category("office", "applications-office")
+        _add_category("server", "network-server")
+        _add_category("accessibility", "preferences-desktop-accessibility")
+        _add_category("system", "applications-system")
+        _add_category("themes", "preferences-desktop-theme")
+        webview.run_js("var CATEGORIES = [{0}]".format(",".join(category_js_payload)))
 
         # Ready!
         webview.run_js("build_view()")
@@ -166,7 +187,7 @@ class Locales():
     when the application starts.
 
     For simplicity, all of the locales are within this file and stored as
-    'software-boutique' and use Python's gettext when they are built or re-generated.
+    'software-boutique' powered by Python's gettext.
     """
     def get_locales():
         return {
@@ -224,13 +245,32 @@ class Locales():
             # General Actions
             "launch": _("Launch"),
             "view_details": _("View Details"),
+            "info": _("Details"),
+            "install": _("Install"),
+            "reinstall": _("Reinstall"),
+            "remove": _("Remove"),
+
+            # Categories
+            "accessibility": _("Universal Access"),
+            "accessories": _("Accessories"),
+            "development": _("Development"),
+            "education": _("Education"),
+            "games": _("Games"),
+            "graphics": _("Graphics"),
+            "internet": _("Internet"),
+            "multimedia": _("Sound & Video"),
+            "office": _("Office"),
+            "server": _("Server"),
+            "system": _("System Tools"),
+            "themes": _("Themes"),
 
             # Settings
             "about": _("About"),
             "ver_software": _("Software Boutique 2.0"), # 2.0
             "ver_index": _("Index Revision 123"), # 123
             "last_updated": _("Last Updated: []"), # []
-            "backend": _("Supported Backends"),
+            "backend": _("Backends"),
+            "backend_curated": _("Software Boutique Curated Index"),
             "backend_apt": _("PackageKit (Apt)"),
             "backend_snap": _("Snapd (Snapcraft)"),
             "backend_appstream": _("AppStream (Metadata)"),
@@ -240,11 +280,21 @@ class Locales():
             "hide_proprietary": _("Hide proprietary applications"),
             "hide_proprietary_help": _("Omit non-free software from being shown in Browse or Search."),
             "show_advanced": _("Show technical details for applications"),
-            "show_advanced_help": _("When viewing an application, additional details like sources and packages will be shown."),
+            "show_advanced_help": _("Display additional details like sources and package names when viewing an application's details."),
             "precise_time": _("Prefer precise times"),
-            "precise_time_help": _("Relative time ('2 days ago') is used by default. Checking this will always show an exact date/time."),
+            "precise_time_help": _("Present exact date/time stamps instead of relative, for example '2 days ago'."),
+            "compact_list": _("Compact view for application listings"),
+            "compact_list_help": _("Show less detail so more applications appear on-screen at once."),
             "misc": _("Miscellaneous"),
             "show_intro": _("Show Introduction Screen"),
+
+            # Browse
+            "group_curated_title": _("Best in Class"),
+            "group_curated_text": _("Tried and tested applications that integrate well with the MATE Desktop. Recommended by the Ubuntu MATE Team."),
+            "group_snap_title": _("Snaps"),
+            "group_snap_text": _("Applications that are sandboxed with tight security enhancements, in addition to being automatically updated."),
+            "group_apt_title": _("Packages"),
+            "group_apt_text": _("Available from the Ubuntu archives, or an external repository installed on your system."),
 
             # End
             "": ""
