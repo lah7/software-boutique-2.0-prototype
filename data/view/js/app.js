@@ -12,24 +12,30 @@ var CATEGORIES = {
 /*************************************************
  * Send request to the controller.
 *************************************************/
-// Start an application (from queue or app details page)
 function launch_app_id(id) {
+    //
+    // Start an application (from queue or app details page)
+    //
     send_data({
         "request": "app_launch",
         "id": id
     });
 }
 
-// View error details for a failed item in the queue.
 function view_error_app_id(id) {
+    //
+    // View error details for a failed item in the queue.
+    //
     send_data({
         "request": "app_show_error",
         "id": id
     });
 }
 
-// Fetches an application list for a specific category or section (e.g. installed)
 function request_app_list(category_id, element_id) {
+    //
+    // Fetches an application list for a specific category or section (e.g. installed)
+    //
     show_loading();
     send_data({
         "request": "request_app_list",
@@ -39,32 +45,40 @@ function request_app_list(category_id, element_id) {
 
 }
 
-// Install an application.
 function install_app(app_id) {
+    //
+    // Install an application.
+    //
     send_data({
         "request": "app_install",
         "id": app_id
     });
 }
 
-// Reinstall an application.
 function reinstall_app(app_id) {
+    //
+    // Reinstall an application.
+    //
     send_data({
         "request": "app_reinstall",
         "id": app_id
     });
 }
 
-// Remove an application.
 function remove_app(app_id) {
+    //
+    // Remove an application.
+    //
     send_data({
         "request": "app_remove",
         "id": app_id
     });
 }
 
-// Open details about an application.
 function info_app(app_id) {
+    //
+    // Open details about an application.
+    //
     send_data({
         "request": "app_info",
         "id": app_id
@@ -76,6 +90,7 @@ function info_app(app_id) {
  * Received update from the controller.
 *************************************************/
 function populate_app_list(data) {
+    //
     // Presents a list of applications gathered by the controller.
     //
     // Variable         Example                 Description
@@ -108,6 +123,9 @@ function open_app_details(data) {
  * Internal view functions to update the page.
 *************************************************/
 function _set_tab_browse(category_id) {
+    //
+    // User chooses the "Browse" tab.
+    //
     var categories = [];
 
     for (c = 0; c < CATEGORIES.length; c++) {
@@ -214,7 +232,9 @@ function _get_app_buttons(app_id, installed) {
 }
 
 function _get_app_list_generic(apps) {
-    // Application lists as displayed on browse, search and installed pages.
+    //
+    // Returns HTML for application lists used on browse, search and installed pages.
+    //
     var compact_list = SETTINGS.compact_list;
     //var unified_mode = SETTINGS.unified_list;
     var enabled_curated = SETTINGS.backends.curated;
@@ -285,29 +305,42 @@ function _get_app_list_generic(apps) {
 }
 
 function _get_app_list_themes(apps) {
-    // In this context, the applications are 'themes'.
+    //
+    // Returns HTML for applications that are represented as 'themes'.
+    //
     // FIXME: Not yet implemented
     return "???";
 }
 
 function _get_app_list_unselected() {
-    // In this context: No category is selected, shows the welcome page.
+    //
+    // Returns HTML when no category is selected. This is the welcome page.
+    //
     // FIXME: Not yet implemented
     return "???";
 }
 
 function _get_app_list_fixes() {
-    // In this context: There are no applications to request, shows a list of fixes.
+    //
+    // Returns HTML when the 'fixes' category is chosen.
+    // There are no applications on this page.
+    //
     // FIXME: Not yet implemented
     return "???";
 }
 
 function _get_app_list_empty() {
+    //
+    // Returns HTML when there are no applications to display.
+    //
     // FIXME: Not yet implemented
     return "???";
 }
 
 function change_category(uid) {
+    //
+    // Buttons call this to change the current category on a Browse page.
+    //
     $("categories a").removeClass("active");
     _nav_add_history("browse", uid);
     _set_tab_browse(uid);
