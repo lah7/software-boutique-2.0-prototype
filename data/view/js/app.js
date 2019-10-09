@@ -1,3 +1,4 @@
+var GENERIC_ICON_PATH = "ui/generic-package.svg";
 var CATEGORIES = {
     /* Example
      * The 'id' is also used to lookup the string.
@@ -68,6 +69,7 @@ function info_app(app_id) {
         "request": "app_info",
         "id": app_id
     });
+    show_loading();
 }
 
 /*************************************************
@@ -84,6 +86,20 @@ function populate_app_list(data) {
     // apps             [{1..},{2..}]           List consisting of data describing the applications in JSON format.
 
     _populate_app_list(data.category, data.element, data.apps);
+    hide_loading();
+}
+
+function open_app_details(data) {
+    //
+    // Opens the details page for an application. Reviews are not included in this
+    // response, as they may take some time to retrieve.
+    //
+    // Variable         Example                 Description
+    // ---------------- ----------------------- -----------------------------------
+    // request          get_app_details         Required
+    // data             {...}                   Details of the application.
+
+    _open_app_details(data.data);
     hide_loading();
 }
 
@@ -106,8 +122,8 @@ function _set_tab_browse(category_id) {
     }
 
     // Set title when browsing a category.
-    if (category_id != null) {
-        $("#header-title").html(get_string("browse") + ' ' + $("#category-" + category_id + " label").html());
+    if (category_id != null && get_string(category_id) != null) {
+        change_title(get_string("browse") + ' ' + get_string(category_id));
     }
 
     // Populate the tab.
@@ -164,55 +180,72 @@ function _populate_app_list(category_id, element_id, data) {
     $("#" + element_id).html(content);
 }
 
+function _get_app_buttons(app_id, installed) {
+    //
+    // Returns buttons appropriate for an application.
+    //
+    var compact_view = SETTINGS.compact_list;
+    var output = "";
+
+    // Details button (not shown in compact view or when viewing details about app)
+    if (compact_view === false && CURRENT_PAGE != "details") {
+        output += `<button onclick="info_app('${app_id}')">${get_svg("fa-info-circle")} <label>${get_string("info")}</label></button>`;
+    }
+
+    if (installed === false) {
+        output += `<button class="btn-install" onclick="install_app('${app_id}')" title="${get_string("install")}">
+                        ${get_svg("fa-download")}
+                        ${compact_view == false ? get_string("install") : ""}
+                   </button>`;
+    } else {
+        output += `<button class="btn-remove" onclick="remove_app('${app_id}')" title="${get_string("remove")}">
+                        ${get_svg("fa-trash")}
+                        ${compact_view == false ? get_string("remove") : ""}
+                   </button>`;
+        output += `<button class="btn-reinstall" onclick="reinstall_app('${app_id}')" title="${get_string("reinstall")}">
+                        ${get_svg("fa-reload")}
+                        ${compact_view == false ? get_string("reinstall") : ""}
+                   </button>`;
+    }
+
+    // TODO: Show status of item in queue.
+
+    return output;
+}
+
 function _get_app_list_generic(apps) {
     // Application lists as displayed on browse, search and installed pages.
-    var compact_list = SETTINGS.unified_list;
+    var compact_list = SETTINGS.compact_list;
+    //var unified_mode = SETTINGS.unified_list;
     var enabled_curated = SETTINGS.backends.curated;
     var enabled_apt = SETTINGS.backends.apt;
     var enabled_snap = SETTINGS.backends.snap;
     var content = [];
-    var generic_icon = "ui/generic-package.svg";
 
     function __add_app(app) {
         var output = "";
         if (compact_list === true) {
             output += `<app class="compact ${app.installed === true ? "installed" : ""}" onclick="info_app('${app.id}')" tabindex="0">
                 <install-check>${get_svg("fa-check-circle")}</install-check>
-                <img src="${app.icon ? app.icon : generic_icon}"/>
-                <name>${app.name}</name>`;
-
-            if (app.installed === false) {
-                output += `<button class="btn-install" onclick="install_app('${app.id}')" title="${get_string("install")}">${get_svg("fa-download")}</button>`;
-            } else {
-                output += `<button class="btn-remove" onclick="remove_app('${app.id}')" title="${get_string("remove")}">${get_svg("fa-trash")}</button>`;
-                output += `<button class="btn-reinstall" onclick="reinstall_app('${app.id}')" title="${get_string("reinstall")}">${get_svg("fa-reload")}</button>`;
-            }
-
-            output += `</app>`
+                <img src="${app.icon ? app.icon : GENERIC_ICON_PATH}"/>
+                <name>${app.name}</name>
+                ${_get_app_buttons(app.id, app.installed)};
+            </app>`;
 
         } else {
             output += `<app class="default ${app.installed === true ? "installed" : ""}" tabindex="0">
                 <install-check>${get_svg("fa-check-circle")}</install-check>
                 <left>
-                    <img src="${app.icon ? app.icon : generic_icon}"/>
+                    <img src="${app.icon ? app.icon : GENERIC_ICON_PATH}"/>
                 </left>
                 <right>
                     <name>${app.name}</name>
                     <summary>${app.summary}</summary>
-                <button-group>`;
-
-            output += `<button onclick="info_app('${app.id}')">${get_svg("fa-info-circle")} <label>${get_string("info")}</label></button>`;
-
-            if (app.installed === false) {
-                output += `<button class="btn-install" onclick="install_app('${app.id}')">${get_svg("fa-download")} <label>${get_string("install")}</label></button>`;
-            } else {
-                output += `<button class="btn-remove" onclick="remove_app('${app.id}')">${get_svg("fa-trash")} <label>${get_string("remove")}</label></button>`;
-                output += `<button class="btn-reinstall" onclick="reinstall_app('${app.id}')">${get_svg("fa-reload")} <label>${get_string("reinstall")}</label></button>`;
-            }
-
-            output += `</button-group>
-                        </right>
-                        </app>`;
+                    <button-group>
+                        ${_get_app_buttons(app.id, app.installed)}
+                    </button-group>
+                </right>
+            </app>`;
         }
         return output;
     }
@@ -269,8 +302,187 @@ function _get_app_list_fixes() {
     return "???";
 }
 
+function _get_app_list_empty() {
+    // FIXME: Not yet implemented
+    return "???";
+}
+
 function change_category(uid) {
     $("categories a").removeClass("active");
     _nav_add_history("browse", uid);
     _set_tab_browse(uid);
 }
+
+function _open_app_details(data) {
+    //
+    // Shows the details for an application. Reviews are not included in this
+    // response, as they may take some time to retrieve.
+    //
+    // Data example:
+    //  data = {
+    //      "name": "Application 1",
+    //      "id": "apt:app1",
+    //      "backend": "apt",
+    //      "icon": "",
+    //      "summary": "A generic application",
+    //      "description": "This is line 1.\nThis is line 2.\nThis is line 3.",
+    //      "nonfree": false,
+    //      "free_license": "GNU General Public License",
+    //      "arch": ["i386", "amd64", "armhf", "arm64", "powerpc"],
+    //      "developer": "Developer Name",
+    //      "developer_url": "https://developer.example.com",
+    //      "website_url": "https://example.com",
+    //      "support_url": "https://support.example.com",
+    //      "apt_source": "ppa:org/name", /* Or: "multiverse" if repo, "https://repo.example.com" if external */
+    //      "apt_packages": ["app1", "app1-data", "app1-doc"],
+    //      "snap_name": "nameofsnap",
+    //      "launch_cmd": "app1",
+    //      "tags": [], /* TODO: Curated only? may be unused */
+    //      "screenshots": ["/path/to/image1", "/path/to/image2"],
+    //      "version": "20.04.1-ubuntu0",
+    //      "installed": true,
+    //      "install_date": [2019, 12, 31, 23, 59] /* [YYYY, MM, DD, HH, MM], */
+    //      "comments": true
+    //  }
+    //
+
+    // Update navigation
+    change_page("details", data);
+    change_title(app.name);
+}
+
+function _set_page_details(data) {
+    //
+    // Open the details page providing more details about an application.
+    //
+    var extra_details = SETTINGS.show_advanced;
+
+    var screenshots = `<empty>${get_string('no_screenshot')}</empty>`;
+    if (data.screenshots.length > 0) {
+        screenshots = "";
+        for (s = 0; s < data.screenshots.length; s++) {
+            var path = data.screenshots[s];
+            screenshots += `<a class="app-screenshot" href="${path}" data-fancybox="gallery"><img src="${path}"/></a>`;
+        }
+    }
+
+    var developer_link = "";
+    if (data.developer != null) {
+        developer_link = `<a onclick="open_uri('${data.developer_url}')" href="#" title="${data.developer_url}">${data.developer}</a>`;
+    }
+
+    var buttons = _get_app_buttons(data.id, data.installed);
+
+    var rows = [];
+    function __add_row(advanced, title, text) {
+        if (advanced === true && extra_details !== true)
+            return;
+        rows.push(`<tr><th>${title}</th><td>${text}</td></tr>`);
+    }
+
+    __add_row(false, get_string("version"), data.version);
+    __add_row(false, get_string("install_date"), data.install_date);
+
+    switch(data.nonfree) {
+        case true:
+            __add_row(false, get_string("license"), get_string("nonfree"));
+            break;
+        case false:
+            if (data.free_license != null) {
+                __add_row(false, get_string("license"), data.free_license);
+            } else {
+                __add_row(false, get_string("license"), get_string("free"));
+            }
+            break;
+        default:
+            __add_row(false, get_string("license"), get_string("unknown"));
+            break;
+    }
+
+    __add_row(false, get_string("supported_arch"), data.arch.join(", "));
+
+    if (data.launch_cmd != null) {
+        __add_row(true, get_string("launch_cmd"), data.launch_cmd);
+    }
+
+    // TODO: Tags unused?
+    if (data.tags.length > 0) {
+        __add_row(false, get_string("tags"), "");
+    }
+
+    if (data.website_url != null) {
+        __add_row(false, get_string("website"), `<a onclick="open_uri('${data.website_url}')" href="#">${data.website_url}</a>`);
+    }
+
+    if (data.support_url != null) {
+        __add_row(false, get_string("support"), `<a onclick="open_uri('${data.support_url}')" href="#">${data.support_url}</a>`);
+    }
+
+    switch(data.backend) {
+        case "apt":
+            __add_row(false, get_string("type"), get_string("apt"));
+
+            if (get_string(data.apt_source) == null) {
+                __add_row(false, get_string("source"), get_string("unknown"));
+            } else {
+                var string;
+                switch(data.apt_source) {
+                    case "main":
+                    case "universe":
+                    case "restricted":
+                    case "multiverse":
+                        string = get_string(data.apt_source);
+                        break;
+                    default:
+                        string = data.apt_source;
+                        break;
+                }
+
+                // TODO: Add icons for Repo/PPA/URL
+                __add_row(false, get_string("source"), string);
+            }
+
+            // TODO: Improve look of each package
+            __add_row(false, get_string("packages"), data.apt_packages.join(", "));
+            break;
+
+        case "snap":
+            __add_row(false, get_string("type"), get_string("snap"));
+            __add_row(true, get_string("snap_name"), data.snap_name);
+            break;
+
+        default:
+            __add_row(false, get_string("type"), get_string("unknown"));
+            break;
+    }
+
+    // Assemble layout
+    $("content").html(`
+        <div class="app-details-page">
+            <overview>
+                <left>
+                    <img id="app-icon" src="${data.icon ? data.icon : GENERIC_ICON_PATH}"/>
+                </left>
+                <center>
+                    <h2 id="app-name">${data.name}</h2>
+                    ${developer_link}
+                    <p>${data.description}</p>
+                    <button-group>
+                        ${buttons}
+                    </button-group>
+                </center>
+                <right>
+                    <screenshots>
+                        ${screenshots}
+                    </screenshots>
+                </right>
+            </overview>
+            <table>
+                <tbody>
+                    ${rows.join("")}
+                </tbody>
+            </table>
+        </div>
+    `);
+}
+

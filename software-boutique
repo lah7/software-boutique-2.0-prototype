@@ -296,6 +296,36 @@ class Locales():
             "group_apt_title": _("Packages"),
             "group_apt_text": _("Available from the Ubuntu archives, or an external repository installed on your system."),
 
+            # Application Details
+            "no_screenshot": _("No screenshot available"),
+            "version": _("Version"),
+            "install_date": _("Installed"),
+            "license": _("License"),
+            "supported_arch": _("Supported Architectures"),
+            "launch_cmd": _("Launch Command"),
+            "tags": _("Tags"),
+            "website": _("Website"),
+            "support": _("Support"),
+            "type": _("Type"),
+            "source": _("Source"),
+            "packages": _("Packages"),
+            "snap_name": _("Snap Name"),
+            "unknown": _("Unknown"),
+
+            # App Types
+            "apt": _("Debian Packaged Application (Apt)"),
+            "snap": _("Universal Linux Package (Snapcraft)"),
+
+            # App Sources
+            "main": _("Canonical supported free and open source software"),
+            "universe": _("Community-maintained free and open source software"),
+            "restricted": _("Proprietary drivers for devices"),
+            "multiverse": _("Software restricted by copyright or legal issues"),
+
+            # Licenses
+            "nonfree": _("Proprietary"),
+            "free": _("Open Source or Free Software (FOSS)"),
+
             # End
             "": ""
         }

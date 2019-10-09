@@ -7,6 +7,13 @@ function send_data(json) {
     document.title = data;
 }
 
+function open_uri(uri) {
+    send_data({
+        "request": "open_uri",
+        "uri": uri
+    });
+}
+
 /***************************************
  * Controller -> View
  *  e.g. update state
@@ -114,6 +121,10 @@ function change_page(name, data) {
     $("#nav-button-" + name).addClass("active");
     change_title(get_string("title_" + name));
 
+    _nav_add_history(name, data);
+    CURRENT_PAGE = name;
+    CURRENT_PAGE_DATA = data;
+
     switch(name) {
         case "browse":
             _set_tab_browse(data);
@@ -130,14 +141,13 @@ function change_page(name, data) {
         case "settings":
             _set_page_settings();
             break;
+        case "details":
+            _set_page_details(data);
+            break;
         default:
             console.error("Invalid page name!");
             break;
     }
-
-    _nav_add_history(name, data);
-    CURRENT_PAGE = name;
-    CURRENT_PAGE_DATA = data;
 }
 
 function _nav_add_history(name, data) {

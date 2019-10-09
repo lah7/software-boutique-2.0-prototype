@@ -1,0 +1,42 @@
+$table-row: rgba(255,255,255,0);
+$table-row-alt: rgba(255,255,255,0.1);
+$table-row-border: rgba(255,255,255,0);
+
+table {
+    margin: 15px;
+    width: 100%;
+}
+
+tr {
+    border-bottom: 1px solid $grey-dark;
+    background-color: $table-row;
+}
+
+tr:first-child,
+tr:nth-child(2n+3) {
+    background-color: $table-row-alt;
+}
+
+th:first-child {
+    width: 25%;
+    text-align: left;
+}
+
+th, td {
+    border-spacing: 0;
+    border-collapse: collapse;
+    padding: 7.5px;
+
+    code {
+        color: initial;
+        font-size: 16px;
+        word-wrap: anywhere;
+    }
+}
+
+/************************
+ * Table Classes
+*************************/
+.split-long-lines {
+    word-wrap: anywhere;
+}

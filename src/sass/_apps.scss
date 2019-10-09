@@ -261,3 +261,107 @@ app-list {
         }
     }
 }
+
+/**************************************
+ * Application Details
+***************************************/
+.app-details-page {
+    width: 100%;
+    padding: 0 30px;
+    padding-bottom: 30px;
+
+    overview {
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        margin: 15px;
+        margin-bottom: 30px;
+
+        left {
+            width: 64px;
+            margin-right: 15px;
+        }
+
+        center {
+            text-align: left;
+            margin-left: 15px;
+            margin-right: 15px;
+        }
+
+        right {
+            margin-left: auto;
+            width: 300px;
+        }
+    }
+
+    #app-icon {
+        width: 64px;
+        max-height: 64px;
+    }
+
+    screenshots {
+        text-align: center;
+
+        empty {
+            border: 1px dashed $grey-light;
+            width: 220px;
+            height: 110px;
+            display: block;
+            line-height: 110px;
+            margin-left: auto;
+            margin-right: 15px;
+        }
+    }
+
+    .app-screenshot {
+        &:first-child {
+            img {
+                height: auto;
+                width: 100%;
+                max-width: 300px;
+                max-height: 300px;
+            }
+        }
+
+        &:not(:first-child) {
+            img {
+                margin-top: 5px;
+                height: auto;
+                max-height: 100px;
+                max-width: 100px;
+            }
+        }
+    }
+
+    #app-name {
+        margin: 0;
+        margin-bottom: 15px;
+    }
+
+    a {
+        color: var(--highlight);
+    }
+
+    p {
+
+    }
+
+    button-group {
+        display: flex;
+        flex-direction: row;
+    }
+
+    table {
+        margin: 15px 0;
+        padding-bottom: 30px;
+    }
+}
+
+/**************************************
+ * Library Overrides
+***************************************/
+.fancybox-button--fullscreen,
+.fancybox-button--play,
+.fancybox-button--thumbs {
+    display: none !important;
+}
