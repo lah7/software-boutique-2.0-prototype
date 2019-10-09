@@ -124,7 +124,7 @@ class SoftwareBoutiqueController(object):
         _add_category("accessibility", "preferences-desktop-accessibility")
         _add_category("system", "applications-system")
         _add_category("themes", "preferences-desktop-theme")
-        webview.run_js("var CATEGORIES = [{0}]".format(",".join(category_js_payload)))
+        self.set_view_variable("CATEGORIES", "[" + ",".join(category_js_payload) + "]")
 
         # Ready!
         webview.run_js("build_view()")
@@ -177,6 +177,12 @@ class SoftwareBoutiqueController(object):
         except Exception:
             dbg.stdout("Internal Error: Cannot parse data for view!", dbg.error)
             return False
+
+    def set_view_variable(self, variable, data):
+        """
+        Updates a JS variable in the view containing JSON data.
+        """
+        webview.run_js("var {0} = {1};".format(variable, data))
 
 
 class Locales():
