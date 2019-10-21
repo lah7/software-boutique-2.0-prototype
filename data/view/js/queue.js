@@ -50,7 +50,7 @@ function queue_clear() {
 /*************************************************
  * Received update from the controller.
 *************************************************/
-function update_queue_status(data) {
+function update_queue_state(data) {
     // Provides status updates for the active item (e.g. installation % complete).
     // Updates the lower-left of the application and 'in progress' heading on queue page.
     //
@@ -60,10 +60,10 @@ function update_queue_status(data) {
     // state            ok                      Value either: "ok", "busy", "error"
     // action_text      Installing Caja (1 of.. Display this text for the action.
     // details_text     app_progress            Display this text for the details. Optional, can be blank.
-    // value            5                       Current value for progress bar. If -1, will pulsate.
+    // value            5                       Current value for progress bar. If -1, for indeterminate.
     // value_end        10                      Total value for progress bar. If 0, will be hidden.
 
-    _update_queue_status(data.state, data.action_text, data.details_text, data.value, data.value_end);
+    _update_queue_state(data.state, data.action_text, data.details_text, data.value, data.value_end);
 }
 
 function update_queue_list(data) {
@@ -236,7 +236,7 @@ function _update_queue_button() {
     // TODO: Queue length should reflect pending tasks.
 }
 
-function _update_queue_status(icon, action_text, details_text, value, value_end) {
+function _update_queue_state(icon, action_text, details_text, value, value_end) {
     // See update_queue_status() for parameters.
 
     var old_action_text = $("#progress-text").html();

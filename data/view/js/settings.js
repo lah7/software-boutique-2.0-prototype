@@ -1,4 +1,4 @@
-// Settings Array - should be updated when application runs.
+// Settings Array - set accordingly when application starts.
 var SETTINGS = {
     // Read-only
     "version": {
@@ -6,9 +6,9 @@ var SETTINGS = {
         "index": 0
     },
     "index": {
-        "day": 31,
-        "month": 12,
-        "year": 2019
+        "day": 0,
+        "month": 0,
+        "year": 0
     },
     "backends": {
         // FIXME: Should be 'false', controller to push dict.
@@ -28,15 +28,9 @@ var SETTINGS = {
 /*************************************************
  * Send update to the controller.
 *************************************************/
-// Retrieve current settings list.
-function settings_get_data() {
-    send_data({
-        "request": "settings_get_data"
-    });
-}
-
 // Set an individual key with a new value.
 function settings_set_key(key, value) {
+    SETTINGS[key] = value;
     send_data({
         "request": "settings_set_key",
         "key": key,
@@ -47,16 +41,7 @@ function settings_set_key(key, value) {
 /*************************************************
  * Received update from the controller.
 *************************************************/
-function settings_recv_data(data) {
-    // Callback when the controller has gathered the settings list.
-    //
-    // Variable         Example                 Description
-    // ---------------- ----------------------- -----------------------------------
-    // request          settings_recv_data      Required
-    // data             {"prop1": true}         Dictonary containing key data.
-
-    SETTINGS = JSON.parse(data.data);
-}
+// Controller does not respond.
 
 /*************************************************
  * Internal view functions to update the page.
@@ -97,7 +82,7 @@ function _set_page_settings() {
                             </tr>
                             <tr>
                                 <th>${get_string("backend_snap")}</th>
-                                <td>${SETTINGS.backend_snap ? get_string("backend_working") : get_string("backend_not_working")}</td>
+                                <td>${SETTINGS.backends.snap ? get_string("backend_working") : get_string("backend_not_working")}</td>
                             </tr>
                             <tr>
                                 <th>${get_string("backend_appstream")}</th>
@@ -114,7 +99,7 @@ function _set_page_settings() {
                 <right>
                     <group>
                         <label>
-                            <input type="checkbox" onclick="settings_set_key('hide_proprietary', this.checked)"/>
+                            <input type="checkbox" onclick="settings_set_key('hide_proprietary', this.checked)" ${SETTINGS.hide_proprietary === true ? "checked" : ""}/>
                             ${get_string("hide_proprietary")}
                         </label>
                         <help>${get_string("hide_proprietary_help")}</help>
@@ -122,7 +107,7 @@ function _set_page_settings() {
 
                     <group>
                         <label>
-                            <input type="checkbox" onclick="settings_set_key('show_advanced', this.checked)"/>
+                            <input type="checkbox" onclick="settings_set_key('show_advanced', this.checked)" ${SETTINGS.show_advanced === true ? "checked" : ""}/>
                             ${get_string("show_advanced")}
                         </label>
                         <help>${get_string("show_advanced_help")}</help>
@@ -130,7 +115,7 @@ function _set_page_settings() {
 
                     <group>
                         <label>
-                            <input type="checkbox" onclick="settings_set_key('precise_time', this.checked)"/>
+                            <input type="checkbox" onclick="settings_set_key('precise_time', this.checked)" ${SETTINGS.precise_time === true ? "checked" : ""}/>
                             ${get_string("precise_time")}
                         </label>
                         <help>${get_string("precise_time_help")}</help>
@@ -138,7 +123,7 @@ function _set_page_settings() {
 
                     <group>
                         <label>
-                            <input type="checkbox" onclick="settings_set_key('compact_list', this.checked)"/>
+                            <input type="checkbox" onclick="settings_set_key('compact_list', this.checked)" ${SETTINGS.compact_list === true ? "checked" : ""}/>
                             ${get_string("compact_list")}
                         </label>
                         <help>${get_string("compact_list_help")}</help>

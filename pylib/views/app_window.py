@@ -21,9 +21,9 @@ class ApplicationWindow(object):
     """
     Main thread for building and interacting with the application.
     """
-    def __init__(self, controller):
+    def __init__(self, app):
         self.webview = None
-        self.controller = controller
+        self.app = app
 
     def build(self, webview_obj, data_source, title):
         width = 900
@@ -85,7 +85,7 @@ class ApplicationWindow(object):
         Gtk.main()
 
     def _close(self, window, event):
-        self.controller.shutdown()
+        self.app.shutdown()
 
 
 def get_gtk3_theme_colours():

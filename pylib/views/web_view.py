@@ -10,15 +10,15 @@ class WebView(WebKit2.WebView):
     """
     Setting up the program's web browser and processing WebKit operations
     """
-    def __init__(self, dbg, controller):
+    def __init__(self, dbg, app):
         """__init__
 
         :param dbg: Dbg instance
-        :param controller: SoftwareBoutique instance
+        :param app: SoftwareBoutique instance
         """
         self.webkit = WebKit2
         self.webkit.WebView.__init__(self)
-        self.controller = controller
+        self.app = app
         self.inspector = False
 
         # Python <--> WebView communication
@@ -58,7 +58,7 @@ class WebView(WebKit2.WebView):
         Callback: On page change.
         """
         if not self.is_loading():
-            self.controller.start()
+            self.app.start()
 
     def _recv_data(self, view, frame):
         """
@@ -66,8 +66,8 @@ class WebView(WebKit2.WebView):
         """
         title = self.get_title()
         if title not in ["null", "", None]:
-            self.controller.recv_data(title)
-            # Reset title afterwards so the same data can be sent again.
+            self.app.recv_data(title)
+            # Reset title afterwards so another request can be sent again.
             self.run_js("document.title = ''")
 
     def send_data(self, data):

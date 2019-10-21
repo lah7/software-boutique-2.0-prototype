@@ -42,7 +42,6 @@ function request_app_list(category_id, element_id) {
         "category": category_id,
         "element": element_id
     });
-
 }
 
 function install_app(app_id) {
@@ -370,7 +369,7 @@ function _open_app_details(data) {
     //      "apt_packages": ["app1", "app1-data", "app1-doc"],
     //      "snap_name": "nameofsnap",
     //      "launch_cmd": "app1",
-    //      "tags": [], /* TODO: Curated only? may be unused */
+    //      "tags": [],
     //      "screenshots": ["/path/to/image1", "/path/to/image2"],
     //      "version": "20.04.1-ubuntu0",
     //      "installed": true,
@@ -388,8 +387,6 @@ function _set_page_details(data) {
     //
     // Open the details page providing more details about an application.
     //
-    var extra_details = SETTINGS.show_advanced;
-
     var screenshots = `<empty>${get_string('no_screenshot')}</empty>`;
     if (data.screenshots.length > 0) {
         screenshots = "";
@@ -408,7 +405,7 @@ function _set_page_details(data) {
 
     var rows = [];
     function __add_row(advanced, title, text) {
-        if (advanced === true && extra_details !== true)
+        if (advanced === true && SETTINGS.show_advanced === false)
             return;
         rows.push(`<tr><th>${title}</th><td>${text}</td></tr>`);
     }
@@ -476,7 +473,7 @@ function _set_page_details(data) {
             }
 
             // TODO: Improve look of each package
-            __add_row(false, get_string("packages"), data.apt_packages.join(", "));
+            __add_row(true, get_string("packages"), data.apt_packages.join(", "));
             break;
 
         case "snap":

@@ -43,6 +43,14 @@ from threading import Thread
 from shutil import rmtree
 
 __VERSION__ = "19.10.0"
+__INDEX__ = {
+    "revision": 0,
+    "last_updated": {
+        "day": 31,
+        "month": 12,
+        "year": 2019
+    }
+}
 
 try:
     import pylib.config as Config
@@ -62,11 +70,15 @@ except ImportError:
     import software_boutique.views.web_view as ViewWebView
 
 
-class SoftwareBoutiqueController(object):
+class SoftwareBoutique(object):
     """
     The main execution of the GUI.
     """
     def __init__(self):
+        """
+        Initalise controller and pre-initalise the application, like checking the
+        styling is present.
+        """
         data_source = Common.get_data_source()
 
         # Check the app's styles are compiled and can be read.
@@ -79,11 +91,10 @@ class SoftwareBoutiqueController(object):
                 dbg.stdout("Missing styles! Please run 'scripts/build-styles.sh' then try again.", dbg.error, 0)
             exit(1)
 
-        # User Preferences
-        if pref.read("advanced-mode", False) == True:
-            self.advanced_mode = True
-        else:
-            self.advanced_mode = False
+        # Prepare Controller
+        dbg.stdout("Spawning controller...", dbg.action, 1)
+        self.controller = SoftwareBoutiqueController(self)
+        dbg.stdout("Controller ready.", dbg.success, 1)
 
     def start(self):
         """
@@ -103,8 +114,7 @@ class SoftwareBoutiqueController(object):
             webview.run_js("$('body').addClass('dark')")
 
         # Pass locales to the view
-        locales = Locales.get_locales()
-        webview.run_js("var LOCALE = " + json.dumps(locales, ensure_ascii=False))
+        self.set_view_variable("LOCALE", Locales.get_locales())
 
         # Pass categories and their icons to the view.
         category_js_payload = []
@@ -124,17 +134,44 @@ class SoftwareBoutiqueController(object):
         _add_category("accessibility", "preferences-desktop-accessibility")
         _add_category("system", "applications-system")
         _add_category("themes", "preferences-desktop-theme")
-        self.set_view_variable("CATEGORIES", "[" + ",".join(category_js_payload) + "]")
+        self.set_view_variable("CATEGORIES", "[{0}]".format(",".join(category_js_payload)))
+
+        # Load user settings
+        self.set_view_variable("SETTINGS", {
+                "version": {
+                    "boutique": __VERSION__,
+                    "index": __INDEX__["revision"]
+                },
+                "index": {
+                    "day": __INDEX__["last_updated"]["day"],
+                    "month": __INDEX__["last_updated"]["month"],
+                    "year": __INDEX__["last_updated"]["year"]
+                },
+                "backends": {
+                    "curated": self.controller.available_backends["curated"],
+                    "apt": self.controller.available_backends["apt"],
+                    "snap": self.controller.available_backends["snap"],
+                    "appstream": self.controller.available_backends["appstream"]
+                },
+                "hide_proprietary": pref.read("hide_proprietary", False),
+                "show_advanced": pref.read("show_advanced", False),
+                "precise_time": pref.read("precise_time", False),
+                "compact_list": pref.read("compact_list", False)
+            })
 
         # Ready!
         webview.run_js("build_view()")
 
     def shutdown(self):
         """
-        The application is requested to exit. Gracefully stops operations.
+        The application requested to exit. Gracefully stop the execution.
         """
         dbg.stdout("Closing Software Boutique...", dbg.action, 1)
-        exit(0)
+        if self.controller.shutdown():
+            exit(0)
+        else:
+            # TODO: Show message to the user. Controller could return error codes.
+            dbg.stdout("Not possible to quit gracefully right now.", dbg.warning)
 
     def recv_data(self, raw):
         """
@@ -158,8 +195,7 @@ class SoftwareBoutiqueController(object):
             dbg.stdout(data, dbg.error)
             return False
 
-        if request == "ping":
-            self.send_data({"request": "ping"})
+        self.controller.process_view_request(request, data)
 
     def send_data(self, raw):
         """
@@ -182,7 +218,288 @@ class SoftwareBoutiqueController(object):
         """
         Updates a JS variable in the view containing JSON data.
         """
-        webview.run_js("var {0} = {1};".format(variable, data))
+        dbg.stdout("Setting view variable '{0}' with data: {1}".format(variable, data), dbg.debug, 2)
+        if type(data) == dict:
+            data = json.dumps(data, ensure_ascii=False)
+
+        webview.run_js("{0} = {1};".format(variable, data))
+
+
+class SoftwareBoutiqueController(object):
+    """
+    The middleman for requests and responses passed between the view and model.
+    """
+    def __init__(self, app):
+        """
+        Prepare the backend and main application.
+        """
+        self.app = app
+        self.send_data = app.send_data
+
+        # FIXME: Programmatically detect avaliable backends.
+        self.available_backends = {
+            "apt": True,
+            "snap": True,
+            "curated": True,
+            "appstream": False
+        }
+
+    ##################################################
+    def _example(self):
+        locales = Locales.get_locales()
+
+        # Update lower-left current status with Ready status
+        self.update_queue_state("ok", locales["queue_ready"], None, 0, -1)
+
+        # Dummy queue data - stored in the controller. View has copy (used to view page)
+        queue = [
+            {
+                "id": "apt:app1",           # This ID is the view's way of telling the model/controller what the source is.
+                "name": "Caja",             # Human name for application
+                "icon": "",                 # Path or empty to show generic icon
+                "action": "install",        # install, remove
+                "state": "pending",         # pending, processing, processed
+                "success": False            # If "processed", states whether operation was successful.
+            },
+            {
+                "id": "snap:ubuntu-mate-welcome",
+                "name": "Ubuntu MATE Welcome",
+                "icon": "",
+                "action": "install",
+                "state": "processed",
+                "success": True
+            }
+        ]
+
+        # Dummy progress bar
+        app_name = "Caja"
+        current_MB = 0
+        total_MB = 5
+        # These strings are human-readable for translators, but are intended to be manipulated, e.g. "XX", "1", "2"
+        action_text = locales["queue_downloading"].replace("XX", app_name).replace("1", str(current)).replace("2", str(total))
+        details_text = locales["queue_progress"].replace("1", str(current_MB)).replace("2", str(total_MB))
+
+        # Update lower-left current status with new status
+        self.update_queue_state("busy", action_text, details_text, str(current_MB), str(total_MB))
+
+        # Update the view when the queue changes. This would update the page.
+        self.update_queue_list(data)
+
+    ##################################################
+
+    def process_view_request(self, request_name, data):
+        """
+        Processes a request sent from the view by matching the request to the
+        function and passing the Python dictonary (data).
+        """
+        bindings = {
+            # Callbacks for queued items
+            "update_queue_list": self.update_queue_list,
+            "update_queue_state": self.update_queue_state,
+
+            # Queue requests
+            "queue_clear": self.queue_clear,
+            "queue_drop_item": self.queue_drop_item,
+
+            # App requests
+            "request_app_list": self.request_app_list,
+            "app_info": self.app_info,
+            "app_launch": self.app_launch,
+            "app_show_error": self.app_show_error,
+            "app_reinstall": self.app_reinstall,
+            "app_remove": self.app_remove,
+            "app_install": self.app_install,
+
+            # General
+            "open_uri": self.open_uri,
+            "settings_set_key": self.settings_set_key
+        }
+
+        try:
+            bindings[request_name](data)
+        except KeyError as e:
+            dbg.stdout("Request failed: " + request_name, dbg.error)
+            dbg.stdout("Exception:", dbg.error)
+            raise e
+            return False
+
+    def shutdown(self):
+        """
+        The user requested to quit Software Boutique. Gracefully stop all operations
+        and threads.
+
+        If it is not possible to stop right now, return False.
+        """
+        return True
+
+    def open_uri(self, data):
+        """
+        Opens a specified URI. Only HTTP/HTTPS is accepted.
+        """
+        uri = data["uri"]
+
+        if uri[:4] == "http":
+            webbrowser.open(uri, new=0, autoraise=True)
+
+    def settings_set_key(self, data):
+        """
+        Writes a new value to a key for this application's preferences.
+        """
+        key = data["key"]
+        value = data["value"]
+
+        pref.write(key, value)
+
+    def update_queue_list(self, queue):
+        """
+        Callback: For when items in the queue has changed.
+
+        Params:
+            queue           List containing queue data.
+        """
+        self.send_data({
+            "request": "update_queue_list",
+            "queue": queue
+        })
+
+    def update_queue_state(self, state, action_text, details_text, value, value_end):
+        """
+        Callback: When the current item in the queue has changed state.
+
+        Params:
+            state           String of either: "ok", "busy", "error". Determines icon.
+            action_text     String indicating the main operation.
+            details_text    Optional string for action text, e.g. download size or verbose progress text.
+            value           Value for progress bar, e.g. current download size. Use -1 for indeterminate.
+            value_end       Max value for progress bar, e.g. total download size. Use 0 to hide progress.
+        """
+        self.send_data({
+            "request": "update_queue_state",
+            "state": state,
+            "action_text": action_text,
+            "details_text": details_text,
+            "value": value,
+            "value_end": value_end
+        })
+
+    def queue_clear(self, data):
+        """
+        Request: User clears all completed items in the queue.
+        """
+        pass
+
+    def queue_drop_item(self, data):
+        """
+        Request: User drops a specific application from the queue.
+        If the item is being processed, the changes should abort (or revert) if possible.
+        """
+        pass
+
+    def request_app_list(self, data):
+        """
+        Request: User is listing all the applications in a specific category.
+        """
+        category = data["category"]
+        element = data["element"]
+
+        # FIXME: Dummy response
+        self.send_data({
+            "request": "populate_app_list",
+            "category": category,
+            "element": element,
+            "apps": [
+                {
+                    "name": "Application 1",
+                    "id": "apt:app1",
+                    "backend": "apt",
+                    "icon": "",
+                    "installed": True,
+                    "summary": "This is a short line describing this application"
+                },
+                {
+                    "name": "Application 2",
+                    "id": "snap:app2",
+                    "backend": "snap",
+                    "icon": "",
+                    "installed": False,
+                    "summary": "This is a short line describing this application"
+                },
+                {
+                    "name": "Application 3",
+                    "id": "curated:app3",
+                    "backend": "curated",
+                    "icon": "",
+                    "installed": True,
+                    "summary": "This is a short line describing this application"
+                }
+            ]
+        })
+
+    def app_info(self, data):
+        """
+        Request: User is viewing details for a specific application.
+        """
+        # FIXME: Dummy response
+        self.send_data({
+            "request": "open_app_details",
+            "data": {
+                "name": "Application 1",
+                "id": "apt:app1", # This ID is the view's way of telling the model/controller what the source is.
+                "backend": "apt",
+                "icon": "", # Path to icon, or blank for generic icon.
+                "summary": "Calculator for the GTK desktop",
+                "description": "This is line 1.\nThis is line 2.\nThis is line 3.",
+                "nonfree": False,
+                "free_license": "GNU General Public License",
+                "arch": ["i386", "amd64", "armhf", "arm64", "powerpc"],
+                "developer": "Developer Name",
+                "developer_url": "https://developer.example.com",
+                "website_url": "https://example.com",
+                "support_url": "https://support.example.com",
+                "apt_source": "ppa:org/name", # "main", "universe", "multiverse", "restricted", "partner", "ppa:org/name", "https://repo.example.com"
+                "apt_packages": ["app1", "app1-data", "app1-doc"],
+                "snap_name": "nameofsnap",
+                "launch_cmd": "app1",
+                "tags": [], # TODO: Curated only? may be unused
+                "screenshots": [
+                    "/path/to/screenshot-1.jpg",
+                    "/path/to/screenshot-2.jpg"
+                ],
+                "version": "20.04.1-ubuntu0",
+                "installed": True,
+                "install_date": [2019, 12, 31, 23, 59] # [YYYY, MM, DD, HH, MM]
+            }
+        })
+
+    def app_launch(self, data):
+        """
+        Request: User would like to run an application, if it has an executable to launch.
+        """
+        pass
+
+    def app_show_error(self, data):
+        """
+        Callback: One of the items in the queue encountered an error.
+        """
+        pass
+
+    def app_reinstall(self, data):
+        """
+        Request: User would like to re-install this application.
+        """
+        pass
+
+    def app_remove(self, data):
+        """
+        Request: User would like to remove this application.
+        """
+        pass
+
+    def app_install(self, data):
+        """
+        Request: User would like to install this application.
+        """
+        pass
 
 
 class Locales():
@@ -337,68 +654,65 @@ class Locales():
         }
 
 
-class CommandLine():
-    def parse_parameters():
-        global _
-        parser = argparse.ArgumentParser(add_help=False)
-        parser._optionals.title = _("Optional arguments")
-        parser.add_argument("-h", "--help", help=_("Show this help message and exit"), action="help")
-        parser.add_argument("-v", "--version", help=_("Print progran version and exit"), action="store_true")
-        parser.add_argument("-d", "--verbose", help=_("Be verbose for diagnosis/debugging"), action="store_true")
-        parser.add_argument("--arch", help=_("Show index listings for a specific architecture, e.g. armhf"))
-        parser.add_argument("--codename", help=_("Show index listings for a specific release, e.g. bionic"))
-        parser.add_argument("--locale", help=_("Force locale for interface"))
-        parser.add_argument("--no-apt", help=_("Disable apt (PackageKit) backend"))
-        parser.add_argument("--no-snap", help=_("Disable snapd backend"))
+def parse_parameters():
+    """
+    Responsible for processing arguments entered at the command line.
+    """
+    global _
+    parser = argparse.ArgumentParser(add_help=False)
+    parser._optionals.title = _("Optional arguments")
+    parser.add_argument("-h", "--help", help=_("Show this help message and exit"), action="help")
+    parser.add_argument("-v", "--version", help=_("Print progran version and exit"), action="store_true")
+    parser.add_argument("-d", "--verbose", help=_("Be verbose for diagnosis/debugging"), action="store_true")
+    parser.add_argument("--arch", help=_("Show index listings for a specific architecture, e.g. armhf"))
+    parser.add_argument("--codename", help=_("Show index listings for a specific release, e.g. bionic"))
+    parser.add_argument("--locale", help=_("Force locale for interface"))
+    parser.add_argument("--no-apt", help=_("Disable apt (PackageKit) backend"))
+    parser.add_argument("--no-snap", help=_("Disable snapd backend"))
 
-        # For development use only - developer tools and frontend testing
-        parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
+    # For development use only - developer tools and frontend testing
+    parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
 
-        args = parser.parse_args()
+    args = parser.parse_args()
 
-        if args.version:
-            dbg.stdout("{0} {1}".format(_("Version"), __VERSION__))
-            exit(0)
+    if args.version:
+        dbg.stdout("{0} {1}".format(_("Version"), __VERSION__))
+        exit(0)
 
-        if args.verbose:
-            dbg.verbose_level = 1
-            dbg.stdout("Verbose enabled", dbg.debug, 1)
+    if args.verbose:
+        dbg.verbose_level = 1
+        dbg.stdout("Verbose enabled", dbg.debug, 1)
 
-        if args.inspect:
-            dbg.verbose_level = 2
+    if args.inspect:
+        dbg.verbose_level = 2
 
-        if args.arch:
-            Config.os_arch = args.arch
-            dbg.stdout("=> Showing listings for arch: " + args.arch, dbg.debug)
+    if args.arch:
+        Config.os_arch = args.arch
+        dbg.stdout("=> Showing listings for arch: " + args.arch, dbg.debug)
 
-        if args.codename:
-            Config.os_codename = args.codename
-            dbg.stdout("=> Showing listings for release: " + args.codename, dbg.debug)
+    if args.codename:
+        Config.os_codename = args.codename
+        dbg.stdout("=> Showing listings for release: " + args.codename, dbg.debug)
 
-        if args.locale:
-            _ = Common.setup_translations(__file__, "software-boutique", arg.locale)
-            dbg.stdout("=> Forcing locale: " + arg.locale, dbg.debug)
+    if args.locale:
+        _ = Common.setup_translations(__file__, "software-boutique", arg.locale)
+        dbg.stdout("=> Forcing locale: " + arg.locale, dbg.debug)
 
-        if args.no_apt:
-            dbg.stdout("=> PackageKit disabled via argument", dbg.debug, 1)
+    if args.no_apt:
+        dbg.stdout("=> PackageKit disabled via argument", dbg.debug, 1)
 
-        if args.no_snap:
-            dbg.stdout("=> Snapd disabled via argument", dbg.debug, 1)
+    if args.no_snap:
+        dbg.stdout("=> Snapd disabled via argument", dbg.debug, 1)
 
 
 if __name__ == "__main__":
     dbg = Common.Debugging()
     _ = Common.setup_translations(__file__, "software-boutique")
-    CommandLine.parse_parameters()
+    parse_parameters()
     pref = Preferences.Preferences(dbg, "preferences", "software-boutique")
 
-    # Init controller
-    controller = SoftwareBoutiqueController()
-
-    # Init window
-    webview = ViewWebView.WebView(dbg, controller)
-    main = ViewAppWindow.ApplicationWindow(controller)
+    app = SoftwareBoutique()
+    webview = ViewWebView.WebView(dbg, app)
+    main = ViewAppWindow.ApplicationWindow(app)
     main.build(webview, Common.get_data_source(), Locales.get_locales()["title"])
-
     main.run()
-

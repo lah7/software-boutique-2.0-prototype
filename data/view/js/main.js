@@ -7,21 +7,26 @@ function send_data(json) {
     document.title = data;
 }
 
-function open_uri(uri) {
-    send_data({
-        "request": "open_uri",
-        "uri": uri
-    });
-}
-
 /***************************************
  * Controller -> View
  *  e.g. update state
 ***************************************/
 function recv_data(data) {
     switch(data.request) {
-        case "queue_update_state":
-            send_data({"request": "ping"});
+        // queue.js
+        case "update_queue_list":
+            update_queue_list(data);
+            break;
+        case "update_queue_state":
+            update_queue_state(data);
+            break;
+
+        // apps.js
+        case "populate_app_list":
+            populate_app_list(data);
+            break;
+        case "open_app_details":
+            open_app_details(data);
             break;
     }
 }
@@ -39,8 +44,16 @@ function get_svg(name) {
     return svg[name];
 }
 
+function open_uri(uri) {
+    send_data({
+        "request": "open_uri",
+        "uri": uri
+    });
+}
+
 // Returns localised relative or absolute date
 function get_date(day, month, year) {
+    // TODO: Implement logic
     return day + "/" + month + "/" + year;
 }
 
@@ -94,7 +107,7 @@ function build_view() {
 
     $("body").show();
     _update_queue_button();
-    _update_queue_status("ok", get_string("queue_ready"), get_string("queue_ready_state"), 0, -1);
+    _update_queue_state("ok", get_string("queue_ready"), get_string("queue_ready_state"), 0, -1);
 
     // Open default tab
     // TODO: Add user option to change this later.
