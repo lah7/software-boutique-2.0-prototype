@@ -77,11 +77,25 @@ class ApplicationWindow(object):
             window.set_position(Gtk.WindowPosition.CENTER)
 
         window.connect("delete-event", self._close)
-        window.show_all()
+        self.window = window
 
     def run(self):
         signal.signal(signal.SIGINT, signal.SIG_DFL)
         Gtk.main()
+
+    def show_window(self):
+        """
+        Opens the GTK+ window after the runtime has initialised. This is to prevent
+        the window flashing colours as the window and WebKit initialises.
+        """
+        GLib.idle_add(self._show_window)
+
+    def _show_window(self):
+        """
+        Private function to actually show the window.
+        """
+        self.window.show_all()
+        return GLib.SOURCE_REMOVE
 
     def _close(self, window, event):
         self.app.shutdown()

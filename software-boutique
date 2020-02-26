@@ -92,7 +92,7 @@ class SoftwareBoutique(object):
             exit(1)
 
         # Prepare Controller
-        dbg.stdout("Spawning controller...", dbg.action, 1)
+        dbg.stdout("Initalizing Controller...", dbg.action, 1)
         self.controller = SoftwareBoutiqueController(self)
         dbg.stdout("Controller ready.", dbg.success, 1)
 
@@ -161,6 +161,7 @@ class SoftwareBoutique(object):
 
         # Ready!
         webview.run_js("build_view()")
+        main.show_window()
 
     def shutdown(self):
         """
