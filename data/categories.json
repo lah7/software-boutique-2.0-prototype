@@ -1,0 +1,50 @@
+[
+    {
+        "id": "accessories",
+        "gtk_icon": "applications-accessories"
+    },
+    {
+        "id": "development",
+        "gtk_icon": "applications-development"
+    },
+    {
+        "id": "education",
+        "gtk_icon": "applications-science"
+    },
+    {
+        "id": "games",
+        "gtk_icon": "applications-games"
+    },
+    {
+        "id": "graphics",
+        "gtk_icon": "applications-graphics"
+    },
+    {
+        "id": "internet",
+        "gtk_icon": "applications-internet"
+    },
+    {
+        "id": "multimedia",
+        "gtk_icon": "applications-multimedia"
+    },
+    {
+        "id": "office",
+        "gtk_icon": "applications-office"
+    },
+    {
+        "id": "server",
+        "gtk_icon": "network-server"
+    },
+    {
+        "id": "accessibility",
+        "gtk_icon": "preferences-desktop-accessibility"
+    },
+    {
+        "id": "system",
+        "gtk_icon": "applications-system"
+    },
+    {
+        "id": "themes",
+        "gtk_icon": "preferences-desktop-theme"
+    }
+]

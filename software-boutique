@@ -117,24 +117,15 @@ class SoftwareBoutique(object):
         self.set_view_variable("LOCALE", Locales.get_locales())
 
         # Pass categories and their icons to the view.
-        category_js_payload = []
-        def _add_category(uid, gtk_name):
-            icon_path = ViewAppWindow.get_gtk_icon_path(gtk_name, 32, data_source + "/view/ui/categories/" + uid + ".svg")
-            category_js_payload.append('{"id": "' + uid + '", "icon_path": "' + icon_path + '"}')
+        categories_path = os.path.join(data_source, "categories.json")
+        fallback_icon = os.path.join(data_source, "view/ui/generic-package.svg")
 
-        _add_category("accessories", "applications-accessories")
-        _add_category("development", "applications-development")
-        _add_category("education", "applications-science")
-        _add_category("games", "applications-games")
-        _add_category("graphics", "applications-graphics")
-        _add_category("internet", "applications-internet")
-        _add_category("multimedia", "applications-multimedia")
-        _add_category("office", "applications-office")
-        _add_category("server", "network-server")
-        _add_category("accessibility", "preferences-desktop-accessibility")
-        _add_category("system", "applications-system")
-        _add_category("themes", "preferences-desktop-theme")
-        self.set_view_variable("CATEGORIES", "[{0}]".format(",".join(category_js_payload)))
+        with open(categories_path, "r") as f:
+            categories = json.load(f)
+
+        for category in categories:
+            category["icon_path"] = ViewAppWindow.get_gtk_icon_path(category["gtk_icon"], 24, fallback_icon)
+        self.set_view_variable("CATEGORIES", categories)
 
         # Load user settings
         self.set_view_variable("SETTINGS", {
