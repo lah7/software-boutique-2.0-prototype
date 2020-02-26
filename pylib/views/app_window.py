@@ -7,7 +7,7 @@ import signal
 import gi
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gdk, Gtk
+from gi.repository import GLib, Gdk, Gtk
 
 ## FIXME: Temporary workaround to ensure the snap works when proctitle is not available on the host.
 try:
@@ -57,7 +57,6 @@ class ApplicationWindow(object):
         sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         sw.add(self.webkit)
         pane = Gtk.Paned(orientation = Gtk.Orientation.HORIZONTAL)
-        pane.modify_bg(Gtk.StateType(0), Gdk.Color(128, 128, 128))
 
         # GTK Window -> Paned -> ScrolledWindow -> WebKit + Inspector (debugging)
         pane.add(sw)
@@ -102,14 +101,42 @@ def get_gtk3_theme_colours():
     highlight         Menu highlight (e.g. selection colour or button dialog border)
     dark              Boolean to indicate the theme is dark.
     """
+    # Code adapted from:
+    # https://github.com/ubuntu-mate/mate-hud/blob/master/usr/lib/mate-hud/mate-hud#L175
 
-    # FIXME: Example only: KDE Breeze-dark theme
+    window = Gtk.Window()
+    style_context = window.get_style_context()
+
+    def _rgba_to_hex(color):
+       """
+       Return hexadecimal string for :class:`Gdk.RGBA` `color`.
+       """
+       return "#{0:02x}{1:02x}{2:02x}".format(
+                                        int(color.red   * 255),
+                                        int(color.green * 255),
+                                        int(color.blue  * 255))
+
+    def _get_color(style_context, preferred_color, fallback_color):
+        color = _rgba_to_hex(style_context.lookup_color(preferred_color)[1])
+        if color == "#000000":
+            color = _rgba_to_hex(style_context.lookup_color(fallback_color)[1])
+        return color
+
+    bg_color = _get_color(style_context, "base_color", "theme_bg_color")
+    bg_color_dark = _get_color(style_context, "dark_bg_color", "theme_bg_color")
+    fg_color = _get_color(style_context, "fg_color", "theme_fg_color")
+    fg_color_dark = _get_color(style_context, "dark_fg_color", "theme_fg_color")
+    selected_bg_color = _rgba_to_hex(style_context.lookup_color("theme_selected_bg_color")[1])
+    selected_fg_color = _rgba_to_hex(style_context.lookup_color("theme_selected_fg_color")[1])
+    text_color = _rgba_to_hex(style_context.lookup_color("theme_text_color")[1])
+
     return {
-        "page_bg": "#232629",
-        "page_fg": "#eff0f1",
-        "header_bg": "#31363b",
-        "header_fg": "#eff0f1",
-        "highlight": "#3daee9",
+        "page_bg": bg_color,
+        "page_fg": fg_color,
+        "header_bg": bg_color_dark,
+        "header_fg": fg_color_dark,
+        "highlight_bg": selected_bg_color,
+        "highlight_fg": selected_fg_color,
         "dark": True
     }
 
