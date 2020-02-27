@@ -140,8 +140,8 @@ def get_gtk3_theme_colours():
     bg_color_dark = _get_color(style_context, "dark_bg_color", "theme_bg_color")
     fg_color = _get_color(style_context, "fg_color", "theme_fg_color")
     fg_color_dark = _get_color(style_context, "dark_fg_color", "theme_fg_color")
-    selected_bg_color = _rgba_to_hex(style_context.lookup_color("theme_selected_bg_color")[1])
-    selected_fg_color = _rgba_to_hex(style_context.lookup_color("theme_selected_fg_color")[1])
+    selected_bg_color = _get_color(style_context, "selected_bg_color", "theme_selected_bg_color")
+    selected_fg_color = _get_color(style_context, "selected_fg_color", "theme_selected_fg_color")
     text_color = _rgba_to_hex(style_context.lookup_color("theme_text_color")[1])
 
     return {

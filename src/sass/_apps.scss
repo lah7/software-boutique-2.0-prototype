@@ -40,11 +40,15 @@ categories {
 
         &:hover,
         &:focus {
-            border-color: var(--highlight);
+            border-color: var(--highlight_bg);
         }
 
         &.active {
-            background-color: var(--highlight);
+            background-color: var(--highlight_bg);
+
+            label {
+                color: var(--highlight_fg);
+            }
         }
     }
 }
@@ -139,11 +143,11 @@ app-list {
 
         &:hover,
         &:focus {
-            border-color: var(--highlight);
+            border-color: var(--highlight_bg);
         }
 
         &:active {
-            background-color: var(--highlight);
+            background-color: var(--highlight_bg);
         }
     }
 
@@ -184,7 +188,7 @@ app-list {
         }
 
         metadata {
-            color: var(--highlight);
+            color: var(--highlight_fg);
         }
 
         button-group {
@@ -205,7 +209,7 @@ app-list {
     }
 
     app.installed {
-        box-shadow: 0px 0px 2px 2px var(--highlight);
+        box-shadow: 0px 0px 2px 2px var(--highlight_bg);
         position: relative;
 
         install-check {
@@ -215,13 +219,13 @@ app-list {
             top: -12px;
 
             svg {
-                background: var(--page_bg);
+                background: var(--highlight_fg);
                 border-radius: 50%;
                 width: 24px;
                 height: 24px;
 
                 path {
-                    fill: var(--highlight);
+                    fill: var(--highlight_bg);
                 }
             }
         }
@@ -339,7 +343,7 @@ app-list {
     }
 
     a {
-        color: var(--highlight);
+        color: var(--highlight_fg);
     }
 
     p {

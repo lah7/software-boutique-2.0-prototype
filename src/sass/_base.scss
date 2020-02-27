@@ -11,7 +11,8 @@ body {
 }
 
 ::selection {
-    background: var(--highlight);
+    background: var(--highlight_bg);
+    color: var(--highlight_fg);
 }
 
 hr {
@@ -109,7 +110,7 @@ content > .content {
 
 code {
     font-family: $monospace-font;
-    color: var(--highlight);
+    color: var(--highlight_fg);
 }
 
 blockquote {
