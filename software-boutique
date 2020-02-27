@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 # -*- coding:utf-8 -*-
 #
-# Copyright (C) 2015-2019 Luke Horwell <code@horwell.me>
-# Copyright (C) 2015-2018 Martin Wimpress <code@flexion.org>
-#
 # Software Boutique is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -16,6 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Software Boutique. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (C) 2015-2020 Luke Horwell <code@horwell.me>
+# Copyright (C) 2015-2018 Martin Wimpress <code@flexion.org>
 #
 
 """
@@ -42,8 +42,8 @@ from datetime import datetime
 from threading import Thread
 from shutil import rmtree
 
-__VERSION__ = "19.10.0"
 __INDEX__ = {
+__VERSION__ = "20.04.0"
     "revision": 0,
     "last_updated": {
         "day": 31,
@@ -52,22 +52,27 @@ __INDEX__ = {
     }
 }
 
-try:
-    import pylib.config as Config
-    import pylib.common as Common
-    import pylib.distro as Distro
-    import pylib.preferences as Preferences
-    import pylib.views.app_window as ViewAppWindow
-    import pylib.views.notification as ViewNotification
-    import pylib.views.web_view as ViewWebView
-except ImportError:
-    import software_boutique.config as Config
-    import software_boutique.common as Common
-    import software_boutique.distro as Distro
-    import software_boutique.preferences as Preferences
-    import software_boutique.views.app_window as ViewAppWindow
-    import software_boutique.views.notification as ViewNotification
-    import software_boutique.views.web_view as ViewWebView
+# Import Software Boutique's Python modules, either relatively (development)
+# or system-wide.
+if os.path.exists(os.path.dirname(__file__) + "/pylib/"):
+    try:
+        import pylib as SBLib
+    except (ImportError, Exception) as e:
+        print("Failed to import modules relatively.\n")
+        raise e
+else:
+    try:
+        import software_boutique as SBLib
+    except (ImportError, Exception) as e:
+        print("Failed to initalise this application's Python modules!\n")
+        raise e
+
+Common = SBLib.common
+Controller = SBLib.controller
+Locales = SBLib.locales.LOCALES
+Preferences = SBLib.preferences
+AppWindow = SBLib.views.app_window
+WebView = SBLib.views.web_view
 
 
 class SoftwareBoutique(object):
@@ -93,7 +98,7 @@ class SoftwareBoutique(object):
 
         # Prepare Controller
         dbg.stdout("Initalizing Controller...", dbg.action, 1)
-        self.controller = SoftwareBoutiqueController(self)
+        self.controller = Controller.SoftwareBoutiqueController(self, args)
         dbg.stdout("Controller ready.", dbg.success, 1)
 
     def start(self):
@@ -104,7 +109,7 @@ class SoftwareBoutique(object):
         data_source = Common.get_data_source()
 
         # Apply current theme colours to view
-        gtk_colours = ViewAppWindow.get_gtk3_theme_colours()
+        gtk_colours = AppWindow.get_gtk3_theme_colours()
         css_keys = []
         for css_variable in gtk_colours.keys():
             css_keys.append("--{0}: {1}".format(css_variable, gtk_colours[css_variable]))
@@ -114,7 +119,7 @@ class SoftwareBoutique(object):
             webview.run_js("$('body').addClass('dark')")
 
         # Pass locales to the view
-        self.set_view_variable("LOCALE", Locales.get_locales())
+        self.set_view_variable("LOCALE", Locales)
 
         # Pass categories and their icons to the view.
         categories_path = os.path.join(data_source, "categories.json")
@@ -124,7 +129,7 @@ class SoftwareBoutique(object):
             categories = json.load(f)
 
         for category in categories:
-            category["icon_path"] = ViewAppWindow.get_gtk_icon_path(category["gtk_icon"], 24, fallback_icon)
+            category["icon_path"] = AppWindow.get_gtk_icon_path(category["gtk_icon"], 24, fallback_icon)
         self.set_view_variable("CATEGORIES", categories)
 
         # Load user settings
@@ -217,429 +222,6 @@ class SoftwareBoutique(object):
         webview.run_js("{0} = {1};".format(variable, data))
 
 
-class SoftwareBoutiqueController(object):
-    """
-    The middleman for requests and responses passed between the view and model.
-    """
-    def __init__(self, app):
-        """
-        Prepare the backend and main application.
-        """
-        self.app = app
-        self.send_data = app.send_data
-
-        # FIXME: Programmatically detect avaliable backends.
-        self.available_backends = {
-            "apt": True,
-            "snap": True,
-            "curated": True,
-            "appstream": False
-        }
-
-    ##################################################
-    def _example(self):
-        locales = Locales.get_locales()
-
-        # Update lower-left current status with Ready status
-        self.update_queue_state("ok", locales["queue_ready"], None, 0, -1)
-
-        # Dummy queue data - stored in the controller. View has copy (used to view page)
-        queue = [
-            {
-                "id": "apt:app1",           # This ID is the view's way of telling the model/controller what the source is.
-                "name": "Caja",             # Human name for application
-                "icon": "",                 # Path or empty to show generic icon
-                "action": "install",        # install, remove
-                "state": "pending",         # pending, processing, processed
-                "success": False            # If "processed", states whether operation was successful.
-            },
-            {
-                "id": "snap:ubuntu-mate-welcome",
-                "name": "Ubuntu MATE Welcome",
-                "icon": "",
-                "action": "install",
-                "state": "processed",
-                "success": True
-            }
-        ]
-
-        # Dummy progress bar
-        app_name = "Caja"
-        current_MB = 0
-        total_MB = 5
-        # These strings are human-readable for translators, but are intended to be manipulated, e.g. "XX", "1", "2"
-        action_text = locales["queue_downloading"].replace("XX", app_name).replace("1", str(current)).replace("2", str(total))
-        details_text = locales["queue_progress"].replace("1", str(current_MB)).replace("2", str(total_MB))
-
-        # Update lower-left current status with new status
-        self.update_queue_state("busy", action_text, details_text, str(current_MB), str(total_MB))
-
-        # Update the view when the queue changes. This would update the page.
-        self.update_queue_list(data)
-
-    ##################################################
-
-    def process_view_request(self, request_name, data):
-        """
-        Processes a request sent from the view by matching the request to the
-        function and passing the Python dictonary (data).
-        """
-        bindings = {
-            # Callbacks for queued items
-            "update_queue_list": self._update_queue_list,
-            "update_queue_state": self._update_queue_state,
-
-            # Queue requests
-            "queue_clear": self._queue_clear,
-            "queue_drop_item": self._queue_drop_item,
-
-            # App requests
-            "request_app_list": self._request_app_list,
-            "app_info": self._app_info,
-            "app_launch": self._app_launch,
-            "app_show_error": self._app_show_error,
-            "app_reinstall": self._app_reinstall,
-            "app_remove": self._app_remove,
-            "app_install": self._app_install,
-
-            # General
-            "open_uri": self._open_uri,
-            "settings_set_key": self._settings_set_key
-        }
-
-        try:
-            bindings[request_name](data)
-        except KeyError as e:
-            dbg.stdout("Request failed: " + request_name, dbg.error)
-            dbg.stdout("Exception:", dbg.error)
-            raise e
-            return False
-
-    def shutdown(self):
-        """
-        The user requested to quit Software Boutique. Gracefully stop all operations
-        and threads.
-
-        If it is not possible to stop right now, return False.
-        """
-        return True
-
-    def _open_uri(self, data):
-        """
-        Opens a specified URI. Only HTTP/HTTPS is accepted.
-        """
-        uri = data["uri"]
-
-        if uri[:4] == "http":
-            webbrowser.open(uri, new=0, autoraise=True)
-
-    def _settings_set_key(self, data):
-        """
-        Writes a new value to a key for this application's preferences.
-        """
-        key = data["key"]
-        value = data["value"]
-
-        pref.write(key, value)
-
-    def _update_queue_list(self, queue):
-        """
-        Callback: For when items in the queue has changed.
-
-        Params:
-            queue           List containing queue JSON data.
-        """
-        self.send_data("update_queue_list", queue)
-
-    def _update_queue_state(self, state, action_text, details_text, value, value_end):
-        """
-        Callback: When the current item in the queue has changed state.
-
-        Params:
-            state           String of either: "ok", "busy", "error". Determines icon.
-            action_text     String indicating the main operation.
-            details_text    Optional string for action text, e.g. download size or verbose progress text.
-            value           Value for progress bar, e.g. current download size. Use -1 for indeterminate.
-            value_end       Max value for progress bar, e.g. total download size. Use 0 to hide progress.
-        """
-        self.send_data("update_queue_state", {
-            "state": state,
-            "action_text": action_text,
-            "details_text": details_text,
-            "value": value,
-            "value_end": value_end
-        })
-
-    def _queue_clear(self, data):
-        """
-        Request: User clears all completed items in the queue.
-        """
-        pass
-
-    def _queue_drop_item(self, data):
-        """
-        Request: User drops a specific application from the queue.
-        If the item is being processed, the changes should abort (or revert) if possible.
-        """
-        pass
-
-    def _request_app_list(self, data):
-        """
-        Request: User is listing all the applications in a specific category.
-        """
-        category = data["category"]
-        element = data["element"]
-
-        # FIXME: Dummy response
-        self.send_data("populate_app_list", {
-            "category": category,
-            "element": element,
-            "apps": [
-                {
-                    "name": "Application 1",
-                    "id": "apt:app1",
-                    "backend": "apt",
-                    "icon": "",
-                    "installed": True,
-                    "summary": "This is a short line describing this application"
-                },
-                {
-                    "name": "Application 2",
-                    "id": "snap:app2",
-                    "backend": "snap",
-                    "icon": "",
-                    "installed": False,
-                    "summary": "This is a short line describing this application"
-                },
-                {
-                    "name": "Application 3",
-                    "id": "curated:app3",
-                    "backend": "curated",
-                    "icon": "",
-                    "installed": True,
-                    "summary": "This is a short line describing this application"
-                }
-            ]
-        })
-
-    def _app_info(self, data):
-        """
-        Request: User is viewing details for a specific application.
-        """
-        # FIXME: Dummy response
-        self.send_data("open_app_details", {
-            "data": {
-                "name": "Application 1",
-                "id": "apt:app1", # This ID is the view's way of telling the model/controller what the source is.
-                "backend": "apt",
-                "icon": "", # Path to icon, or blank for generic icon.
-                "summary": "Calculator for the GTK desktop",
-                "description": "This is line 1.\nThis is line 2.\nThis is line 3.",
-                "nonfree": False,
-                "free_license": "GNU General Public License",
-                "arch": ["i386", "amd64", "armhf", "arm64", "powerpc"],
-                "developer": "Developer Name",
-                "developer_url": "https://developer.example.com",
-                "website_url": "https://example.com",
-                "support_url": "https://support.example.com",
-                "apt_source": "ppa:org/name", # "main", "universe", "multiverse", "restricted", "partner", "ppa:org/name", "https://repo.example.com"
-                "apt_packages": ["app1", "app1-data", "app1-doc"],
-                "snap_name": "nameofsnap",
-                "launch_cmd": "app1",
-                "tags": [], # TODO: Curated only? may be unused
-                "screenshots": [
-                    "/path/to/screenshot-1.jpg",
-                    "/path/to/screenshot-2.jpg"
-                ],
-                "version": "20.04.1-ubuntu0",
-                "installed": True,
-                "install_date": [2019, 12, 31, 23, 59] # [YYYY, MM, DD, HH, MM]
-            }
-        })
-
-    def _app_launch(self, data):
-        """
-        Request: User would like to run an application, if it has an executable to launch.
-        """
-        pass
-
-    def _app_show_error(self, data):
-        """
-        Callback: One of the items in the queue encountered an error.
-        """
-        pass
-
-    def _app_reinstall(self, data):
-        """
-        Request: User would like to re-install this application.
-        """
-        pass
-
-    def _app_remove(self, data):
-        """
-        Request: User would like to remove this application.
-        """
-        pass
-
-    def _app_install(self, data):
-        """
-        Request: User would like to install this application.
-        """
-        pass
-
-
-class Locales():
-    """
-    A dictionary containing all of the locales that are used in the view.
-
-    The view will store locales as a JSON object under the 'LOCALE' variable
-    when the application starts.
-
-    For simplicity, all of the locales are within this file and stored as
-    'software-boutique' powered by Python's gettext.
-    """
-    def get_locales():
-        return {
-            "title": _("Software Boutique"),
-
-            # Header Buttons
-            "browse": _("Browse"),
-            "queue": _("Queue (0)"), # 0
-            "installed": _("Installed"),
-            "news": _("News"),
-            "search": _("Search"),
-            "settings": _("Settings"),
-
-            # Titles for pages
-            "title_browse": _("Browse for Applications"),
-            "title_queue": _("Queued Changes"),
-            "title_installed": _("Installed Software"),
-            "title_news": _("What's New?"),
-            "title_search": _("Search"),
-            "title_settings": _("Boutique Settings"),
-
-            # Header Tooltips
-            "tooltip_browse": _("View curated software or list applications by category"),
-            "tooltip_queue": _("View pending software operations"),
-            "tooltip_installed": _("View software currently installed on this system"),
-            "tooltip_news": _("See the latest changes to the curated software picks"),
-            "tooltip_search": _("Look for software available for your system"),
-            "tooltip_settings": _("Change options related to Software Boutique"),
-            "tooltip_back": _("Go back to the previous page"),
-
-            # Footer
-            "queue_ready": _("Ready."),
-            "queue_ready_state": _("Installation progress will appear here."),
-            "queue_downloading": _("Downloading XXX (1 of 2)..."), # XXX, 1, 2
-            "queue_installing": _("Installing XXX (1 of 2)..."), # XXX, 1, 2
-            "queue_progress": _("1 MB of 2 MB"), # 1, 2
-            "queue_success": _("Finished."),
-            "queue_success_state": _("1 installed, 2 updated, 3 removed."), # 1, 2, 3
-            "queue_error": _("There were problems completing your request."), # XXX
-            "queue_error_state": _("1 succeeded, 2 failed."), # 1, 2
-
-            # Queue page
-            "queue_list_title_processing": _("In Progress"),
-            "queue_list_title_processed": _("Completed"),
-            "queue_list_title_pending": _("Queued"),
-            "queue_list_success_install": "", # Unused, 'Launch' button only.
-            "queue_list_success_remove": _("Successfully removed"),
-            "queue_list_failed_install": _("Failed to install"),
-            "queue_list_failed_remove": _("Failed to remove"),
-            "queue_list_clear": _("Clear List"),
-            "queue_list_pending_install": _("Waiting for installation"),
-            "queue_list_pending_remove": _("Waiting for removal"),
-            "queue_list_empty": _("Progress for your software installations will appear here."),
-
-            # General Actions
-            "launch": _("Launch"),
-            "view_details": _("View Details"),
-            "info": _("Details"),
-            "install": _("Install"),
-            "reinstall": _("Reinstall"),
-            "remove": _("Remove"),
-
-            # Categories
-            "accessibility": _("Universal Access"),
-            "accessories": _("Accessories"),
-            "development": _("Development"),
-            "education": _("Education"),
-            "games": _("Games"),
-            "graphics": _("Graphics"),
-            "internet": _("Internet"),
-            "multimedia": _("Sound & Video"),
-            "office": _("Office"),
-            "server": _("Server"),
-            "system": _("System Tools"),
-            "themes": _("Themes"),
-
-            # Settings
-            "about": _("About"),
-            "ver_software": _("Software Boutique 2.0"), # 2.0
-            "ver_index": _("Index Revision 123"), # 123
-            "last_updated": _("Last Updated: []"), # []
-            "backend": _("Backends"),
-            "backend_curated": _("Software Boutique Curated Index"),
-            "backend_apt": _("PackageKit (Apt)"),
-            "backend_snap": _("Snapd (Snapcraft)"),
-            "backend_appstream": _("AppStream (Metadata)"),
-            "backend_working": _("Enabled"),
-            "backend_not_working": _("Unavailable"),
-            "interface": _("Interface"),
-            "hide_proprietary": _("Hide proprietary applications"),
-            "hide_proprietary_help": _("Omit non-free software from being shown in Browse or Search."),
-            "show_advanced": _("Show technical details for applications"),
-            "show_advanced_help": _("Display additional details like sources and package names when viewing an application's details."),
-            "precise_time": _("Prefer precise times"),
-            "precise_time_help": _("Present exact date/time stamps instead of relative, for example '2 days ago'."),
-            "compact_list": _("Compact view for application listings"),
-            "compact_list_help": _("Show less detail so more applications appear on-screen at once."),
-            "misc": _("Miscellaneous"),
-            "show_intro": _("Show Introduction Screen"),
-
-            # Browse
-            "group_curated_title": _("Best in Class"),
-            "group_curated_text": _("Tried and tested applications that integrate well with the MATE Desktop. Recommended by the Ubuntu MATE Team."),
-            "group_snap_title": _("Snaps"),
-            "group_snap_text": _("Applications that are sandboxed with tight security enhancements, in addition to being automatically updated."),
-            "group_apt_title": _("Packages"),
-            "group_apt_text": _("Available from the Ubuntu archives, or an external repository installed on your system."),
-
-            # Application Details
-            "no_screenshot": _("No screenshot available"),
-            "version": _("Version"),
-            "install_date": _("Installed"),
-            "license": _("License"),
-            "supported_arch": _("Supported Architectures"),
-            "launch_cmd": _("Launch Command"),
-            "tags": _("Tags"),
-            "website": _("Website"),
-            "support": _("Support"),
-            "type": _("Type"),
-            "source": _("Source"),
-            "packages": _("Packages"),
-            "snap_name": _("Snap Name"),
-            "unknown": _("Unknown"),
-
-            # App Types
-            "apt": _("Debian Packaged Application (Apt)"),
-            "snap": _("Universal Linux Package (Snapcraft)"),
-
-            # App Sources
-            "main": _("Canonical supported free and open source software"),
-            "universe": _("Community-maintained free and open source software"),
-            "restricted": _("Proprietary drivers for devices"),
-            "multiverse": _("Software restricted by copyright or legal issues"),
-
-            # Licenses
-            "nonfree": _("Proprietary"),
-            "free": _("Open Source or Free Software (FOSS)"),
-
-            # End
-            "": ""
-        }
-
-
 def parse_parameters():
     """
     Responsible for processing arguments entered at the command line.
@@ -673,11 +255,9 @@ def parse_parameters():
         dbg.verbose_level = 2
 
     if args.arch:
-        Config.os_arch = args.arch
         dbg.stdout("=> Showing listings for arch: " + args.arch, dbg.debug)
 
     if args.codename:
-        Config.os_codename = args.codename
         dbg.stdout("=> Showing listings for release: " + args.codename, dbg.debug)
 
     if args.locale:
@@ -690,15 +270,17 @@ def parse_parameters():
     if args.no_snap:
         dbg.stdout("=> Snapd disabled via argument", dbg.debug, 1)
 
+    return args
+
 
 if __name__ == "__main__":
     dbg = Common.Debugging()
     _ = Common.setup_translations(__file__, "software-boutique")
-    parse_parameters()
+    args = parse_parameters()
     pref = Preferences.Preferences(dbg, "preferences", "software-boutique")
 
     app = SoftwareBoutique()
-    webview = ViewWebView.WebView(dbg, app)
-    main = ViewAppWindow.ApplicationWindow(app)
-    main.build(webview, Common.get_data_source(), Locales.get_locales()["title"])
+    webview = WebView.WebView(dbg, app)
+    main = AppWindow.ApplicationWindow(app)
+    main.build(webview, Common.get_data_source(), Locales["title"])
     main.run()

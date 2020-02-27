@@ -84,11 +84,3 @@ class WebView(WebKit2.WebView):
         Context menu is disabled as the application masks it's a WebKit browser.
         """
         return True
-
-    @staticmethod
-    def make_html_safe(string):
-        """
-        Returns a string that is HTML safe that won't cause interference.
-        For example, when used in JavaScript attributes.
-        """
-        return string.replace("'", "&#145;")

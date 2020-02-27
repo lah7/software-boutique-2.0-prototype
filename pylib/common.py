@@ -1,10 +1,6 @@
 """
 Common functions shared between Software Boutique and the Welcome application.
 """
-# Licensed under GPLv3
-#
-# Copyright 2017-2019 Luke Horwell <code@horwell.me>
-#
 
 import os
 import gettext
@@ -12,10 +8,37 @@ import sys
 import inspect
 import subprocess
 
-try:
-    from pylib.decorators.singleton import singleton
-except ImportError:
-    from software_boutique.decorators.singleton import singleton
+
+class Paths(object):
+    """
+    Paths to storage, temporary and data files.
+    """
+    def __init__(self):
+        # Application Cache
+        self.cache_path = os.path.join(os.path.expanduser("~"), '.cache', "software-boutique")
+
+        # Curated index
+        index_path = os.path.join(os.path.expanduser("~"), ".config", "software-boutique", "installed.json")
+        if not os.path.exists(index_path):
+            index_path = None
+
+        # Initialise empty directories.
+        if not os.path.exists(cache_path):
+            os.mkdir(cache_path)
+
+
+def singleton(class_):
+    """
+    Only ensures there is one instance of a class. Place '@singleton' above
+    the function.
+    """
+    instances = {}
+    def getinstance(*args, **kwargs):
+        if class_ not in instances:
+            instances[class_] = class_(*args, **kwargs)
+        return instances[class_]
+    return getinstance
+
 
 @singleton
 class Debugging(object):
