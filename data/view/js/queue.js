@@ -17,15 +17,12 @@ var QUEUE_DATA = [];
 *************************************************/
 // Aborts the active task, if there is one.
 function queue_stop_current() {
-    send_data({
-        "request": "queue_stop_active"
-    });
+    send_data("queue_stop_active", {});
 }
 
 // Adds a new item to the queue.
 function queue_add_item(backend, operation, app_id) {
-    send_data({
-        "request": "queue_add_item",
+    send_data("queue_add_item", {
         "backend": backend,             // Either: 'snapd', 'apt', 'index'
         "operation": operation,         // Either: 'install', 'remove'
         "id": id                        // App name / package name / or index ID, depending on backend parameter.
@@ -34,17 +31,14 @@ function queue_add_item(backend, operation, app_id) {
 
 // Removes an unprocessed item from the queue.
 function queue_drop_item(id) {
-    send_data({
-        "request": "queue_drop_item",
+    send_data("queue_drop_item", {
         "id": id
     });
 }
 
 // Removes all processed items from the queue.
 function queue_clear() {
-    send_data({
-        "request": "queue_clear"
-    });
+    send_data("queue_clear", {});
 }
 
 /*************************************************
@@ -79,14 +73,14 @@ function update_queue_list(data) {
 
     _update_queue_button();
     if (CURRENT_TAB === "queue") {
-        _set_page_queue();
+        set_page_queue();
     }
 }
 
 /*************************************************
  * Internal view functions to update the page.
 *************************************************/
-function _set_page_queue() {
+function set_page_queue() {
     var html_buffer_processing = [];
     var html_buffer_processed = [];
     var html_buffer_pending = [];
@@ -237,7 +231,23 @@ function _update_queue_button() {
 }
 
 function _update_queue_state(icon, action_text, details_text, value, value_end) {
-    // See update_queue_status() for parameters.
+    //
+    // Provides status updates for the active item (e.g. installation % complete).
+    // Updates the lower-left of the application and 'in progress' heading on queue page.
+    //
+    // Variable         Example                 Description
+    // ---------------- ----------------------- -----------------------------------
+    // state            ok                      Value either: "ok", "busy", "error"
+    // action_text      Installing Caja (1 of.. Display this text for the action.
+    // details_text     app_progress            Display this text for the details. Optional, can be blank.
+    // value            5                       Current value for progress bar. If -1, for indeterminate.
+    // value_end        10                      Total value for progress bar. If 0, will be hidden.
+    //
+    var icon = data.icon;
+    var action_text = data.action_text;
+    var details_text = data.details_text;
+    var value = data.value;
+    var value_end = data.value_end;
 
     var old_action_text = $("#progress-text").html();
 
@@ -256,7 +266,7 @@ function _update_queue_state(icon, action_text, details_text, value, value_end) 
             svg_name = "fa-exclamation-triangle";
             break;
         default:
-            break;
+            return;
     }
 
     $("#status-icon").html(get_svg(svg_name));

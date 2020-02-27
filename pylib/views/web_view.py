@@ -66,17 +66,18 @@ class WebView(WebKit2.WebView):
         """
         title = self.get_title()
         if title not in ["null", "", None]:
-            self.app.recv_data(title)
+            self.app.incoming_request(title)
             # Reset title afterwards so another request can be sent again.
             self.run_js("document.title = ''")
 
-    def send_data(self, data):
+    def send_data(self, function, data):
         """
         Used to communicate from controller (Python) to view (JS).
 
+        :parm function: Name of the JavaScript function to execute, passing this data.
         :parm data: String containing data stream.
         """
-        self.run_js("recv_data({0})".format(str(data)))
+        self.run_js("{0}({1})".format(function, str(data)))
 
     def _on_context_menu(self, webview, menu, event, htr, user_data=None):
         """

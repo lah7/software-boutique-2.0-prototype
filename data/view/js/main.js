@@ -2,7 +2,14 @@
  * View -> Controller
  *  e.g. user input
 ***************************************/
-function send_data(json) {
+function send_data(request, json) {
+    //
+    // Sends JSON data to the Controller.
+    //
+    //  request     String of the Python function to run.
+    //  json        JSON data.
+    //
+    json["request"] = request;
     var data = JSON.stringify(json);
     document.title = data;
 }
@@ -21,7 +28,7 @@ function recv_data(data) {
             update_queue_state(data);
             break;
 
-        // apps.js
+        // app.js
         case "populate_app_list":
             populate_app_list(data);
             break;
@@ -45,8 +52,7 @@ function get_svg(name) {
 }
 
 function open_uri(uri) {
-    send_data({
-        "request": "open_uri",
+    send_data("open_uri", {
         "uri": uri
     });
 }
@@ -140,22 +146,22 @@ function change_page(name, data) {
 
     switch(name) {
         case "browse":
-            _set_tab_browse(data);
+            set_tab_browse(data);
             break;
         case "news":
             break;
         case "search":
             break;
         case "queue":
-            _set_page_queue();
+            set_page_queue();
             break;
         case "installed":
             break;
         case "settings":
-            _set_page_settings();
+            set_page_settings();
             break;
         case "details":
-            _set_page_details(data);
+            set_page_details(data);
             break;
         default:
             console.error("Invalid page name!");

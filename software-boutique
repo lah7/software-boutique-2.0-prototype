@@ -165,12 +165,12 @@ class SoftwareBoutique(object):
             # TODO: Show message to the user. Controller could return error codes.
             dbg.stdout("Not possible to quit gracefully right now.", dbg.warning)
 
-    def recv_data(self, raw):
+    def incoming_request(self, raw):
         """
         Receive data (e.g. user input) from the view.
         This will be converted to a Python dictonary for the controller/model to parse.
 
-        :param raw: String containing the data stream
+        :param raw: String containing the JSON data (in string format)
         """
         dbg.stdout("→ Controller: " + str(raw), dbg.debug, 1)
 
@@ -189,18 +189,19 @@ class SoftwareBoutique(object):
 
         self.controller.process_view_request(request, data)
 
-    def send_data(self, raw):
+    def send_data(self, function, data):
         """
         Send data (e.g. interface update) to the view.
         This will be converted to JSON (string) for the view to parse.
 
-        :param raw: Python dictonary containing the data stream
+        :param function: Name of JavaScript function to execute.
+        :param data: Python dictonary containing the JSON data (in dictionary format)
         """
-        dbg.stdout("→ View: " + str(raw), dbg.debug)
+        dbg.stdout("→ View: " + str(data), dbg.debug)
 
         try:
-            data = json.dumps(raw, ensure_ascii=False)
-            webview.send_data(data)
+            data = json.dumps(data, ensure_ascii=False)
+            webview.send_data(function, data)
             return True
         except Exception:
             dbg.stdout("Internal Error: Cannot parse data for view!", dbg.error)
@@ -210,10 +211,9 @@ class SoftwareBoutique(object):
         """
         Updates a JS variable in the view containing JSON data.
         """
-        dbg.stdout("Setting view variable '{0}' with data: {1}".format(variable, data), dbg.debug, 2)
+        dbg.stdout("Setting view variable: " + variable, dbg.debug, 1)
         if type(data) == dict:
             data = json.dumps(data, ensure_ascii=False)
-
         webview.run_js("{0} = {1};".format(variable, data))
 
 
@@ -286,25 +286,25 @@ class SoftwareBoutiqueController(object):
         """
         bindings = {
             # Callbacks for queued items
-            "update_queue_list": self.update_queue_list,
-            "update_queue_state": self.update_queue_state,
+            "update_queue_list": self._update_queue_list,
+            "update_queue_state": self._update_queue_state,
 
             # Queue requests
-            "queue_clear": self.queue_clear,
-            "queue_drop_item": self.queue_drop_item,
+            "queue_clear": self._queue_clear,
+            "queue_drop_item": self._queue_drop_item,
 
             # App requests
-            "request_app_list": self.request_app_list,
-            "app_info": self.app_info,
-            "app_launch": self.app_launch,
-            "app_show_error": self.app_show_error,
-            "app_reinstall": self.app_reinstall,
-            "app_remove": self.app_remove,
-            "app_install": self.app_install,
+            "request_app_list": self._request_app_list,
+            "app_info": self._app_info,
+            "app_launch": self._app_launch,
+            "app_show_error": self._app_show_error,
+            "app_reinstall": self._app_reinstall,
+            "app_remove": self._app_remove,
+            "app_install": self._app_install,
 
             # General
-            "open_uri": self.open_uri,
-            "settings_set_key": self.settings_set_key
+            "open_uri": self._open_uri,
+            "settings_set_key": self._settings_set_key
         }
 
         try:
@@ -324,7 +324,7 @@ class SoftwareBoutiqueController(object):
         """
         return True
 
-    def open_uri(self, data):
+    def _open_uri(self, data):
         """
         Opens a specified URI. Only HTTP/HTTPS is accepted.
         """
@@ -333,7 +333,7 @@ class SoftwareBoutiqueController(object):
         if uri[:4] == "http":
             webbrowser.open(uri, new=0, autoraise=True)
 
-    def settings_set_key(self, data):
+    def _settings_set_key(self, data):
         """
         Writes a new value to a key for this application's preferences.
         """
@@ -342,19 +342,16 @@ class SoftwareBoutiqueController(object):
 
         pref.write(key, value)
 
-    def update_queue_list(self, queue):
+    def _update_queue_list(self, queue):
         """
         Callback: For when items in the queue has changed.
 
         Params:
-            queue           List containing queue data.
+            queue           List containing queue JSON data.
         """
-        self.send_data({
-            "request": "update_queue_list",
-            "queue": queue
-        })
+        self.send_data("update_queue_list", queue)
 
-    def update_queue_state(self, state, action_text, details_text, value, value_end):
+    def _update_queue_state(self, state, action_text, details_text, value, value_end):
         """
         Callback: When the current item in the queue has changed state.
 
@@ -365,8 +362,7 @@ class SoftwareBoutiqueController(object):
             value           Value for progress bar, e.g. current download size. Use -1 for indeterminate.
             value_end       Max value for progress bar, e.g. total download size. Use 0 to hide progress.
         """
-        self.send_data({
-            "request": "update_queue_state",
+        self.send_data("update_queue_state", {
             "state": state,
             "action_text": action_text,
             "details_text": details_text,
@@ -374,20 +370,20 @@ class SoftwareBoutiqueController(object):
             "value_end": value_end
         })
 
-    def queue_clear(self, data):
+    def _queue_clear(self, data):
         """
         Request: User clears all completed items in the queue.
         """
         pass
 
-    def queue_drop_item(self, data):
+    def _queue_drop_item(self, data):
         """
         Request: User drops a specific application from the queue.
         If the item is being processed, the changes should abort (or revert) if possible.
         """
         pass
 
-    def request_app_list(self, data):
+    def _request_app_list(self, data):
         """
         Request: User is listing all the applications in a specific category.
         """
@@ -395,8 +391,7 @@ class SoftwareBoutiqueController(object):
         element = data["element"]
 
         # FIXME: Dummy response
-        self.send_data({
-            "request": "populate_app_list",
+        self.send_data("populate_app_list", {
             "category": category,
             "element": element,
             "apps": [
@@ -427,13 +422,12 @@ class SoftwareBoutiqueController(object):
             ]
         })
 
-    def app_info(self, data):
+    def _app_info(self, data):
         """
         Request: User is viewing details for a specific application.
         """
         # FIXME: Dummy response
-        self.send_data({
-            "request": "open_app_details",
+        self.send_data("open_app_details", {
             "data": {
                 "name": "Application 1",
                 "id": "apt:app1", # This ID is the view's way of telling the model/controller what the source is.
@@ -463,31 +457,31 @@ class SoftwareBoutiqueController(object):
             }
         })
 
-    def app_launch(self, data):
+    def _app_launch(self, data):
         """
         Request: User would like to run an application, if it has an executable to launch.
         """
         pass
 
-    def app_show_error(self, data):
+    def _app_show_error(self, data):
         """
         Callback: One of the items in the queue encountered an error.
         """
         pass
 
-    def app_reinstall(self, data):
+    def _app_reinstall(self, data):
         """
         Request: User would like to re-install this application.
         """
         pass
 
-    def app_remove(self, data):
+    def _app_remove(self, data):
         """
         Request: User would like to remove this application.
         """
         pass
 
-    def app_install(self, data):
+    def _app_install(self, data):
         """
         Request: User would like to install this application.
         """
@@ -659,8 +653,8 @@ def parse_parameters():
     parser.add_argument("--arch", help=_("Show index listings for a specific architecture, e.g. armhf"))
     parser.add_argument("--codename", help=_("Show index listings for a specific release, e.g. bionic"))
     parser.add_argument("--locale", help=_("Force locale for interface"))
-    parser.add_argument("--no-apt", help=_("Disable apt (PackageKit) backend"))
-    parser.add_argument("--no-snap", help=_("Disable snapd backend"))
+    parser.add_argument("--no-apt", help=_("Disable apt (PackageKit) backend"), action="store_true")
+    parser.add_argument("--no-snap", help=_("Disable snapd backend"), action="store_true")
 
     # For development use only - developer tools and frontend testing
     parser.add_argument("--inspect", help=argparse.SUPPRESS, action="store_true")
@@ -673,7 +667,7 @@ def parse_parameters():
 
     if args.verbose:
         dbg.verbose_level = 1
-        dbg.stdout("Verbose enabled", dbg.debug, 1)
+        dbg.stdout("=> Verbose enabled", dbg.debug, 1)
 
     if args.inspect:
         dbg.verbose_level = 2

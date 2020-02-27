@@ -16,8 +16,7 @@ function launch_app_id(id) {
     //
     // Start an application (from queue or app details page)
     //
-    send_data({
-        "request": "app_launch",
+    send_data("app_launch", {
         "id": id
     });
 }
@@ -26,8 +25,7 @@ function view_error_app_id(id) {
     //
     // View error details for a failed item in the queue.
     //
-    send_data({
-        "request": "app_show_error",
+    send_data("app_show_error", {
         "id": id
     });
 }
@@ -37,8 +35,7 @@ function request_app_list(category_id, element_id) {
     // Fetches an application list for a specific category or section (e.g. installed)
     //
     show_loading();
-    send_data({
-        "request": "request_app_list",
+    send_data("request_app_list", {
         "category": category_id,
         "element": element_id
     });
@@ -48,8 +45,7 @@ function install_app(app_id) {
     //
     // Install an application.
     //
-    send_data({
-        "request": "app_install",
+    send_data("app_install", {
         "id": app_id
     });
 }
@@ -58,8 +54,7 @@ function reinstall_app(app_id) {
     //
     // Reinstall an application.
     //
-    send_data({
-        "request": "app_reinstall",
+    send_data("app_reinstall", {
         "id": app_id
     });
 }
@@ -68,8 +63,7 @@ function remove_app(app_id) {
     //
     // Remove an application.
     //
-    send_data({
-        "request": "app_remove",
+    send_data("app_remove", {
         "id": app_id
     });
 }
@@ -78,8 +72,7 @@ function info_app(app_id) {
     //
     // Open details about an application.
     //
-    send_data({
-        "request": "app_info",
+    send_data("app_info", {
         "id": app_id
     });
     show_loading();
@@ -121,7 +114,7 @@ function open_app_details(data) {
 /*************************************************
  * Internal view functions to update the page.
 *************************************************/
-function _set_tab_browse(category_id) {
+function set_tab_browse(category_id) {
     //
     // User chooses the "Browse" tab.
     //
@@ -342,7 +335,7 @@ function change_category(uid) {
     //
     $("categories a").removeClass("active");
     _nav_add_history("browse", uid);
-    _set_tab_browse(uid);
+    set_tab_browse(uid);
 }
 
 function _open_app_details(data) {
@@ -383,7 +376,7 @@ function _open_app_details(data) {
     change_title(app.name);
 }
 
-function _set_page_details(data) {
+function set_page_details(data) {
     //
     // Open the details page providing more details about an application.
     //

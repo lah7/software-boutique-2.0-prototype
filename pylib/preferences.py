@@ -1,10 +1,6 @@
 """
 Handles persistant data for the application.
 """
-# Licensed under GPLv3
-#
-# Copyright 2015-2019 Luke Horwell <code@horwell.me>
-#
 
 import os
 import json

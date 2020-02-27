@@ -31,8 +31,7 @@ var SETTINGS = {
 // Set an individual key with a new value.
 function settings_set_key(key, value) {
     SETTINGS[key] = value;
-    send_data({
-        "request": "settings_set_key",
+    send_data("settings_set_key", {
         "key": key,
         "value": value
     });
@@ -46,7 +45,7 @@ function settings_set_key(key, value) {
 /*************************************************
  * Internal view functions to update the page.
 *************************************************/
-function _set_page_settings() {
+function set_page_settings() {
     $("content").html(`
         <div class="settings-page">
             <row>
