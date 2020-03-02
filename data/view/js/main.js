@@ -48,7 +48,7 @@ function get_string(string) {
 }
 
 function get_svg(name) {
-    return svg[name];
+    return SVGS[name];
 }
 
 function open_uri(uri) {

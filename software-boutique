@@ -132,6 +132,19 @@ class SoftwareBoutique(object):
             category["icon_path"] = AppWindow.get_gtk_icon_path(category["gtk_icon"], 24, fallback_icon)
         self.set_view_variable("CATEGORIES", categories)
 
+        # Load SVGs into memory (for in-line style manipulation)
+        with open(os.path.join(data_source, "view/ui/svgs.json")) as f:
+            svgs = json.load(f)
+
+        SVGS = {}
+        for svg in svgs:
+            svg_path = os.path.join(data_source, "view/ui/" + svg)
+            if os.path.exists(svg_path):
+                with open(svg_path) as f:
+                    SVGS[svg.replace(".svg", "")] = "".join(f.readlines())
+
+        self.set_view_variable("SVGS", SVGS)
+
         # Load user settings
         self.set_view_variable("SETTINGS", {
                 "version": {
