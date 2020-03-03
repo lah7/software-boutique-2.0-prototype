@@ -11,6 +11,7 @@ snap/.snapcraft
 stage/
 
 # Compiled files
+data/index/
 *.mo
 data/view/boutique.css
 locale/
