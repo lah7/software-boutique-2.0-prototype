@@ -5,6 +5,7 @@ Handles persistant data for the application.
 import os
 import json
 
+
 class Preferences(object):
     def __init__(self, dbg_obj, config_name, project_name):
         """

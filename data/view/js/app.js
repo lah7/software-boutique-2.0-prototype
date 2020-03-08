@@ -1,13 +1,20 @@
-var GENERIC_ICON_PATH = "ui/generic-package.svg";
-var CATEGORIES = {
-    /* Example
-     * The 'id' is also used to lookup the string.
+//
+// Application List & Details - handles the view for both screens, and common
+//                              interactions like instructing an app for install,
+//
+var EXAMPLE = [
     {
-        "id": "accessories",
-        "icon_path": "/path/to/icon.svg"
+        "id": "accessories",        // (str) ID used for element and locale string.
+        "icon_path": "/path/to/svg" // (str) Absolute path to icon
     }
-    */
-};
+];
+
+// Actual data set at app start.
+var CATEGORIES = [];
+
+// Global variables
+var GENERIC_ICON_PATH = "ui/generic-package.svg";
+
 
 /*************************************************
  * Send request to the controller.
@@ -30,12 +37,12 @@ function view_error_app_id(id) {
     });
 }
 
-function request_app_list(category_id, element_id) {
+function request_category_list(category_id, element_id) {
     //
     // Fetches an application list for a specific category or section (e.g. installed)
     //
     show_loading();
-    send_data("request_app_list", {
+    send_data("request_category_list", {
         "category": category_id,
         "element": element_id
     });
@@ -155,7 +162,7 @@ function set_tab_browse(category_id) {
     //  - no category is selected, in which the welcome message was displayed.
     //  - it's the fixes page, which doesn't need any apps populating.
     if (category_id != null && category_id != "fixes") {
-        request_app_list(category_id, element_id);
+        request_category_list(category_id, element_id);
     }
 }
 
@@ -228,8 +235,6 @@ function _get_app_list_generic(apps) {
     // Returns HTML for application lists used on browse, search and installed pages.
     //
     var compact_list = SETTINGS.compact_list;
-    //var unified_mode = SETTINGS.unified_list;
-    var enabled_curated = SETTINGS.backends.curated;
     var enabled_apt = SETTINGS.backends.apt;
     var enabled_snap = SETTINGS.backends.snap;
     var content = [];

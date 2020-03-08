@@ -3,6 +3,22 @@ Controller layer that interfaces between the backend (libboutique) and
 the view.
 """
 
+import os
+import json
+import webbrowser
+
+from . import common as Common
+from . import controller as Controller
+from . import locales as Locales
+from . import preferences as Preferences
+
+Locales = Locales.LOCALES
+dbg = None
+
+# Minimum version of the curated index supported by this version of the program.
+__INDEX_MIN_VER__ = 7
+
+
 class SoftwareBoutiqueController(object):
     """
     The middleman for requests and responses passed between the view and model.
@@ -13,22 +29,75 @@ class SoftwareBoutiqueController(object):
         """
         self.app = app
         self.args = args
+        self.data_source = Common.get_data_source()
         self.send_data = app.send_data
+        self.set_view_variable = app.set_view_variable
+        self.dbg = app.dbg
+        self.pref = Preferences.Preferences(dbg, "preferences", "software-boutique")
+        self.index = None
 
-        # FIXME: Programmatically detect avaliable backends.
+        # FIXME: libboutique: Get status of apt, snap and appstream.
         self.available_backends = {
-            "apt": True,
-            "snap": True,
-            "curated": True,
+            "apt": False,
+            "snap": False,
             "appstream": False
         }
 
+        # Is the index working?
+        index_available = False
+        index_timestamp = None
+        index_revision = None
+        index_name = None
+        index_info_url = None
+        index_support_url = None
+        index_path = os.path.join(self.data_source, "index", "applications-en.json")
+        if os.path.exists(index_path):
+            try:
+                with open(index_path, "r") as f:
+                    self.index = json.load(f)
+                index_timestamp = self.index["stats"]["compiled"]
+                index_revision = self.index["stats"]["revision"]
+                index_name = self.index["distro"]["name"]
+                index_info_url = self.index["distro"]["info_url"]
+                index_support_url = self.index["distro"]["support_url"]
+                index_available = True
+                self.dbg.stdout("Index successfully loaded.", self.dbg.success)
+            except Exception as e:
+                self.dbg.stdout("Failed to load index: " + str(e), self.dbg.error)
+        else:
+            self.dbg.stdout("Curated index not present.", self.dbg.warning, 1)
+
+        # Define settings
+        self.settings = {
+            "version": {
+                "boutique": app.version
+            },
+            "index": {
+                "available": index_available,
+                "name": index_name,
+                "info_url": index_info_url,
+                "support_url": index_support_url,
+                "timestamp": index_timestamp,
+                "revision": index_revision
+            },
+            "backends": {
+                "apt": self.available_backends["apt"],
+                "snap": self.available_backends["snap"],
+                "appstream": self.available_backends["appstream"]
+            },
+            "hide_proprietary": self.pref.read("hide_proprietary", False),
+            "show_advanced": self.pref.read("show_advanced", False),
+            "precise_time": self.pref.read("precise_time", False),
+            "compact_list": self.pref.read("compact_list", False)
+            # add default tab
+        }
+        self.set_view_variable("SETTINGS", self.settings)
+
+
     ##################################################
     def _example(self):
-        locales = Locales.get_locales()
-
         # Update lower-left current status with Ready status
-        self.update_queue_state("ok", locales["queue_ready"], None, 0, -1)
+        self.update_queue_state("ok", Locales["queue_ready"], None, 0, -1)
 
         # Dummy queue data - stored in the controller. View has copy (used to view page)
         queue = [
@@ -81,7 +150,7 @@ class SoftwareBoutiqueController(object):
             "queue_drop_item": self._queue_drop_item,
 
             # App requests
-            "request_app_list": self._request_app_list,
+            "request_category_list": self._request_category_list,
             "app_info": self._app_info,
             "app_launch": self._app_launch,
             "app_show_error": self._app_show_error,
@@ -126,8 +195,7 @@ class SoftwareBoutiqueController(object):
         """
         key = data["key"]
         value = data["value"]
-
-        pref.write(key, value)
+        self.pref.write(key, value)
 
     def _update_queue_list(self, queue):
         """
@@ -170,9 +238,9 @@ class SoftwareBoutiqueController(object):
         """
         pass
 
-    def _request_app_list(self, data):
+    def _request_category_list(self, data):
         """
-        Request: User is listing all the applications in a specific category.
+        Request: User is listing all the curated applications in a category.
         """
         category = data["category"]
         element = data["element"]

@@ -1,16 +1,21 @@
-// QUEUE_DATA - the controller sends data in this format:
-//  [
-//      {
-//          "id": "app1"                // Unique ID of item (backend parameter)
-//          "name": "Application 1"     // Name of application
-//          "icon": "/path/to/img"      // Path to the icon
-//          "action": "install"         // Either: 'install', 'remove'
-//          "state": "processing"       // Either: 'pending', 'processing', 'processed'
-//          "success": true             // Success or failed? Only applicable for 'processed' state.
-//      }
-//  ]
+//
+// Queue - shows applications that are queued for install/removal, and progress
+//         of existing apps. Queue works instantly.
+//
+var EXAMPLE = [
+  {
+      "id": "app1",                 // (str) Unique ID of item (backend parameter)
+      "name": "Application 1",      // (str) Human readable application name
+      "icon": "/path/to/img",       // (str) Absolute path to the icon
+      "action": "install",          // (str) Either: 'install', 'remove'
+      "state": "processing",        // (str) Either: 'pending', 'processing', 'processed'
+      "success": true               // (bool) Only applicable for 'processed' state.
+  }
+]
 
-var QUEUE_DATA = [];
+// Actual data set at app start.
+var QUEUE = [];
+
 
 /*************************************************
  * Send update to the controller.
@@ -45,6 +50,7 @@ function queue_clear() {
  * Received update from the controller.
 *************************************************/
 function update_queue_state(data) {
+    //
     // Provides status updates for the active item (e.g. installation % complete).
     // Updates the lower-left of the application and 'in progress' heading on queue page.
     //
@@ -61,15 +67,16 @@ function update_queue_state(data) {
 }
 
 function update_queue_list(data) {
+    //
     // Items were added/removed/changed state in the queue. Updates the queue
     // page if it is open.
     //
     // Variable         Example                 Description
     // ---------------- ----------------------- -----------------------------------
     // request          update_queue_list       Required
-    // queue            [{..},{..}]             Queue JSON data (see "QUEUE_DATA")
+    // queue            [{..},{..}]             Queue JSON data (see "QUEUE")
 
-    QUEUE_DATA = data.queue;
+    QUEUE = data.queue;
 
     _update_queue_button();
     if (CURRENT_TAB === "queue") {
@@ -85,8 +92,8 @@ function set_page_queue() {
     var html_buffer_processed = [];
     var html_buffer_pending = [];
 
-    for (i = 0; i < QUEUE_DATA.length; i++) {
-        var item = QUEUE_DATA[i];
+    for (i = 0; i < QUEUE.length; i++) {
+        var item = QUEUE[i];
         var html_app_data = `<img class="app-icon" src="${item.icon}"/>
             <div class="app-name">${item.name}</div>`;
         var html_remove_button = `<a class="queue-remove" onclick="queue_drop_item('${item.id}')">${get_svg("fa-x")}</a>`;
@@ -179,7 +186,7 @@ function set_page_queue() {
         }
     }
 
-    if (QUEUE_DATA.length === 0) {
+    if (QUEUE.length === 0) {
         // Inform user about the queue page.
         $("content").html(`
             <div class="queue-page">
@@ -224,7 +231,7 @@ function _update_queue_button() {
     //
     // Run when the queue length has changed.
     //
-    var button_text = get_string("queue").replace("0", QUEUE_DATA.length);
+    var button_text = get_string("queue").replace("0", QUEUE.length);
     $("#tab-button-queue span").html(button_text);
 
     // TODO: Queue length should reflect pending tasks.

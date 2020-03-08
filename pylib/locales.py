@@ -87,25 +87,23 @@ LOCALES = {
 
     # Settings
     "about": _("About"),
-    "ver_software": _("Software Boutique 2.0"), # 2.0
-    "ver_index": _("Index Revision 123"), # 123
+    "ver_software": _("Software Boutique"),
+    "ver_index": _("Revision 123"), # 123
     "last_updated": _("Last Updated: []"), # []
+    "index_about": _("This curation of software has been picked by:"),
+    "index_info_url": _("More Information"),
+    "index_support_url": _("Support"),
     "backend": _("Backends"),
-    "backend_curated": _("Software Boutique Curated Index"),
     "backend_apt": _("PackageKit (Apt)"),
     "backend_snap": _("Snapd (Snapcraft)"),
     "backend_appstream": _("AppStream (Metadata)"),
     "backend_working": _("Enabled"),
     "backend_not_working": _("Unavailable"),
     "interface": _("Interface"),
-    "hide_proprietary": _("Hide proprietary applications"),
-    "hide_proprietary_help": _("Omit non-free software from being shown in Browse or Search."),
-    "show_advanced": _("Show technical details for applications"),
-    "show_advanced_help": _("Display additional details like sources and package names when viewing an application's details."),
-    "precise_time": _("Prefer precise times"),
-    "precise_time_help": _("Present exact date/time stamps instead of relative, for example '2 days ago'."),
-    "compact_list": _("Compact view for application listings"),
-    "compact_list_help": _("Show less detail so more applications appear on-screen at once."),
+    "hide_proprietary": _("Hide proprietary applications (Browse only)"),
+    "show_advanced": _("When viewing applications, show technical details"),
+    "precise_time": _("Show install dates with an absolute date/time"),
+    "compact_list": _("List applications in compact view"),
     "misc": _("Miscellaneous"),
     "show_intro": _("Show Introduction Screen"),
 

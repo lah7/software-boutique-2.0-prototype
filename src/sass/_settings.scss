@@ -32,6 +32,26 @@ row right {
         display: block;
         margin-bottom: 15px;
 
+        /* Preferences / About the application */
+        &.about {
+            display: flex;
+
+            svg, img {
+                vertical-align: middle;
+                height: 40px;
+                width: 40px;
+                padding-right: 0.5em;
+            }
+
+            svg path {
+                fill: var(--page_fg);
+            }
+
+            help {
+                padding-left: 0;
+            }
+        }
+
         &:last-child {
             margin-bottom: 0;
         }
@@ -42,6 +62,6 @@ row right {
         font-size: 0.9em;
         margin: 5px 0;
         opacity: 0.5;
-        padding-left: 35px;
+        padding-left: 30px;
     }
 }

@@ -22,6 +22,10 @@
 Software Boutique - a software distribution program for Ubuntu MATE to curate
 a selection of tried & tested, best in class applications that integrate well
 with the Ubuntu MATE desktop.
+
+The program will operate as a stand alone client to libboutique via the
+WebKitGTK interface when the curated collection is not present (internally
+known as the index).
 """
 
 import argparse
@@ -30,27 +34,12 @@ import inspect
 import json
 import locale
 import os
-import random
 import requests
-import signal
 import subprocess
 import sys
-import time
-import traceback
-import webbrowser
-from datetime import datetime
 from threading import Thread
-from shutil import rmtree
 
-__INDEX__ = {
 __VERSION__ = "20.04.0"
-    "revision": 0,
-    "last_updated": {
-        "day": 31,
-        "month": 12,
-        "year": 2019
-    }
-}
 
 # Import Software Boutique's Python modules, either relatively (development)
 # or system-wide.
@@ -81,10 +70,14 @@ class SoftwareBoutique(object):
     """
     def __init__(self):
         """
-        Initalise controller and pre-initalise the application, like checking the
-        styling is present.
+        Initalise controller and pre-initalise the application, such as checking
+        the styling is present.
         """
         data_source = Common.get_data_source()
+        self.version = __VERSION__
+        self.dbg = dbg
+        self.webview = None
+        self.main = None
 
         # Check the app's styles are compiled and can be read.
         if not os.path.exists(os.path.join(data_source, "view", "boutique.css")):
@@ -96,15 +89,19 @@ class SoftwareBoutique(object):
                 dbg.stdout("Missing styles! Please run 'scripts/build-styles.sh' then try again.", dbg.error, 0)
             exit(1)
 
+    def start(self):
+        """
+        Runs when the page within the WebView is ready.
+
+        This function will:
+            - Get GTK colours and override the CSS variables.
+            - Send variable containing key/value locales, category and settings.
+        """
         # Prepare Controller
         dbg.stdout("Initalizing Controller...", dbg.action, 1)
         self.controller = Controller.SoftwareBoutiqueController(self, args)
         dbg.stdout("Controller ready.", dbg.success, 1)
 
-    def start(self):
-        """
-        Runs when the page within the WebView is ready.
-        """
         dbg.stdout("Preparing Software Boutique...", dbg.action, 1)
         data_source = Common.get_data_source()
 
@@ -113,10 +110,10 @@ class SoftwareBoutique(object):
         css_keys = []
         for css_variable in gtk_colours.keys():
             css_keys.append("--{0}: {1}".format(css_variable, gtk_colours[css_variable]))
-        webview.run_js("$('body').append('<style>:root {" + ";".join(css_keys) + "}</style>')")
+        self.webview.run_js("$('body').append('<style>:root {" + ";".join(css_keys) + "}</style>')")
 
         if gtk_colours["dark"] == True:
-            webview.run_js("$('body').addClass('dark')")
+            self.webview.run_js("$('body').addClass('dark')")
 
         # Pass locales to the view
         self.set_view_variable("LOCALE", Locales)
@@ -145,32 +142,9 @@ class SoftwareBoutique(object):
 
         self.set_view_variable("SVGS", SVGS)
 
-        # Load user settings
-        self.set_view_variable("SETTINGS", {
-                "version": {
-                    "boutique": __VERSION__,
-                    "index": __INDEX__["revision"]
-                },
-                "index": {
-                    "day": __INDEX__["last_updated"]["day"],
-                    "month": __INDEX__["last_updated"]["month"],
-                    "year": __INDEX__["last_updated"]["year"]
-                },
-                "backends": {
-                    "curated": self.controller.available_backends["curated"],
-                    "apt": self.controller.available_backends["apt"],
-                    "snap": self.controller.available_backends["snap"],
-                    "appstream": self.controller.available_backends["appstream"]
-                },
-                "hide_proprietary": pref.read("hide_proprietary", False),
-                "show_advanced": pref.read("show_advanced", False),
-                "precise_time": pref.read("precise_time", False),
-                "compact_list": pref.read("compact_list", False)
-            })
-
         # Ready!
-        webview.run_js("build_view()")
-        main.show_window()
+        self.webview.run_js("build_view()")
+        self.main.show_window()
 
     def shutdown(self):
         """
@@ -219,7 +193,7 @@ class SoftwareBoutique(object):
 
         try:
             data = json.dumps(data, ensure_ascii=False)
-            webview.send_data(function, data)
+            self.webview.send_data(function, data)
             return True
         except Exception:
             dbg.stdout("Internal Error: Cannot parse data for view!", dbg.error)
@@ -232,7 +206,7 @@ class SoftwareBoutique(object):
         dbg.stdout("Setting view variable: " + variable, dbg.debug, 1)
         if type(data) == dict:
             data = json.dumps(data, ensure_ascii=False)
-        webview.run_js("{0} = {1};".format(variable, data))
+        self.webview.run_js("{0} = {1};".format(variable, data))
 
 
 def parse_parameters():
@@ -293,7 +267,7 @@ if __name__ == "__main__":
     pref = Preferences.Preferences(dbg, "preferences", "software-boutique")
 
     app = SoftwareBoutique()
-    webview = WebView.WebView(dbg, app)
-    main = AppWindow.ApplicationWindow(app)
-    main.build(webview, Common.get_data_source(), Locales["title"])
-    main.run()
+    app.webview = WebView.WebView(dbg, app)
+    app.main = AppWindow.ApplicationWindow(app)
+    app.main.build(app.webview, Common.get_data_source(), Locales["title"])
+    app.main.run()

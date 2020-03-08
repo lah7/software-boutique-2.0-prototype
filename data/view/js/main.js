@@ -1,7 +1,6 @@
-/***************************************
- * View -> Controller
- *  e.g. user input
-***************************************/
+/**********************************************
+ * View -> Controller | such as for user input
+**********************************************/
 function send_data(request, json) {
     //
     // Sends JSON data to the Controller.
@@ -14,10 +13,9 @@ function send_data(request, json) {
     document.title = data;
 }
 
-/***************************************
- * Controller -> View
- *  e.g. update state
-***************************************/
+/***********************************************
+ * Controller -> View | such as updating status
+***********************************************/
 function recv_data(data) {
     switch(data.request) {
         // queue.js
@@ -41,6 +39,11 @@ function recv_data(data) {
 /*****************************
  * Common
 *****************************/
+// Set at app start
+var LOCALE;
+var SVGS;
+
+// Global variables
 var TRANS_SPEED = 300;
 
 function get_string(string) {
@@ -57,10 +60,12 @@ function open_uri(uri) {
     });
 }
 
-// Returns localised relative or absolute date
-function get_date(day, month, year) {
-    // TODO: Implement logic
-    return day + "/" + month + "/" + year;
+function get_date(seconds) {
+    var t = new Date(1970, 0, 1); // Epoch
+    t.setSeconds(seconds);
+
+    // TODO: Implement rellative/absolute logic
+    return t.toDateString()
 }
 
 function get_random_element_id() {
@@ -72,7 +77,10 @@ function get_random_element_id() {
  * Initialisation
 *****************************/
 function build_view() {
+    //
     // Create the layout of the application
+    //
+    var has_index = SETTINGS.index.available;
 
     // -- 1. Header
     function _header_button(string, image) {
@@ -90,8 +98,8 @@ function build_view() {
             </div>
 
             <div class="right">
-                ${_header_button("browse", "boutique-mono")}
-                ${_header_button("news", "fa-bullhorn")}
+                ${has_index ? _header_button("browse", "boutique-mono") : ""}
+                ${has_index ? _header_button("news", "fa-bullhorn") : ""}
                 ${_header_button("search", "fa-search")}
                 ${_header_button("queue", "fa-clone")}
                 ${_header_button("installed", "fa-download")}
