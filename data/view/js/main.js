@@ -157,13 +157,16 @@ function change_page(name, data) {
             set_tab_browse(data);
             break;
         case "news":
+            set_page_news();
             break;
         case "search":
+            set_page_search();
             break;
         case "queue":
             set_page_queue();
             break;
         case "installed":
+            set_page_installed();
             break;
         case "settings":
             set_page_settings();

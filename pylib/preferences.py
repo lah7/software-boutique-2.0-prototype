@@ -75,7 +75,7 @@ class Preferences(object):
             return value
         except:
             # Should it be non-existent, use the default value instead.
-            self.dbg.stdout("No preference found for '{0}', so writing '{1}' as default.".format(key, default_value), self.dbg.action, 2)
+            print("No preference found for '{0}', so writing '{1}' as default.".format(key, default_value))
             self.write(key, default_value)
             return default_value
 
